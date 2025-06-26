@@ -1,6 +1,9 @@
 import requests
 import os
 from dotenv import load_dotenv
+from .geocode import get_lat_lon
+from features.history_tracker.geocode import get_lat_lon
+
 
 # Load environment variables (WeatherDB API key and base URL)
 load_dotenv()
@@ -35,21 +38,20 @@ def get_basic_weather_from_weatherdb(city_name):
     except Exception as e:
         return None, str(e)
 
-# Get detailed environmental weather data (UV, pressure, pollen, etc.) from Open-Meteo
-def get_detailed_environmental_data(city_name):
-    lat, lon = resolve_coordinates_by_city(city_name)
+# Get detailed environmental weather data (UV, pressure etc.) from Open-Meteo
+def get_detailed_environmental_data(city):
+    lat, lon = get_lat_lon(city)
     if not lat or not lon:
         return None
 
     url = (
-        f"https://api.open-meteo.com/v1/forecast?"
+        "https://api.open-meteo.com/v1/forecast?"
         f"latitude={lat}&longitude={lon}"
-        f"&current=temperature_2m,relative_humidity_2m,wind_speed_10m,surface_pressure,visibility"
-        f"&daily=uv_index_max,precipitation_sum,pollen_index"
-        f"&timezone=auto"
+        "&current=temperature_2m,relative_humidity_2m,wind_speed_10m,surface_pressure,visibility"
+        "&daily=uv_index_max,precipitation_sum"
+        "&timezone=auto"
     )
-
-    response = requests.get(url)
-    if response.status_code == 200:
-        return response.json()
+    resp = requests.get(url)
+    if resp.status_code == 200:
+        return resp.json()
     return None

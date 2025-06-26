@@ -50,11 +50,10 @@ def extract_weather_details(data):
     daily = data.get("daily", {})
 
     return {
-        "humidity": current.get("relative_humidity_2m"),
-        "wind": current.get("wind_speed_10m"),
-        "pressure": current.get("surface_pressure"),
-        "visibility": current.get("visibility"),
-        "uv": daily.get("uv_index_max", [None])[0],
-        "precipitation": daily.get("precipitation_sum", [None])[0],
-        "pollen": daily.get("pollen_index", [None])[0]
+        "humidity": current.get("relative_humidity_2m", "N/A"),
+        "wind": current.get("wind_speed_10m", "N/A"),
+        "pressure": current.get("surface_pressure", "N/A"),
+        "visibility": current.get("visibility", "N/A"),
+        "uv": daily.get("uv_index_max", ["N/A"])[0],
+        "precipitation": daily.get("precipitation_sum", ["N/A"])[0],
     }

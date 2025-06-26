@@ -1,19 +1,18 @@
 import customtkinter as ctk
+from customtkinter import CTkImage
 from features.history_tracker.display import show_weather_history
-from .api import get_basic_weather_from_weatherdb
+from .api import get_basic_weather_from_weatherdb, get_detailed_environmental_data
 from .error_handler import handle_errors
 from .theme import LIGHT_THEME, DARK_THEME
 from .gui import build_gui
 from datetime import datetime
 import requests
-from PIL import Image, ImageTk
+from PIL import Image
 from io import BytesIO
-from .api import get_detailed_environmental_data
-
+from core.processor import extract_weather_details
 
 
 class WeatherApp:
-    # Initializes the WeatherApp with GUI, default city, and theme.
     def __init__(self):
         self.root = ctk.CTk()
         self.theme = LIGHT_THEME
@@ -27,14 +26,15 @@ class WeatherApp:
         build_gui(self)
         self.update_weather()
 
-    # Toggles between light and dark theme and rebuilds the UI.
     def toggle_theme(self):
         self.theme = DARK_THEME if self.theme == LIGHT_THEME else LIGHT_THEME
         build_gui(self)
 
-    # Fetches and displays the current weather data for the selected city.
     def update_weather(self):
-        city = self.city_var.get()
+        """
+        Fetches current basic weather data and updates UI labels accordingly.
+        """
+        city = self.city_var.get().strip()
         data, error = get_basic_weather_from_weatherdb(city)
 
         if error:
@@ -82,30 +82,33 @@ class WeatherApp:
         pressure = data.get("main", {}).get("pressure")
         visibility = data.get("visibility")
 
-        uv_index = data.get("uv_index")  # May not be present
-        pollen_count = data.get("pollen_count")
-        bug_index = data.get("bug_index")
-        precipitation = data.get("precipitation")
+        uv_index = None
+        precipitation = None
 
-        if humidity is not None:
-            self.humidity_label.configure(text=f"Humidity: {humidity}%")
-        if wind_speed is not None:
-            self.wind_label.configure(text=f"Wind: {wind_speed} m/s")
-        if pressure is not None:
-            self.pressure_label.configure(text=f"Pressure: {pressure} hPa")
-        if visibility is not None:
-            self.visibility_label.configure(text=f"Visibility: {visibility} m")
-        if uv_index is not None:
-            self.uv_label.configure(text=f"UV Index: {uv_index}")
-        if pollen_count is not None:
-            self.pollen_label.configure(text=f"Pollen: {pollen_count}")
-        if bug_index is not None:
-            self.bug_label.configure(text=f"Bugs: {bug_index}")
-        if precipitation is not None:
-            self.precipitation.configure(text=f"Precipitation: {precipitation}")
+        self.humidity_label.configure(text=f"Humidity: {humidity}%" if humidity is not None else "Humidity: N/A")
+        self.wind_label.configure(text=f"Wind: {wind_speed} m/s" if wind_speed is not None else "Wind: N/A")
+        self.pressure_label.configure(text=f"Pressure: {pressure} hPa" if pressure is not None else "Pressure: N/A")
+        self.visibility_label.configure(text=f"Visibility: {visibility} m" if visibility is not None else "Visibility: N/A")
+        self.uv_label.configure(text=f"UV Index: {uv_index}" if uv_index is not None else "UV Index: N/A")
+        self.precipitation_label.configure(text=f"Precipitation: {precipitation}" if precipitation is not None else "Precipitation: N/A")
 
-    # Downloads and sets the weather icon from OpenWeatherMap or uses a blank fallback.
+        # After basic weather from weatherdb (temp, desc, etc.)
+        env_data = get_detailed_environmental_data(city)
+        env = extract_weather_details(env_data) if env_data else {}
+
+        # Update labels using env dict
+        self.humidity_label.configure(text=f"💧 Humidity: {env.get('humidity', 'N/A')}%")
+        self.wind_label.configure(text=f"💨 Wind: {env.get('wind', 'N/A')} km/h")
+        self.pressure_label.configure(text=f"🧭 Pressure: {env.get('pressure', 'N/A')} hPa")
+        self.visibility_label.configure(text=f"👁️ Visibility: {env.get('visibility', 'N/A')} m")
+        self.uv_label.configure(text=f"🌞 UV Index: {env.get('uv', 'N/A')}")
+        self.precipitation_label.configure(text=f"🌧️ Precipitation: {env.get('precipitation', 'N/A')} mm")
+
     def set_weather_icon(self, icon_code):
+        """
+        Downloads and sets the weather icon from OpenWeatherMap.
+        Does NOT rotate the image.
+        """
         if icon_code:
             try:
                 icon_url = f"http://openweathermap.org/img/wn/{icon_code}@2x.png"
@@ -118,34 +121,23 @@ class WeatherApp:
         else:
             pil_img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
 
-        icon_image = ImageTk.PhotoImage(pil_img)
-        self.icon_label.configure(image=icon_image, text="")
+        icon_image = CTkImage(light_image=pil_img, size=(64, 64))
+        self.icon_label.configure(image=icon_image)
         self.icon_label.image = icon_image  # Prevent garbage collection
 
-    # Loads and displays historical weather data for the entered city.
     def show_weather_history(self):
+        """
+        Loads and displays historical weather data for the entered city.
+        """
         city = self.city_var.get().strip()
         if city:
             show_weather_history(self.history_text, city)
 
-    # Runs the Tkinter main loop.
     def run(self):
         self.root.mainloop()
 
-    def update_weather_display(self):
-        """
-        Fetches the latest detailed weather and environmental data for the current city,
-        and updates the app's GUI elements (temperature, humidity, wind, UV index, etc.)
-        accordingly. Handles the case when no data is found by notifying via console output.
-        """
-        city = self.city_var.get()
-        data = get_detailed_environmental_data(city)
-        if not data:
-            print("No weather data found")
-            return
 
-
-# Starts the WeatherApp when called from the entrypoint.
+# Entrypoint for app
 def run_app():
     app = WeatherApp()
     app.run()
