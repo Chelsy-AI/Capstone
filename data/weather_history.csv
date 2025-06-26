@@ -1,0 +1,129 @@
+timestamp,city,temperature,description
+2025-06-24 17:57,London,67.44,few clouds
+2025-06-24 18:33,London,66.92,clear sky
+2025-06-24 18:33,London,66.92,clear sky
+2025-06-24 18:33,New York,99.27,clear sky
+2025-06-24 19:37,London,65.37,clear sky
+2025-06-24 19:47,Toronto,92.43,clear sky
+2025-06-24 19:48,London,65.34,clear sky
+2025-06-24 19:49,London,65.32,clear sky
+2025-06-24 19:50,Toronto,92.43,clear sky
+2025-06-24 20:01,London,65.17,clear sky
+2025-06-24 20:48,London,64.76,clear sky
+2025-06-24 20:49,London,64.76,clear sky
+2025-06-24 20:51,Cadiz,60.82,clear sky
+2025-06-24 20:56,California,87.03,clear sky
+2025-06-24 20:57,London,64.45,clear sky
+2025-06-25 13:56,London,80.35,few clouds
+2025-06-25 16:08,New York,97.79,few clouds
+2025-06-25 16:09,New York,97.79,few clouds
+2025-06-25 16:09,New York,97.79,few clouds
+2025-06-25 16:09,London,76.96,scattered clouds
+2025-06-25 16:09,Toronto,82.06,scattered clouds
+2025-06-25 16:12,New York,98.17,scattered clouds
+2025-06-25 16:18,New York,98.17,scattered clouds
+2025-06-25 16:19,London,76.33,scattered clouds
+2025-06-25 16:22,New York,98.17,scattered clouds
+2025-06-25 16:22,London,76.33,scattered clouds
+2025-06-25 16:31,New York,98.1,scattered clouds
+2025-06-25 16:31,London,75.92,scattered clouds
+2025-06-25 16:32,New York,98.51,scattered clouds
+2025-06-25 16:50,New York,97.84,scattered clouds
+2025-06-25 16:53,New York,97.93,scattered clouds
+2025-06-25 16:53,London,75.6,scattered clouds
+2025-06-25 16:56,New York,97.93,scattered clouds
+2025-06-25 16:57,London,75.6,scattered clouds
+2025-06-25 17:31,New York,96.98,few clouds
+2025-06-25 17:31,New York,96.98,few clouds
+2025-06-25 17:31,New York,96.98,few clouds
+2025-06-25 17:42,New York,95.86,few clouds
+2025-06-25 17:42,New York,95.86,few clouds
+2025-06-25 17:42,London,72.88,scattered clouds
+2025-06-25 17:42,London,72.88,scattered clouds
+2025-06-25 17:42,London,72.88,scattered clouds
+2025-06-25 17:42,London,72.88,scattered clouds
+2025-06-25 17:42,London,72.88,scattered clouds
+2025-06-25 17:42,London,72.88,scattered clouds
+2025-06-25 17:50,New York,95.74,few clouds
+2025-06-25 17:51,London,71.73,scattered clouds
+2025-06-25 17:51,London,71.73,scattered clouds
+2025-06-25 17:51,London,71.73,scattered clouds
+2025-06-25 17:51,New York,95.74,few clouds
+2025-06-25 17:54,New York,95.74,few clouds
+2025-06-25 17:55,New York,95.74,few clouds
+2025-06-25 17:55,New York,95.72,few clouds
+2025-06-25 18:42,New York,95.49,few clouds
+2025-06-25 19:06,New York,93.58,few clouds
+2025-06-25 19:06,London,70.16,scattered clouds
+2025-06-25 19:15,New York,91.8,clear sky
+2025-06-25 19:15,New York,91.8,clear sky
+2025-06-25 19:15,New York,91.8,clear sky
+2025-06-25 19:16,Delhi,86.09,mist
+2025-06-25 19:16,Delhi,86.09,mist
+2025-06-25 19:25,New York,91.58,clear sky
+2025-06-25 19:25,London,69.44,scattered clouds
+2025-06-25 19:25,London,69.44,scattered clouds
+2025-06-25 19:25,London,69.44,scattered clouds
+2025-06-25 19:25,London,69.44,scattered clouds
+2025-06-25 19:26,London,69.44,scattered clouds
+2025-06-25 19:26,London,69.44,scattered clouds
+2025-06-25 19:28,New York,91.56,clear sky
+2025-06-25 19:28,London,69.75,scattered clouds
+2025-06-25 19:30,New York,91.56,clear sky
+2025-06-25 19:31,New York,91.58,clear sky
+2025-06-25 19:36,New York,91.56,clear sky
+2025-06-25 19:36,London,69.75,scattered clouds
+2025-06-25 19:36,London,69.75,scattered clouds
+2025-06-25 19:37,Delhi,86.09,mist
+2025-06-25 19:45,New York,90.32,clear sky
+2025-06-25 19:46,New York,90.32,clear sky
+2025-06-25 19:46,New York,90.32,clear sky
+2025-06-25 19:46,New York,90.32,clear sky
+2025-06-25 19:46,New York,90.32,clear sky
+2025-06-25 19:46,New York,90.32,clear sky
+2025-06-25 19:46,London,69.26,broken clouds
+2025-06-25 19:46,London,69.26,broken clouds
+2025-06-25 19:46,London,69.26,broken clouds
+2025-06-25 19:46,London,69.26,broken clouds
+2025-06-25 19:46,London,69.26,broken clouds
+2025-06-25 19:46,London,69.26,broken clouds
+2025-06-25 19:46,London,69.26,broken clouds
+2025-06-25 19:51,New York,91.45,clear sky
+2025-06-25 19:52,New York,91.45,clear sky
+2025-06-25 19:52,New York,91.45,clear sky
+2025-06-25 19:52,New York,91.45,clear sky
+2025-06-25 19:52,New York,91.45,clear sky
+2025-06-25 19:52,New York,91.45,clear sky
+2025-06-25 19:52,New York,91.45,clear sky
+2025-06-25 19:52,New York,91.45,clear sky
+2025-06-25 19:52,New York,91.45,clear sky
+2025-06-25 19:55,New York,91.45,clear sky
+2025-06-25 19:55,New York,91.45,clear sky
+2025-06-25 19:55,New York,91.45,clear sky
+2025-06-25 20:01,New York,91.45,clear sky
+2025-06-25 20:01,New York,91.45,clear sky
+2025-06-25 20:01,London,69.01,broken clouds
+2025-06-25 20:07,New York,90.54,clear sky
+2025-06-25 20:08,London,68.68,broken clouds
+2025-06-25 20:08,London,68.68,broken clouds
+2025-06-25 20:08,London,68.68,broken clouds
+2025-06-25 20:08,London,68.68,broken clouds
+2025-06-25 20:08,Toronto,80.15,clear sky
+2025-06-25 20:08,Toronto,80.15,clear sky
+2025-06-25 20:08,Toronto,80.15,clear sky
+2025-06-25 20:09,Toronto,80.15,clear sky
+2025-06-25 20:09,Toronto,80.15,clear sky
+2025-06-25 20:09,Toronto,80.15,clear sky
+2025-06-25 20:09,Toronto,80.15,clear sky
+2025-06-25 20:09,Toronto,80.15,clear sky
+2025-06-25 20:09,Toronto,80.15,clear sky
+2025-06-25 20:09,Toronto,80.15,clear sky
+2025-06-25 20:14,New York,90.14,clear sky
+2025-06-25 20:14,New York,90.14,clear sky
+2025-06-25 20:14,New York,90.14,clear sky
+2025-06-25 20:14,New York,90.14,clear sky
+2025-06-25 20:26,New York,32.3,clear sky
+2025-06-25 20:26,London,20.36,broken clouds
+2025-06-25 20:28,New York,32.65,clear sky
+2025-06-25 20:28,New York,32.65,clear sky
+2025-06-25 20:28,London,20.36,broken clouds
