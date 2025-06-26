@@ -1,6 +1,6 @@
 import requests
 from datetime import datetime, timedelta
-from history_tracker.geocode import get_lat_lon
+from features.history_tracker.geocode import get_lat_lon
 
 
 def fetch_world_history(city):

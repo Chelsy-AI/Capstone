@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from history_tracker.display import show_weather_history
+from features.history_tracker.display import show_weather_history
 from .api import fetch_weather
 from .processor import display_weather
 from .storage import save_weather

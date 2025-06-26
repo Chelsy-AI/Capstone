@@ -1,4 +1,4 @@
-from history_tracker.api import fetch_world_history
+from features.history_tracker.api import fetch_world_history
 
 def show_weather_history(text_widget, city="New York"):
     text_widget.delete('1.0', "end")

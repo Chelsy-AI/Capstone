@@ -2,16 +2,19 @@ import customtkinter as ctk
 from PIL import Image, ImageTk
 
 def build_gui(app):
+    # Clear previous widgets
     for widget in app.root.winfo_children():
         widget.destroy()
 
     ctk.set_appearance_mode("System")
     ctk.set_default_color_theme("blue")
-    ctk.CTkLabel(app.root, text="Label", text_color=app.theme["fg"], fg_color="transparent")
-    ctk.CTkEntry(app.root, text_color=app.theme["fg"], fg_color=app.theme["entry_bg"])
-    ctk.CTkButton(app.root, text="Search", fg_color=app.theme["button_bg"], text_color=app.theme["fg"])
 
+    # Set root background color
     app.root.configure(fg_color=app.theme["bg"])
+
+    # Create a frame to hold feature boxes horizontally
+    parent_frame = ctk.CTkFrame(app.root, fg_color=app.theme["bg"])
+    parent_frame.pack(pady=10, fill="x")
 
     # Toggle Theme Button
     theme_btn = ctk.CTkButton(
@@ -49,75 +52,35 @@ def build_gui(app):
     if not hasattr(app, "weather_icon_img_original"):
         # Placeholder transparent 64x64 PNG if no icon loaded yet
         app.weather_icon_img_original = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
-    
-    app.humidity_label = ctk.CTkLabel(
-        parent_frame,
-        text="Humidity",
-        text_color=app.theme["text_fg"],
-        fg_color=app.theme["text_bg"]
-    )
-    app.humidity_label.pack()  # or .grid(...)
 
-    app.wind_label = ctk.CTkLabel(
-        parent_frame,
-        text="Wind Speed",
-        text_color=app.theme["text_fg"],
-        fg_color=app.theme["text_bg"]
-    )
-    app.wind_label.pack()
+    # Feature boxes: Each is a vertical frame inside parent_frame
+    features = [
+        ("Hum", "💧", "humidity_label"),
+        ("Wind", "🌬", "wind_label"),
+        ("Press", "🔵", "pressure_label"),
+        ("Vis", "👁️", "visibility_label"),
+        ("UV", "☀️", "uv_label"),
+        ("Pollen", "🌸", "pollen_label"),
+        ("Bug", "🐞", "bug_label"),
+        ("Precip", "☔", "precipitation_label"),
+    ]
 
-    app.pressure_label = ctk.CTkLabel(
-        parent_frame,
-        text="Pressure",
-        text_color=app.theme["text_fg"],
-        fg_color=app.theme["text_bg"]
-    )
-    app.pressure_label.pack()
+    for fname, icon, attr_name in features:
+        frame = ctk.CTkFrame(parent_frame, width=80, height=100, fg_color=app.theme["text_bg"])
+        frame.pack(side="left", padx=5)
 
-    app.visibility_label = ctk.CTkLabel(
-        parent_frame,
-        text="Visibility",
-        text_color=app.theme["text_fg"],
-        fg_color=app.theme["text_bg"]
-    )
-    app.visibility_label.pack()
+        label_name = ctk.CTkLabel(frame, text=fname, text_color=app.theme["text_fg"], font=("Arial", 14))
+        label_name.pack(pady=(5,0))
 
-    app.uv_label = ctk.CTkLabel(
-        parent_frame,
-        text="UV Index",
-        text_color=app.theme["text_fg"],
-        fg_color=app.theme["text_bg"]
-    )
-    app.uv_label.pack()
+        label_icon = ctk.CTkLabel(frame, text=icon, font=("Arial", 24))
+        label_icon.pack()
 
-    app.pollen_label = ctk.CTkLabel(
-        parent_frame,
-        text="Pollen Count",
-        text_color=app.theme["text_fg"],
-        fg_color=app.theme["text_bg"]
-    )
-    app.pollen_label.pack()
+        label_value = ctk.CTkLabel(frame, text="", text_color=app.theme["text_fg"], font=("Arial", 16))
+        label_value.pack(pady=(0,5))
 
-    app.bug_label = ctk.CTkLabel(
-        parent_frame,
-        text="Bug Index",
-        text_color=app.theme["text_fg"],
-        fg_color=app.theme["text_bg"]
-    )
-    app.bug_label.pack()
+        setattr(app, attr_name, label_value)  # dynamically create label attributes on app
 
-    app.precipitation_label = ctk.CTkLabel(
-        parent_frame,
-        text="Precipitation",
-        text_color=app.theme["text_fg"],
-        fg_color=app.theme["text_bg"]
-    )
-    app.precipitation.pack()
-
-    app.icon_label = ctk.CTkLabel(app.root, text="")
-    app.icon_label.pack()
-
-
+    # Rotation function for icon
     def rotate_icon():
         rotated = app.weather_icon_img_original.rotate(app.icon_rotation_angle)
         app.weather_icon_img = ImageTk.PhotoImage(rotated)
@@ -136,7 +99,6 @@ def build_gui(app):
         cursor="hand2"
     )
     app.temp_label.pack(pady=5)
-
     app.temp_label.bind("<Button-1>", lambda e: toggle_unit(app))
 
     # Description Label
