@@ -1,8 +1,6 @@
 import customtkinter as ctk
 from features.history_tracker.display import show_weather_history
-from .api import fetch_weather
-from .processor import display_weather
-from .storage import save_weather
+from .api import get_basic_weather_from_weatherdb
 from .error_handler import handle_errors
 from .theme import LIGHT_THEME, DARK_THEME
 from .gui import build_gui
@@ -10,9 +8,12 @@ from datetime import datetime
 import requests
 from PIL import Image, ImageTk
 from io import BytesIO
+from .api import get_detailed_environmental_data
+
 
 
 class WeatherApp:
+    # Initializes the WeatherApp with GUI, default city, and theme.
     def __init__(self):
         self.root = ctk.CTk()
         self.theme = LIGHT_THEME
@@ -24,19 +25,23 @@ class WeatherApp:
         self.root.configure(fg_color=self.theme["bg"])
 
         build_gui(self)
-        self.fetch_and_display()
+        self.update_weather()
 
+    # Toggles between light and dark theme and rebuilds the UI.
     def toggle_theme(self):
         self.theme = DARK_THEME if self.theme == LIGHT_THEME else LIGHT_THEME
         build_gui(self)
 
-    def fetch_and_display(self):
+    # Fetches and displays the current weather data for the selected city.
+    def update_weather(self):
         city = self.city_var.get()
-        data, error = fetch_weather(city)
+        data, error = get_basic_weather_from_weatherdb(city)
+
         if error:
             handle_errors(error)
             return
 
+        # --- Temperature & Description ---
         temp_c = data.get("main", {}).get("temp")
         weather_list = data.get("weather", [])
         desc = weather_list[0].get("description") if weather_list else "No description"
@@ -51,7 +56,7 @@ class WeatherApp:
         elif self.unit == "C":
             display_temp = f"{temp_c:.1f} °C"
         else:
-            temp_f = (temp_c * 9/5) + 32
+            temp_f = (temp_c * 9 / 5) + 32
             display_temp = f"{temp_f:.1f} °F"
 
         self.temp_label.configure(text=display_temp)
@@ -67,49 +72,21 @@ class WeatherApp:
 
         self.update_label.configure(text=f"Updated at {last_update}")
 
-        # --- Icon loading and animation ---
-
+        # --- Weather Icon ---
         icon_code = weather_list[0].get("icon") if weather_list else None
+        self.set_weather_icon(icon_code)
 
-        if icon_code:
-            try:
-                icon_url = f"http://openweathermap.org/img/wn/{icon_code}@2x.png"
-                response = requests.get(icon_url)
-                response.raise_for_status()
-                img_data = response.content
-                pil_img = Image.open(BytesIO(img_data)).convert("RGBA")
-                self.weather_icon_img_original = pil_img
-            except Exception:
-                self.weather_icon_img_original = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
-        else:
-            self.weather_icon_img_original = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
-
-        # Start rotation animation
-        if hasattr(self, "animation_angle"):
-            self.animation_angle = (self.animation_angle + 5) % 360
-        else:
-            self.animation_angle = 0
-
-        rotated = self.weather_icon_img_original.rotate(self.animation_angle, resample=Image.BICUBIC, expand=True)
-        icon_image = ImageTk.PhotoImage(rotated)
-
-        self.icon_label.configure(image=icon_image, text="")  # no text on icon label
-        self.icon_label.image = icon_image  # prevent garbage collection
-
-        # schedule next rotation frame after 50 ms
-        self.root.after(50, self.fetch_and_display)
-        
-        # Extract additional weather information
+        # --- Extra Weather Info ---
         humidity = data.get("main", {}).get("humidity")
         wind_speed = data.get("wind", {}).get("speed")
         pressure = data.get("main", {}).get("pressure")
         visibility = data.get("visibility")
-        uv_index = data.get("uv_index")  # Assuming UV index is part of the data
-        pollen_count = data.get("pollen_count")  # Assuming pollen count is part of the data
-        bug_index = data.get("bug_index")  # Assuming bug index is part of the data
-        precipitation = data.get("precipitation")  # Or the correct key depending on your API
 
-        # Update labels with new data
+        uv_index = data.get("uv_index")  # May not be present
+        pollen_count = data.get("pollen_count")
+        bug_index = data.get("bug_index")
+        precipitation = data.get("precipitation")
+
         if humidity is not None:
             self.humidity_label.configure(text=f"Humidity: {humidity}%")
         if wind_speed is not None:
@@ -117,7 +94,7 @@ class WeatherApp:
         if pressure is not None:
             self.pressure_label.configure(text=f"Pressure: {pressure} hPa")
         if visibility is not None:
-           self.visibility_label.configure(text=f"Visibility: {visibility} m")
+            self.visibility_label.configure(text=f"Visibility: {visibility} m")
         if uv_index is not None:
             self.uv_label.configure(text=f"UV Index: {uv_index}")
         if pollen_count is not None:
@@ -127,15 +104,48 @@ class WeatherApp:
         if precipitation is not None:
             self.precipitation.configure(text=f"Precipitation: {precipitation}")
 
+    # Downloads and sets the weather icon from OpenWeatherMap or uses a blank fallback.
+    def set_weather_icon(self, icon_code):
+        if icon_code:
+            try:
+                icon_url = f"http://openweathermap.org/img/wn/{icon_code}@2x.png"
+                response = requests.get(icon_url)
+                response.raise_for_status()
+                img_data = response.content
+                pil_img = Image.open(BytesIO(img_data)).convert("RGBA")
+            except Exception:
+                pil_img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+        else:
+            pil_img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
 
+        icon_image = ImageTk.PhotoImage(pil_img)
+        self.icon_label.configure(image=icon_image, text="")
+        self.icon_label.image = icon_image  # Prevent garbage collection
+
+    # Loads and displays historical weather data for the entered city.
     def show_weather_history(self):
         city = self.city_var.get().strip()
         if city:
             show_weather_history(self.history_text, city)
 
+    # Runs the Tkinter main loop.
     def run(self):
         self.root.mainloop()
 
+    def update_weather_display(self):
+        """
+        Fetches the latest detailed weather and environmental data for the current city,
+        and updates the app's GUI elements (temperature, humidity, wind, UV index, etc.)
+        accordingly. Handles the case when no data is found by notifying via console output.
+        """
+        city = self.city_var.get()
+        data = get_detailed_environmental_data(city)
+        if not data:
+            print("No weather data found")
+            return
+
+
+# Starts the WeatherApp when called from the entrypoint.
 def run_app():
     app = WeatherApp()
     app.run()

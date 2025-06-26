@@ -1,22 +1,26 @@
+# core/gui.py
+
 import customtkinter as ctk
 from PIL import Image, ImageTk
+from customtkinter import CTkImage
+from core.api import get_detailed_environmental_data
+from core.processor import extract_weather_details
 
+# Builds the complete GUI layout and attaches all components to the main app window
 def build_gui(app):
-    # Clear previous widgets
+    # --- Clear previous widgets (for theme toggling) ---
     for widget in app.root.winfo_children():
         widget.destroy()
 
     ctk.set_appearance_mode("System")
     ctk.set_default_color_theme("blue")
-
-    # Set root background color
     app.root.configure(fg_color=app.theme["bg"])
 
-    # Create a frame to hold feature boxes horizontally
+    # --- Frame to hold horizontal weather feature boxes ---
     parent_frame = ctk.CTkFrame(app.root, fg_color=app.theme["bg"])
     parent_frame.pack(pady=10, fill="x")
 
-    # Toggle Theme Button
+    # --- Theme Toggle Button ---
     theme_btn = ctk.CTkButton(
         master=app.root,
         text="Toggle Theme",
@@ -27,7 +31,7 @@ def build_gui(app):
     )
     theme_btn.pack(pady=10)
 
-    # City Entry
+    # --- City Input Field ---
     app.city_entry = ctk.CTkEntry(
         master=app.root,
         textvariable=app.city_var,
@@ -41,19 +45,18 @@ def build_gui(app):
     app.city_entry.pack(pady=(10, 20))
     app.city_entry.bind("<Return>", lambda e: app.fetch_and_display())
 
-    # Weather Icon Label
+    # --- Weather Icon Placeholder ---
     app.icon_label = ctk.CTkLabel(app.root, text="", image=None)
-    app.icon_label.configure(text="")  # Ensure no default text shows
+    app.icon_label.configure(text="")  # Avoid any default text
     app.icon_label.pack(pady=5)
 
-    # Initialize rotation angle and image if not present
+    # Initialize icon image and angle if not already defined
     if not hasattr(app, "icon_rotation_angle"):
         app.icon_rotation_angle = 0
     if not hasattr(app, "weather_icon_img_original"):
-        # Placeholder transparent 64x64 PNG if no icon loaded yet
         app.weather_icon_img_original = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
 
-    # Feature boxes: Each is a vertical frame inside parent_frame
+    # --- Create Feature Boxes for Weather Stats ---
     features = [
         ("Hum", "💧", "humidity_label"),
         ("Wind", "🌬", "wind_label"),
@@ -78,19 +81,33 @@ def build_gui(app):
         label_value = ctk.CTkLabel(frame, text="", text_color=app.theme["text_fg"], font=("Arial", 16))
         label_value.pack(pady=(0,5))
 
-        setattr(app, attr_name, label_value)  # dynamically create label attributes on app
+        setattr(app, attr_name, label_value)
 
-    # Rotation function for icon
+    # --- Fetch current weather data and populate labels ---
+        data = get_detailed_environmental_data(app.city_var.get())
+    if data:
+        weather = extract_weather_details(data)
+        app.humidity_label.configure(text=f"Humidity: {weather['humidity']}%")
+        app.wind_label.configure(text=f"Wind: {weather['wind']} km/h")
+        app.pressure_label.configure(text=f"Pressure: {weather['pressure']} hPa")
+        app.visibility_label.configure(text=f"Visibility: {weather['visibility']} m")
+        app.uv_label.configure(text=f"UV Index: {weather['uv']}")
+        app.precipitation_label.configure(text=f"Precipitation: {weather['precipitation']} mm")
+        app.pollen_label.configure(text=f"Pollen: {weather['pollen']}")
+    else:
+        print("No weather data found")
+
+    # --- Icon Rotation Animation ---
     def rotate_icon():
         rotated = app.weather_icon_img_original.rotate(app.icon_rotation_angle)
-        app.weather_icon_img = ImageTk.PhotoImage(rotated)
+        app.weather_icon_img = CTkImage(light_image=rotated, size=(64, 64))
         app.icon_label.configure(image=app.weather_icon_img)
         app.icon_rotation_angle = (app.icon_rotation_angle + 10) % 360
         app.root.after(100, rotate_icon)
 
     rotate_icon()
 
-    # Temperature Label
+    # --- Temperature Label with Unit Toggle on Click ---
     app.temp_label = ctk.CTkLabel(
         master=app.root,
         text="",
@@ -101,7 +118,7 @@ def build_gui(app):
     app.temp_label.pack(pady=5)
     app.temp_label.bind("<Button-1>", lambda e: toggle_unit(app))
 
-    # Description Label
+    # --- Weather Description Label ---
     app.desc_label = ctk.CTkLabel(
         master=app.root,
         text="",
@@ -110,7 +127,7 @@ def build_gui(app):
     )
     app.desc_label.pack(pady=5)
 
-    # Last Update Label
+    # --- Last Updated Timestamp Label ---
     app.update_label = ctk.CTkLabel(
         master=app.root,
         text="",
@@ -119,7 +136,7 @@ def build_gui(app):
     )
     app.update_label.pack(pady=5)
 
-    # History Textbox
+    # --- History Text Display Box ---
     app.history_text = ctk.CTkTextbox(
         master=app.root,
         height=150,
@@ -129,7 +146,7 @@ def build_gui(app):
     )
     app.history_text.pack(pady=10)
 
-    # Show History Button
+    # --- Show History Button ---
     history_btn = ctk.CTkButton(
         master=app.root,
         text="Show History",
@@ -140,9 +157,10 @@ def build_gui(app):
     )
     history_btn.pack(pady=10)
 
-    # Initial fetch & display
-    app.fetch_and_display()
+    # --- Initial Fetch to Populate UI ---
+    app.update_weather_display()
 
+# Toggles temperature unit between Celsius and Fahrenheit and updates display
 def toggle_unit(app):
     app.unit = "F" if app.unit == "C" else "C"
-    app.fetch_and_display()
+    app.update_weather_display()
