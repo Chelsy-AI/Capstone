@@ -2,12 +2,11 @@ import customtkinter as ctk
 from PIL import Image
 from io import BytesIO
 import requests
+from datetime import datetime
 
 from .theme import LIGHT_THEME, DARK_THEME
-from .utils import toggle_unit, kelvin_to_celsius, kelvin_to_fahrenheit, format_temperature
 from core.gui import build_gui
-import core.api as weather_api
-
+from core.api import get_current_weather
 
 class WeatherApp(ctk.CTk):
     def __init__(self):
@@ -21,19 +20,23 @@ class WeatherApp(ctk.CTk):
 
         # State vars
         self.city_var = ctk.StringVar(value="New York")
-        self.unit = "C"
+        self.unit = "C"  # Current temperature unit, toggled by clicking label
+
+        # Store temps in both units after fetch
+        self.temp_c = None
+        self.temp_f = None
 
         # Main parent frame for theme changes
         self.parent_frame = ctk.CTkFrame(self, fg_color=self.theme["bg"])
         self.parent_frame.pack(expand=True, fill="both", padx=20, pady=20)
 
-        # Hold references to metric value labels to update later
+        # Hold references to metric value labels
         self.metric_value_labels = {}
 
         # Build GUI widgets
         build_gui(self)
 
-        # Fetch weather and history initially
+        # Initial data load
         self.update_weather()
         self.show_weather_history()
 
@@ -43,7 +46,7 @@ class WeatherApp(ctk.CTk):
         self.configure(fg_color=self.theme["bg"])
         self.parent_frame.configure(fg_color=self.theme["bg"])
 
-        # Rebuild GUI to apply theme
+        # Rebuild GUI for theme update
         build_gui(self)
 
         # Refresh displayed data
@@ -51,55 +54,53 @@ class WeatherApp(ctk.CTk):
         self.show_weather_history()
 
     def toggle_temp_unit(self, event=None):
-        self.unit = toggle_unit(self.unit)
-        self.update_weather()
+        # Toggle temperature unit C <-> F on label click
+        self.unit = "F" if self.unit == "C" else "C"
+        self.update_temperature_label()
+
+    def update_temperature_label(self):
+        if self.temp_c is None:
+            self.temp_label.configure(text="N/A")
+            return
+
+        if self.unit == "C":
+            self.temp_label.configure(text=f"{self.temp_c} °C")
+        else:
+            self.temp_label.configure(text=f"{self.temp_f} °F")
 
     def update_weather(self):
         city = self.city_var.get().strip() or "New York"
-        data, error = weather_api.get_basic_weather_from_weatherdb(city)
+        data = get_current_weather(city)
 
-        if error or not data:
-            # Show N/A or error message in labels
+        if data.get("error"):
+            self.temp_c = None
+            self.temp_f = None
             self.temp_label.configure(text="N/A")
-            self.desc_label.configure(text="Error fetching data")
+            self.desc_label.configure(text=data["error"])
             for label in self.metric_value_labels.values():
                 label.configure(text="N/A")
             self.icon_label.configure(image=None)
+            self.icon_label.image = None
             self.update_label.configure(text="")
             return
 
-        # Temperature in Celsius from API (assume API returns Celsius)
-        temp_c = data.get("main", {}).get("temp")
-        weather_list = data.get("weather", [])
-        desc = weather_list[0].get("description") if weather_list else ""
-        update_time = data.get("dt")
-
-        # Convert temperature based on unit
-        if temp_c is None:
-            display_temp = "N/A"
+        temp_c = data.get("temperature")
+        if temp_c is not None:
+            self.temp_c = round(temp_c, 1)
+            self.temp_f = round((temp_c * 9 / 5) + 32, 1)
         else:
-            if self.unit == "C":
-                display_temp = f"{temp_c:.1f} °C"
-            else:
-                temp_f = (temp_c * 9 / 5) + 32
-                display_temp = f"{temp_f:.1f} °F"
+            self.temp_c = None
+            self.temp_f = None
 
-        self.temp_label.configure(text=display_temp)
-        self.desc_label.configure(text=desc.capitalize() if desc else "No description")
+        self.update_temperature_label()
 
-        # Format last update time
-        if update_time:
-            try:
-                from datetime import datetime
-                last_update = datetime.utcfromtimestamp(update_time).strftime("%Y-%m-%d %H:%M UTC")
-            except Exception:
-                last_update = "Unknown"
-        else:
-            last_update = "Unknown"
-        self.update_label.configure(text=f"Updated at {last_update}")
+        description = data.get("description", "No description")
+        self.desc_label.configure(text=description)
 
-        # Load weather icon from OpenWeatherMap
-        icon_code = weather_list[0].get("icon") if weather_list else None
+        now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+        self.update_label.configure(text=f"Updated at {now_str}")
+
+        icon_code = data.get("icon")
         if icon_code:
             try:
                 icon_url = f"http://openweathermap.org/img/wn/{icon_code}@2x.png"
@@ -116,31 +117,23 @@ class WeatherApp(ctk.CTk):
             self.icon_label.configure(image=None)
             self.icon_label.image = None
 
-        main = data.get("main", {})
-        wind = data.get("wind", {})
-        visibility = data.get("visibility")
-
-        # Update metric labels safely
         metrics = {
-            "humidity": f"{main.get('humidity')}%" if main.get("humidity") is not None else "N/A",
-            "wind": f"{wind.get('speed')} m/s" if wind.get("speed") is not None else "N/A",
-            "pressure": f"{main.get('pressure')} hPa" if main.get("pressure") is not None else "N/A",
-            "visibility": f"{visibility} m" if visibility is not None else "N/A",
-            # You can add UV and Precipitation if available from another source
-            "uv": "N/A",
-            "precipitation": "N/A",
-        }
-
+           "humidity": f"{data.get('humidity')}%" if data.get("humidity") is not None else "N/A",
+           "wind": f"{data.get('wind_speed')} m/s" if data.get("wind_speed") is not None else "N/A",
+           "pressure": f"{data.get('pressure')} hPa" if data.get("pressure") is not None else "N/A",
+           "visibility": f"{data.get('visibility')} m" if data.get("visibility") is not None else "N/A",
+           "uv": str(data.get("uv_index")) if data.get("uv_index") is not None else "N/A",
+           "precipitation": f"{data.get('precipitation')} mm" if data.get("precipitation") is not None else "N/A",
+        }   
         for key, val in metrics.items():
             label = self.metric_value_labels.get(key)
             if label:
                 label.configure(text=val)
 
     def show_weather_history(self):
-        # Import here to avoid circular imports
         from features.history_tracker.display import insert_temperature_history_as_grid
 
-        # Remove existing history frame if exists
+        # Destroy old history frame if exists
         if hasattr(self, "history_frame") and self.history_frame.winfo_exists():
             self.history_frame.destroy()
 

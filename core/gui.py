@@ -1,7 +1,6 @@
 import customtkinter as ctk
+import tkinter as tk  # for StringVar, if needed
 from core.theme import LIGHT_THEME, DARK_THEME
-from core.utils import toggle_unit, toggle_theme
-
 
 def build_gui(app):
     # Clear previous widgets (for theme toggling)
@@ -11,9 +10,9 @@ def build_gui(app):
     ctk.set_appearance_mode(ctk.get_appearance_mode())
     app.configure(fg_color=app.theme["bg"])
 
-    # Create main frame
+    # Main parent frame (recreate)
     app.parent_frame = ctk.CTkFrame(app, fg_color=app.theme["bg"])
-    app.parent_frame.pack(pady=10, fill="x")
+    app.parent_frame.pack(expand=True, fill="both", padx=20, pady=20)
 
     # Theme toggle button
     theme_btn = ctk.CTkButton(
@@ -44,10 +43,13 @@ def build_gui(app):
     app.icon_label = ctk.CTkLabel(app, text="", image=None)
     app.icon_label.pack(pady=5)
 
-    # Create metric labels dictionary
+    # Feature icons and labels container
+    features_frame = ctk.CTkFrame(app.parent_frame, fg_color=app.theme["bg"])
+    features_frame.pack(pady=(10, 20))
+
+    # Metric value labels dictionary reset
     app.metric_value_labels = {}
 
-    # Feature icons and labels
     features = [
         ("humidity", "💧", "Humidity"),
         ("wind", "💨", "Wind"),
@@ -58,7 +60,7 @@ def build_gui(app):
     ]
 
     for key, icon, label_text in features:
-        frame = ctk.CTkFrame(app.parent_frame, width=80, height=100, fg_color=app.theme["text_bg"])
+        frame = ctk.CTkFrame(features_frame, width=80, height=100, fg_color=app.theme["text_bg"])
         frame.pack(side="left", padx=5)
 
         label_title = ctk.CTkLabel(frame, text=label_text, text_color=app.theme["text_fg"], font=("Arial", 14))
@@ -70,19 +72,18 @@ def build_gui(app):
         value_label = ctk.CTkLabel(frame, text="--", text_color=app.theme["text_fg"], font=("Arial", 16))
         value_label.pack(pady=(0, 5))
 
-        # Store the label in the dictionary
         app.metric_value_labels[key] = value_label
 
-    # Temperature label (clickable to toggle units)
+    # Single clickable temperature label (toggles C/F)
     app.temp_label = ctk.CTkLabel(
         master=app,
-        text="",
+        text="--",
         font=("Arial", 32),
         text_color=app.theme["fg"],
         cursor="hand2"
     )
     app.temp_label.pack(pady=5)
-    app.temp_label.bind("<Button-1>", lambda e: toggle_unit(app))
+    app.temp_label.bind("<Button-1>", lambda e: app.toggle_temp_unit())
 
     # Description label
     app.desc_label = ctk.CTkLabel(
@@ -102,7 +103,7 @@ def build_gui(app):
     )
     app.update_label.pack(pady=5)
 
-    # History button
+    # Show history button
     app.show_history_button = ctk.CTkButton(
         master=app,
         text="Show History",
@@ -113,5 +114,5 @@ def build_gui(app):
     )
     app.show_history_button.pack(pady=(10, 10))
 
-    # Trigger first weather fetch
+    # Initial weather fetch (optional if you want on rebuild)
     app.update_weather()

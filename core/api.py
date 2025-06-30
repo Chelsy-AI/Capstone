@@ -9,7 +9,6 @@ load_dotenv()
 API_KEY = os.getenv("weatherdb_api_key")
 BASE_URL = os.getenv("weatherdb_base_url")
 
-# Resolve coordinates using Open-Meteo Geocoding API
 def resolve_coordinates_by_city(city_name):
     url = f"https://geocoding-api.open-meteo.com/v1/search?name={city_name}"
     response = requests.get(url)
@@ -20,7 +19,6 @@ def resolve_coordinates_by_city(city_name):
         return lat, lon
     return None, None
 
-# Basic weather from WeatherDB
 def get_basic_weather_from_weatherdb(city_name):
     try:
         params = {
@@ -36,7 +34,6 @@ def get_basic_weather_from_weatherdb(city_name):
     except Exception as e:
         return None, str(e)
 
-# Environmental data from Open-Meteo
 def get_detailed_environmental_data(city):
     lat, lon = get_lat_lon(city)
     if not lat or not lon:
@@ -54,7 +51,6 @@ def get_detailed_environmental_data(city):
         return resp.json()
     return None
 
-# Combined weather data used by app.py
 def get_current_weather(city):
     weather_data, err = get_basic_weather_from_weatherdb(city)
     detailed_data = get_detailed_environmental_data(city)
@@ -66,12 +62,27 @@ def get_current_weather(city):
             "wind_speed": None,
             "pressure": None,
             "icon": "❓",
-            "error": err or "Unknown error"
+            "error": err or "Unknown error",
+            "description": "No description"
         }
 
     main = weather_data.get("main", {})
     wind = weather_data.get("wind", {})
-    icon = weather_data.get("weather", [{}])[0].get("icon", "01d")
+    weather_list = weather_data.get("weather", [{}])
+    icon = weather_list[0].get("icon", "01d")
+    description = weather_list[0].get("description", "No description").capitalize()
+
+    uv_index = None
+    precipitation = None
+
+    if detailed_data:
+        uv_index_list = detailed_data.get("daily", {}).get("uv_index_max")
+        if uv_index_list and isinstance(uv_index_list, list) and len(uv_index_list) > 0:
+            uv_index = uv_index_list[0]
+
+        precipitation_list = detailed_data.get("daily", {}).get("precipitation_sum")
+        if precipitation_list and isinstance(precipitation_list, list) and len(precipitation_list) > 0:
+            precipitation = precipitation_list[0]
 
     return {
         "temperature": main.get("temp"),
@@ -80,7 +91,8 @@ def get_current_weather(city):
         "pressure": main.get("pressure"),
         "icon": icon,
         "visibility": detailed_data.get("current", {}).get("visibility") if detailed_data else None,
-        "uv_index": detailed_data.get("daily", {}).get("uv_index_max", [None])[0] if detailed_data else None,
-        "precipitation": detailed_data.get("daily", {}).get("precipitation_sum", [None])[0] if detailed_data else None,
-        "error": None
+        "uv_index": uv_index if uv_index is not None else "N/A",
+        "precipitation": precipitation if precipitation is not None else "N/A",
+        "error": None,
+        "description": description
     }
