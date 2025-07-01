@@ -3,13 +3,17 @@ import os
 from dotenv import load_dotenv
 from .geocode import get_lat_lon
 
-# Load environment variables
+# Load environment variables from .env file
 load_dotenv()
 
 API_KEY = os.getenv("weatherdb_api_key")
 BASE_URL = os.getenv("weatherdb_base_url")
 
 def resolve_coordinates_by_city(city_name):
+    """
+    Resolve latitude and longitude for a given city name
+    using the Open-Meteo geocoding API.
+    """
     url = f"https://geocoding-api.open-meteo.com/v1/search?name={city_name}"
     response = requests.get(url)
     data = response.json()
@@ -20,6 +24,10 @@ def resolve_coordinates_by_city(city_name):
     return None, None
 
 def get_basic_weather_from_weatherdb(city_name):
+    """
+    Fetch basic current weather data from weatherdb API.
+    Returns JSON data and error (if any).
+    """
     try:
         params = {
             "q": city_name,
@@ -35,6 +43,10 @@ def get_basic_weather_from_weatherdb(city_name):
         return None, str(e)
 
 def get_detailed_environmental_data(city):
+    """
+    Fetch detailed environmental data (humidity, wind, pressure, visibility,
+    UV index, precipitation) from Open-Meteo API for the given city.
+    """
     lat, lon = get_lat_lon(city)
     if not lat or not lon:
         return None
@@ -52,6 +64,11 @@ def get_detailed_environmental_data(city):
     return None
 
 def get_current_weather(city):
+    """
+    Combine basic weather and detailed environmental data for a city,
+    and return a dictionary of weather info including temperature, humidity,
+    wind speed, pressure, visibility, UV index, precipitation, and weather icon.
+    """
     weather_data, err = get_basic_weather_from_weatherdb(city)
     detailed_data = get_detailed_environmental_data(city)
 

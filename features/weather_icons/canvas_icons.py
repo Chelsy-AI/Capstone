@@ -1,10 +1,3 @@
-from .canvas_icons import draw_weather_icon, animate_weather_icon, clear_icon_canvas
-
-__all__ = [
-    "draw_weather_icon",
-    "animate_weather_icon",
-    "clear_icon_canvas",
-]
 import customtkinter as ctk
 
 # ──────────────────────────────────────────────────────────────────────────────

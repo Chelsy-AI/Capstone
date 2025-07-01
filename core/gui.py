@@ -1,20 +1,31 @@
 import customtkinter as ctk
-import tkinter as tk  # for StringVar, if needed
+import tkinter as tk  # for StringVar
 from core.theme import LIGHT_THEME, DARK_THEME
+from features.tomorrows_guess.display import create_tomorrow_guess_frame, update_tomorrow_guess_display
+from features.tomorrows_guess.predictor import get_tomorrows_prediction
+
 
 def build_gui(app):
-    # Clear previous widgets (for theme toggling)
+    """
+    Build the complete weather app GUI using customtkinter.
+    Clears all existing widgets before rebuilding (useful for theme toggling).
+    """
+
+    # --- Clear any previous widgets (e.g., for theme toggling) ---
     for widget in app.winfo_children():
         widget.destroy()
 
+    # Set appearance mode (light/dark)
     ctk.set_appearance_mode(ctk.get_appearance_mode())
+
+    # Set window background color
     app.configure(fg_color=app.theme["bg"])
 
-    # Main parent frame (recreate)
+    # --- Main container frame ---
     app.parent_frame = ctk.CTkFrame(app, fg_color=app.theme["bg"])
     app.parent_frame.pack(expand=True, fill="both", padx=20, pady=20)
 
-    # Theme toggle button
+    # --- Theme toggle button ---
     theme_btn = ctk.CTkButton(
         master=app,
         text="Toggle Theme",
@@ -25,7 +36,7 @@ def build_gui(app):
     )
     theme_btn.pack(pady=10)
 
-    # City entry
+    # --- City input field ---
     app.city_entry = ctk.CTkEntry(
         master=app,
         textvariable=app.city_var,
@@ -37,19 +48,20 @@ def build_gui(app):
         text_color=app.theme["fg"]
     )
     app.city_entry.pack(pady=(10, 20))
-    app.city_entry.bind("<Return>", lambda e: app.update_weather())
+    app.city_entry.bind("<Return>", lambda e: app.update_weather())  # Trigger update on Enter key
 
-    # Weather icon
+    # --- Main weather icon ---
     app.icon_label = ctk.CTkLabel(app, text="", image=None)
     app.icon_label.pack(pady=5)
 
-    # Feature icons and labels container
+    # --- Frame for all metric icons/labels ---
     features_frame = ctk.CTkFrame(app.parent_frame, fg_color=app.theme["bg"])
-    features_frame.pack(pady=(10, 20))
+    features_frame.pack(pady=(10, 20), fill="x")
 
-    # Metric value labels dictionary reset
+    # Initialize dictionary to store metric value labels
     app.metric_value_labels = {}
 
+    # Define weather metrics to display
     features = [
         ("humidity", "💧", "Humidity"),
         ("wind", "💨", "Wind"),
@@ -59,22 +71,48 @@ def build_gui(app):
         ("precipitation", "🌧️", "Precipitation"),
     ]
 
-    for key, icon, label_text in features:
-        frame = ctk.CTkFrame(features_frame, width=80, height=100, fg_color=app.theme["text_bg"])
-        frame.pack(side="left", padx=5)
+    # Configure equal spacing across all metric columns
+    features_frame.grid_columnconfigure(tuple(range(len(features))), weight=1, uniform="metrics")
 
-        label_title = ctk.CTkLabel(frame, text=label_text, text_color=app.theme["text_fg"], font=("Arial", 14))
+    # --- Create metric cards (icon + value) ---
+    for col, (key, icon, label_text) in enumerate(features):
+        frame = ctk.CTkFrame(
+            features_frame,
+            fg_color=app.theme["text_bg"],
+            corner_radius=8
+        )
+        frame.grid(row=0, column=col, padx=6, pady=5, sticky="nsew")  # Equal-sized cards
+
+        # Metric label (e.g., "Humidity")
+        label_title = ctk.CTkLabel(
+            frame,
+            text=label_text,
+            text_color=app.theme["text_fg"],
+            font=("Arial", 14)
+        )
         label_title.pack(pady=(5, 0))
 
-        label_icon = ctk.CTkLabel(frame, text=icon, font=("Arial", 24))
+        # Emoji icon for the metric
+        label_icon = ctk.CTkLabel(
+            frame,
+            text=icon,
+            font=("Arial", 24)
+        )
         label_icon.pack()
 
-        value_label = ctk.CTkLabel(frame, text="--", text_color=app.theme["text_fg"], font=("Arial", 16))
+        # Metric value (e.g., "45%")
+        value_label = ctk.CTkLabel(
+            frame,
+            text="--",
+            text_color=app.theme["text_fg"],
+            font=("Arial", 16)
+        )
         value_label.pack(pady=(0, 5))
 
+        # Save reference to label for live updates
         app.metric_value_labels[key] = value_label
 
-    # Single clickable temperature label (toggles C/F)
+    # --- Temperature display (clickable to toggle unit) ---
     app.temp_label = ctk.CTkLabel(
         master=app,
         text="--",
@@ -83,9 +121,9 @@ def build_gui(app):
         cursor="hand2"
     )
     app.temp_label.pack(pady=5)
-    app.temp_label.bind("<Button-1>", lambda e: app.toggle_temp_unit())
+    app.temp_label.bind("<Button-1>", lambda e: app.toggle_temp_unit())  # Toggle °C/°F on click
 
-    # Description label
+    # --- Weather description (e.g., "Sunny") ---
     app.desc_label = ctk.CTkLabel(
         master=app,
         text="",
@@ -94,7 +132,7 @@ def build_gui(app):
     )
     app.desc_label.pack(pady=5)
 
-    # Last update time label
+    # --- Last updated timestamp ---
     app.update_label = ctk.CTkLabel(
         master=app,
         text="",
@@ -103,16 +141,19 @@ def build_gui(app):
     )
     app.update_label.pack(pady=5)
 
-    # Show history button
+    # --- Button to show 7-day history ---
     app.show_history_button = ctk.CTkButton(
         master=app,
         text="Show History",
-        command=app.show_weather_history,
+        command=app.update_weather_history,
         fg_color=app.theme["button_bg"],
         text_color=app.theme["button_fg"],
         width=120
     )
     app.show_history_button.pack(pady=(10, 10))
 
-    # Initial weather fetch (optional if you want on rebuild)
+    # --- Tomorrow's Guess Frame ---
+    app.tomorrow_guess_frame = create_tomorrow_guess_frame(app.parent_frame, app.theme)
+
+    # --- Initial weather fetch (optional on rebuild) ---
     app.update_weather()

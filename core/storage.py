@@ -4,10 +4,13 @@ from datetime import datetime
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Saves weather data to a CSV file for historical tracking.
-# If the CSV file doesn't exist, it creates it and writes a header row.
-# Each entry includes timestamp, city name, temperature, and weather description.
+# Creates the CSV file with header row if it does not exist.
+# Each record stores timestamp, city name, temperature, and description.
 # ──────────────────────────────────────────────────────────────────────────────
 def save_weather(data, filepath="data/weather_history.csv"):
+    """
+    Append weather data entry to CSV file.
+    """
     file_exists = os.path.isfile(filepath)
 
     with open(filepath, "a", newline="") as csvfile:
