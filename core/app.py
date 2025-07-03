@@ -3,6 +3,7 @@ from PIL import Image
 from io import BytesIO
 import requests
 from datetime import datetime
+import threading
 
 from features.history_tracker.api import fetch_world_history
 from features.history_tracker.display import insert_temperature_history_as_grid
@@ -31,26 +32,35 @@ class WeatherApp(ctk.CTk):
         self.temp_f = None
         self.metric_value_labels = {}
 
-        self.parent_frame = None
+        # Icon image cache to avoid repeated downloads
+        self.icon_cache = {}
+
+        # Initialize widget placeholders as None (created in build_gui)
         self.history_frame = None
-        self.history_data = None
         self.temp_label = None
         self.desc_label = None
         self.update_label = None
         self.icon_label = None
         self.tomorrow_guess_frame = None
+        self.city_entry = None  # Will be assigned in build_gui
 
-        build_gui(self)
-        self.update_weather()
+        build_gui(self)  # Create all widgets and assign them
+
+        # Start weather update in background thread safely after GUI initialized
+        self.after_idle(lambda: threading.Thread(target=self.update_weather, daemon=True).start())
 
     def toggle_theme(self):
-        self.theme = DARK_THEME if self.theme == LIGHT_THEME else LIGHT_THEME
-        ctk.set_appearance_mode("dark" if self.theme == DARK_THEME else "light")
-        self.configure(fg_color=self.theme["bg"])
-        if self.parent_frame:
-            self.parent_frame.configure(fg_color=self.theme["bg"])
+        if self.theme == LIGHT_THEME:
+            self.theme = DARK_THEME
+            ctk.set_appearance_mode("dark")
+        else:
+            self.theme = LIGHT_THEME
+            ctk.set_appearance_mode("light")
 
+        # Rebuild entire GUI to apply new theme colors
         build_gui(self)
+
+        # Update the weather data display to refresh texts/images after rebuild
         self.update_weather()
 
     def toggle_temp_unit(self, event=None):
@@ -60,6 +70,9 @@ class WeatherApp(ctk.CTk):
         self.update_weather_history()
 
     def update_temperature_label(self):
+        if self.temp_label is None:
+            return  # Widget not ready yet
+
         if self.temp_c is None:
             self.temp_label.configure(text="N/A")
         elif self.unit == "C":
@@ -70,7 +83,7 @@ class WeatherApp(ctk.CTk):
     def update_weather(self):
         city = self.city_var.get().strip() or "New York"
 
-        # Fetch historical data and store it (for display only)
+        # Fetch historical data for history display
         self.history_data = fetch_world_history(city)
 
         # Fetch current weather
@@ -78,14 +91,19 @@ class WeatherApp(ctk.CTk):
         if data.get("error"):
             self.temp_c = None
             self.temp_f = None
-            self.temp_label.configure(text="N/A")
-            self.desc_label.configure(text=data["error"])
+            if self.temp_label:
+                self.temp_label.configure(text="N/A")
+            if self.desc_label:
+                self.desc_label.configure(text=data["error"])
             for label in self.metric_value_labels.values():
                 label.configure(text="N/A")
-            self.icon_label.configure(image=None)
-            self.icon_label.image = None
-            self.update_label.configure(text="")
-            update_tomorrow_guess_display(self.tomorrow_guess_frame, "N/A", "N/A", "N/A")
+            if self.icon_label:
+                self.icon_label.configure(image=None)
+                self.icon_label.image = None
+            if self.update_label:
+                self.update_label.configure(text="")
+            if self.tomorrow_guess_frame:
+                update_tomorrow_guess_display(self.tomorrow_guess_frame, "N/A", "N/A", "N/A")
             return
 
         temp_c = data.get("temperature")
@@ -96,26 +114,39 @@ class WeatherApp(ctk.CTk):
             self.temp_c = self.temp_f = None
 
         self.update_temperature_label()
-        self.desc_label.configure(text=data.get("description", "No description"))
-        self.update_label.configure(text=f"Updated at {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+
+        if self.desc_label:
+            self.desc_label.configure(text=data.get("description", "No description"))
+
+        if self.update_label:
+            self.update_label.configure(text=f"Updated at {datetime.now().strftime('%Y-%m-%d %H:%M')}")
 
         icon_code = data.get("icon")
-        if icon_code:
-            try:
-                url = f"http://openweathermap.org/img/wn/{icon_code}@2x.png"
-                response = requests.get(url)
-                response.raise_for_status()
-                pil_img = Image.open(BytesIO(response.content)).convert("RGBA")
-                icon_image = ctk.CTkImage(light_image=pil_img, size=(64, 64))
+        if icon_code and self.icon_label:
+            if icon_code in self.icon_cache:
+                icon_image = self.icon_cache[icon_code]
+            else:
+                try:
+                    url = f"http://openweathermap.org/img/wn/{icon_code}@2x.png"
+                    response = requests.get(url, timeout=10)
+                    response.raise_for_status()
+                    pil_img = Image.open(BytesIO(response.content)).convert("RGBA")
+                    icon_image = ctk.CTkImage(light_image=pil_img, size=(64, 64))
+                    self.icon_cache[icon_code] = icon_image
+                except Exception:
+                    icon_image = None
+
+            if icon_image:
                 self.icon_label.configure(image=icon_image)
                 self.icon_label.image = icon_image
-            except Exception:
+            else:
                 self.icon_label.configure(image=None)
                 self.icon_label.image = None
-        else:
+        elif self.icon_label:
             self.icon_label.configure(image=None)
             self.icon_label.image = None
 
+        # Update metric labels
         metrics = {
             "humidity": f"{data.get('humidity')}%" if data.get("humidity") is not None else "N/A",
             "wind": f"{data.get('wind_speed')} m/s" if data.get("wind_speed") is not None else "N/A",
@@ -130,17 +161,17 @@ class WeatherApp(ctk.CTk):
             if label:
                 label.configure(text=val)
 
-        # HERE: pass city string to prediction function, NOT history_data
-        self.update_tomorrow_prediction(city)
-        self.update_weather_history()
+        # Update tomorrow's prediction and weather history on main thread using after
+        self.after(0, lambda: self.update_tomorrow_prediction(city))
+        self.after(0, self.update_weather_history)
 
     def update_tomorrow_prediction(self, city=None):
         if city is None:
             city = self.city_var.get().strip()
 
-        # Defensive: check city is string
         if not isinstance(city, str) or city == "":
-            update_tomorrow_guess_display(self.tomorrow_guess_frame, "N/A", "N/A", "N/A")
+            if self.tomorrow_guess_frame:
+                update_tomorrow_guess_display(self.tomorrow_guess_frame, "N/A", "N/A", "N/A")
             return
 
         predicted_temp, confidence, accuracy = get_tomorrows_prediction(city)
@@ -153,33 +184,24 @@ class WeatherApp(ctk.CTk):
                 else f"{round((predicted_temp * 9 / 5) + 32, 1)} °F"
             )
 
-        update_tomorrow_guess_display(
-            self.tomorrow_guess_frame,
-            predicted_temp=predicted_display,
-            confidence=confidence,
-            accuracy=accuracy
-        )
+        if self.tomorrow_guess_frame:
+            update_tomorrow_guess_display(
+                self.tomorrow_guess_frame,
+                predicted_temp=predicted_display,
+                confidence=confidence,
+                accuracy=accuracy
+            )
 
     def update_weather_history(self):
-        # Destroy old frame if it exists
-        if getattr(self, "history_frame", None):
-            try:
-                if self.history_frame.winfo_exists():
-                    self.history_frame.destroy()
-            except Exception:
-                pass
+        if getattr(self, "history_frame", None) and self.history_frame.winfo_exists():
+            for widget in self.history_frame.winfo_children():
+                widget.destroy()
 
-        # Create a new frame at the bottom of the app
-        self.history_frame = ctk.CTkFrame(self, fg_color=self.theme["bg"])
-        self.history_frame.pack(fill="x", pady=(10, 10), side="bottom")
-
-        # Validate and display history data
         if isinstance(self.history_data, dict) and all(
             key in self.history_data for key in ["time", "temperature_2m_max", "temperature_2m_min", "temperature_2m_mean"]
         ):
-            insert_temperature_history_as_grid(self.history_frame, self.city_var.get())
+            insert_temperature_history_as_grid(self.history_frame, self.city_var.get(), unit=self.unit)
         else:
-            # Fallback in case data is missing or incorrect
             label = ctk.CTkLabel(
                 self.history_frame,
                 text="Weather history not available.",

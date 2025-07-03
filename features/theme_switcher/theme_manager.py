@@ -51,3 +51,12 @@ def get_user_preference():
     Returns None if no preference saved.
     """
     return load_user_theme_preference()
+
+def apply_theme(app, theme):
+    """
+    Apply the selected theme to the app (light or dark) during initialization.
+    """
+    if theme == "dark":
+        set_night_mode(app)
+    else:
+        set_day_mode(app)

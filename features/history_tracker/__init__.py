@@ -1,5 +1,4 @@
 from .api import fetch_world_history
-from .display import insert_temperature_history_as_grid
 from .geocode import get_lat_lon
 
 __all__ = [

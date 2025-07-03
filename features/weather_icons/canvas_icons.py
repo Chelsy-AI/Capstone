@@ -1,72 +1,66 @@
 import customtkinter as ctk
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Draws a basic weather icon on the given canvas based on weather condition.
-# ──────────────────────────────────────────────────────────────────────────────
 def draw_weather_icon(canvas, condition):
-    """
-    Draws a canvas-based weather icon depending on the condition string.
-    Supports conditions like 'sunny', 'rain', 'cloudy', 'snow', 'storm'.
-    """
-    clear_icon_canvas(canvas)
-    w = canvas.winfo_width()
-    h = canvas.winfo_height()
+    canvas.delete("all")  # Clear previous drawings
+
+    w = int(canvas.cget("width"))
+    h = int(canvas.cget("height"))
+    center_x, center_y = w // 2, h // 2
 
     if condition == "sunny":
-        # Draw sun (yellow circle with rays)
-        canvas.create_oval(w*0.3, h*0.3, w*0.7, h*0.7, fill="yellow", outline="")
-        for i in range(8):
-            angle = i * 45
-            canvas.create_line(w*0.5, h*0.5, w*0.5 + 30 * ctk.cos(angle), h*0.5 - 30 * ctk.sin(angle), fill="orange", width=2)
-
-    elif condition == "rain":
-        # Draw cloud and raindrops
-        canvas.create_oval(w*0.3, h*0.4, w*0.7, h*0.6, fill="gray", outline="")
-        for i in range(3):
-            x = w*0.4 + i*20
-            canvas.create_line(x, h*0.6, x, h*0.8, fill="blue", width=3)
+        # Draw a yellow sun
+        canvas.create_oval(center_x - 40, center_y - 40, center_x + 40, center_y + 40, fill="yellow", outline="")
+        # Sun rays
+        for angle in range(0, 360, 45):
+            x_end = center_x + 60 * ctk.math.cos(angle * 3.1416 / 180)
+            y_end = center_y + 60 * ctk.math.sin(angle * 3.1416 / 180)
+            canvas.create_line(center_x, center_y, x_end, y_end, fill="orange", width=3)
 
     elif condition == "cloudy":
-        # Draw clouds
-        canvas.create_oval(w*0.3, h*0.4, w*0.7, h*0.6, fill="lightgray", outline="")
-        canvas.create_oval(w*0.4, h*0.3, w*0.8, h*0.5, fill="lightgray", outline="")
+        # Draw clouds as overlapping ovals
+        canvas.create_oval(center_x - 50, center_y - 20, center_x + 20, center_y + 40, fill="lightgray", outline="")
+        canvas.create_oval(center_x - 30, center_y - 40, center_x + 40, center_y + 20, fill="gray", outline="")
+        canvas.create_oval(center_x - 10, center_y - 30, center_x + 60, center_y + 30, fill="darkgray", outline="")
 
-    elif condition == "snow":
-        # Draw snowflake (simple asterisk)
-        x, y = w*0.5, h*0.5
-        size = 20
-        for angle in [0, 45, 90, 135]:
-            canvas.create_line(x - size, y, x + size, y, fill="white", width=2)
-            canvas.create_line(x, y - size, x, y + size, fill="white", width=2)
-            canvas.create_line(x - size*0.7, y - size*0.7, x + size*0.7, y + size*0.7, fill="white", width=2)
-            canvas.create_line(x - size*0.7, y + size*0.7, x + size*0.7, y - size*0.7, fill="white", width=2)
-
-    elif condition == "storm":
-        # Draw cloud and lightning bolt
-        canvas.create_oval(w*0.3, h*0.4, w*0.7, h*0.6, fill="darkgray", outline="")
-        points = [w*0.5, h*0.6, w*0.55, h*0.7, w*0.48, h*0.7, w*0.52, h*0.8]
-        canvas.create_polygon(points, fill="yellow")
+    elif condition == "rainy":
+        # Draw cloud
+        canvas.create_oval(center_x - 50, center_y - 40, center_x + 50, center_y + 10, fill="gray", outline="")
+        # Draw raindrops
+        for i in range(-30, 31, 20):
+            canvas.create_line(center_x + i, center_y + 10, center_x + i - 5, center_y + 30, fill="blue", width=2)
 
     else:
-        # Default: question mark
-        canvas.create_text(w*0.5, h*0.5, text="?", font=("Arial", 32), fill="red")
+        # Default: draw a question mark
+        canvas.create_text(center_x, center_y, text="?", font=("Arial", 48), fill="red")
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Clears all drawings from the icon canvas.
-# ──────────────────────────────────────────────────────────────────────────────
-def clear_icon_canvas(canvas):
-    """
-    Clears the canvas of any drawings.
-    """
-    canvas.delete("all")
+def update_weather_icon(canvas, condition):
+    draw_weather_icon(canvas, condition)
 
-# ──────────────────────────────────────────────────────────────────────────────
-# Placeholder for simple animation of weather icons.
-# ──────────────────────────────────────────────────────────────────────────────
-def animate_weather_icon(canvas, condition):
-    """
-    Starts a simple animation on the weather icon canvas.
-    (Example: blinking sun rays or raindrops falling)
-    """
-    # Implementation left as a future extension
-    pass
+
+def create_metric_frame(parent, theme):
+    frame = ctk.CTkFrame(parent, fg_color=theme["bg"])
+    features = [
+        ("humidity", "💧", "Humidity"),
+        ("wind", "💨", "Wind"),
+        ("pressure", "🧭", "Pressure"),
+        ("visibility", "👁️", "Visibility"),
+        ("uv", "🌞", "UV Index"),
+        ("precipitation", "🌧️", "Precipitation"),
+    ]
+    frame.grid_columnconfigure(tuple(range(len(features))), weight=1, uniform="metrics")
+
+    # dictionary to store value labels if needed later
+    frame.metric_value_labels = {}
+
+    for col, (key, icon, label_text) in enumerate(features):
+        card = ctk.CTkFrame(frame, fg_color=theme["text_bg"], corner_radius=8)
+        card.grid(row=0, column=col, padx=6, pady=5, sticky="nsew")
+
+        ctk.CTkLabel(card, text=label_text, text_color=theme["text_fg"], font=("Arial", 14)).pack(pady=(5, 0))
+        ctk.CTkLabel(card, text=icon, font=("Arial", 24)).pack()
+        value_label = ctk.CTkLabel(card, text="--", text_color=theme["text_fg"], font=("Arial", 16))
+        value_label.pack(pady=(0, 5))
+
+        frame.metric_value_labels[key] = value_label
+
+    return frame

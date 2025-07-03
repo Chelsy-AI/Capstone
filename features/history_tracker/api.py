@@ -1,16 +1,29 @@
 from .geocode import get_lat_lon
 import requests
 import datetime
+import time
+
+_weather_cache = {}
+CACHE_DURATION = 120  # Cache duration in seconds
+
 
 def fetch_world_history(city):
     """
     Fetch last 7 days of daily temperature data for the specified city.
     Returns the 'daily' dict if data exists and contains valid temperature lists,
     otherwise returns an empty dict.
+    Uses simple in-memory caching to reduce repeated API calls.
     """
     if not isinstance(city, str):
         print(f"[ERROR] fetch_world_history called with invalid city argument (not str): {city}")
         return {}
+
+    city_key = city.lower()
+    now = time.time()
+    if city_key in _weather_cache:
+        cached_time, cached_data = _weather_cache[city_key]
+        if now - cached_time < CACHE_DURATION:
+            return cached_data
 
     lat, lon = get_lat_lon(city)
     if lat is None or lon is None:
@@ -33,7 +46,7 @@ def fetch_world_history(city):
     )
 
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=10)
         response.raise_for_status()
         data = response.json()
 
@@ -50,6 +63,8 @@ def fetch_world_history(city):
             print(f"[ERROR] Empty temperature lists in API response for city '{city}'")
             return {}
 
+        # Cache the successful response
+        _weather_cache[city_key] = (now, daily)
         return daily
 
     except Exception as e:

@@ -2,8 +2,7 @@
 import customtkinter as ctk
 
 def create_tomorrow_guess_frame(parent, theme):
-    frame = ctk.CTkFrame(parent, fg_color=theme["text_bg"], corner_radius=8)
-    frame.pack(pady=10, fill="x", padx=10)
+    frame = ctk.CTkFrame(parent, fg_color=theme["bg"])
 
     temp_label = ctk.CTkLabel(frame, text="--", font=("Arial", 24, "bold"), text_color=theme["text_fg"])
     temp_label.pack(pady=(10, 5))
