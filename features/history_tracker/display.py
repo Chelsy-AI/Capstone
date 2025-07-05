@@ -14,7 +14,6 @@ def insert_temperature_history_as_grid(parent, city, unit="C"):
     Appends °C or °F to each temperature based on selected unit.
     """
     if not isinstance(city, str):
-        print(f"[ERROR] fetch_world_history called with invalid city argument (not str): {city}")
         city = "New York"  # fallback default
 
     data = fetch_world_history(city)

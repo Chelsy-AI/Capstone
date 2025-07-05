@@ -7,7 +7,6 @@ def get_tomorrows_prediction(city):
     Returns: (predicted_temp: float|None, confidence_str: str, accuracy_int: int)
     """
     if not isinstance(city, str):
-        print(f"[ERROR] get_tomorrows_prediction called with invalid city: {city}")
         return None, "0%", 85
 
     raw_data = fetch_world_history(city)

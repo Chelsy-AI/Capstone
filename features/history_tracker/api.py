@@ -15,7 +15,6 @@ def fetch_world_history(city):
     Uses simple in-memory caching to reduce repeated API calls.
     """
     if not isinstance(city, str):
-        print(f"[ERROR] fetch_world_history called with invalid city argument (not str): {city}")
         return {}
 
     city_key = city.lower()
@@ -27,7 +26,6 @@ def fetch_world_history(city):
 
     lat, lon = get_lat_lon(city)
     if lat is None or lon is None:
-        print(f"[ERROR] Geocode failed for city '{city}'")
         return {}
 
     # Compute last 7 days date range (past dates only)
@@ -56,11 +54,9 @@ def fetch_world_history(city):
         mean_temps = daily.get("temperature_2m_mean")
 
         if not max_temps or not min_temps or not mean_temps:
-            print(f"[ERROR] Missing temperature data in API response for city '{city}'")
             return {}
 
         if len(max_temps) == 0 or len(min_temps) == 0 or len(mean_temps) == 0:
-            print(f"[ERROR] Empty temperature lists in API response for city '{city}'")
             return {}
 
         # Cache the successful response
@@ -68,5 +64,4 @@ def fetch_world_history(city):
         return daily
 
     except Exception as e:
-        print(f"[ERROR] Exception fetching weather history for city '{city}': {e}")
         return {}

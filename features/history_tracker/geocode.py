@@ -20,7 +20,6 @@ def get_lat_lon(city):
             _geocode_cache[city_key] = lat_lon
             return lat_lon
     except Exception as e:
-        print(f"[ERROR] Geocode failed for {city}: {e}")
-
+        pass
     _geocode_cache[city_key] = (None, None)
     return None, None

@@ -7,7 +7,6 @@ def get_lat_lon(city):
     Defensive: logs error if input is invalid or API fails.
     """
     if not isinstance(city, str):
-        print(f"[ERROR] get_lat_lon called with invalid city argument (not str): {city}")
         return None, None
 
     url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1&language=en&format=json"

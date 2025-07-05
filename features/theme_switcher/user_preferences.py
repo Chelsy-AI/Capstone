@@ -14,8 +14,8 @@ def save_user_theme_preference(theme_name):
         with open(PREF_FILE, "w") as f:
             json.dump({"theme": theme_name}, f)
     except Exception as e:
-        print(f"[ERROR] Saving theme preference failed: {e}")
-
+        pass
+    
 # ──────────────────────────────────────────────────────────────────────────────
 # Loads the user's saved theme preference from the JSON file.
 # ──────────────────────────────────────────────────────────────────────────────
@@ -30,5 +30,5 @@ def load_user_theme_preference():
                 data = json.load(f)
                 return data.get("theme")
     except Exception as e:
-        print(f"[ERROR] Loading theme preference failed: {e}")
+        pass
     return None
