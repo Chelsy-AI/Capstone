@@ -1,26 +1,39 @@
 # Weather Dashboard Capstone Project
 
-A desktop weather dashboard app built with Python and CustomTkinter that fetches real-time weather data and historical weather history using the Open-Meteo API. It supports light/dark themes, unit toggling (Celsius/Fahrenheit), and displays detailed weather metrics including humidity, wind, pressure, UV index, pollen, and precipitation.
+## Overview:
+- Desktop weather app using Python and CustomTkinter
+- Fetches real-time and 7-day historical weather data via Open-Meteo API (no API key needed)
+- Supports light/dark themes toggle
+- Temperature toggle between Celsius and Fahrenheit by clicking temperature label
+- Shows detailed metrics: humidity, wind, pressure, visibility, UV index, pollen, precipitation, bugs
+- Predicts tomorrow’s temperature with confidence and accuracy tracking
+- Saves weather history and prediction accuracy locally as CSV files
+- Custom canvas-based weather icons for different conditions
+- User-friendly error handling and clear messages
 
----
+## Installation:
+- Clone repo: git clone https://github.com/yourusername/weather-dashboard.git
+- cd weather-dashboard
+- (Optional) create and activate virtual environment
+- Install dependencies: pip install -r requirements.txt
 
-## Features
+## Usage:
+- Run app: python main.py
+- Enter city name to get weather data
+- Click temperature label to toggle between °C and °F
+- Toggle light/dark theme with button
+- View tomorrow’s prediction and confidence display
+- Access 7-day historical weather data saved locally
 
-- Real-time weather data by city name using Open-Meteo API (free, no API key required)
-- Historical 7-day weather temperature averages
-- Supports light and dark themes with toggle button
-- Temperature display toggle between Celsius and Fahrenheit by clicking temperature label
-- Displays humidity, wind speed, pressure, visibility, UV index, pollen, precipitation
-- Clean, modern UI built using CustomTkinter
-- Error handling and user-friendly messages
-- Saves weather history locally to CSV
+## Testing:
+- Run tests with: pytest tests/
+- Includes tests for API, GUI, prediction logic, and utilities
 
----
+## Dependencies:
+- Python 3.8+
+- CustomTkinter
+- requests
+- pytest
 
-## Installation
-
-1. Clone this repository:
-
-   ```bash
-   git clone https://github.com/yourusername/weather-dashboard.git
-   cd weather-dashboard
+## License:
+- MIT License
