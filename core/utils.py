@@ -180,7 +180,9 @@ def toggle_theme(app):
         # Refresh weather history display
         if hasattr(app, 'show_weather_history'):
             app.show_weather_history()
-        
+    except Exception as e:
+        print(f"Error toggling theme: {e}")
+
 # ────────────────────────────────────────────────────────────────────────────── 
 # VALIDATION UTILITIES
 # ────────────────────────────────────────────────────────────────────────────── 
@@ -256,4 +258,3 @@ def capitalize_words(text):
             capitalized_words.append(word.capitalize())
     
     return ' '.join(capitalized_words)
-

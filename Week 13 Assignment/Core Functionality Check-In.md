@@ -1,0 +1,3 @@
+I implemented the API calls by using the **OpenWeather API** to fetch today's temperature and the **Open-Meteo API** to retrieve additional data like humidity, wind, pressure, and 7-day weather history. I structured the API logic into separate, reusable Python functions that convert city names into coordinates, request the relevant data, and return it in a consistent format for display in the GUI. One challenge was aligning the data formats and units between the two APIs while ensuring smooth integration into the interface.
+
+Next steps include adding multilingual support, weather-based background effects, and health-related suggestions based on current conditions.
