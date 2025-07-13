@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from core.theme import LIGHT_THEME, DARK_THEME  # Import our theme dictionaries
-from core.gui import build_gui
+from gui.gui_builder import build_gui
 
 # ────────────────────────────────────────────────────────────────────────────── 
 # UTILITY FUNCTIONS MODULE
