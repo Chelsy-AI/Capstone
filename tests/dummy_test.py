@@ -1,59 +1,70 @@
-import pytest
-from core.app import WeatherApp  # adjust import to your actual app class location
-from core.gui import draw_background
-import customtkinter as ctk
-from core.gui import SmartBackground
+import tkinter as tk
+import random
 
+class SmartBackground:
+    def __init__(self, canvas):
+        self.canvas = canvas
+        self.animation_running = False
+        self.animation_id = None
+        self.width = self.canvas.winfo_width() or 800
+        self.height = self.canvas.winfo_height() or 600
+        self.particles = []
+        self.weather_condition = "rain"
 
-def test_draw_background(app):
-    app = WeatherApp()
-    canvas = app.smart_background.canvas
-    if not canvas:
-        print("No canvas to draw on yet")
-        return
+    def start_animation(self):
+        if self.animation_running:
+            return
+        self.animation_running = True
+        self.width = self.canvas.winfo_width() or 800
+        self.height = self.canvas.winfo_height() or 600
+        self._init_particles()
+        self._animate()
 
-    width = canvas.winfo_width()
-    height = canvas.winfo_height()
-    if width <= 1 or height <= 1:
-        print("Canvas size too small, retrying in 100ms")
-        app.after(100, lambda: test_draw_background(app))
-        return
+    def stop_animation(self):
+        self.animation_running = False
+        if self.animation_id:
+            self.canvas.after_cancel(self.animation_id)
+            self.animation_id = None
+        self.canvas.delete("all")
 
-    colors = ["#ff0000", "#0000ff"]  # Simple red to blue gradient
-    steps = 50
-    canvas.delete("background")
-    for i in range(steps):
-        ratio = i / steps
-        r = int(255 * (1 - ratio))
-        b = int(255 * ratio)
-        color = f"#{r:02x}00{b:02x}"
-        y1 = int(height * i / steps)
-        y2 = int(height * (i + 1) / steps)
-        canvas.create_rectangle(0, y1, width, y2, fill=color, outline="", tags="background")
-    print("Test background drawn.")
+    def _init_particles(self):
+        self.particles.clear()
+        count = 100
+        for _ in range(count):
+            x = random.randint(0, self.width)
+            y = random.randint(0, self.height)
+            length = random.randint(10, 20)
+            speed = random.uniform(4, 8)
+            self.particles.append({"x": x, "y": y, "length": length, "speed": speed})
 
-def test_app():
-    app = ctk.CTk()
-    app.geometry("400x400")
-    return app
+    def _animate(self):
+        if not self.animation_running:
+            return
+        self.width = self.canvas.winfo_width() or 800
+        self.height = self.canvas.winfo_height() or 600
 
-def test_draw_background_runs_without_crash(test_app):
-    draw_background(test_app)
-    # Just checking that it runs; you could assert presence of canvas if exposed
-    test_app.after(1000, test_app.destroy)
-    test_app.mainloop()
+        self.canvas.delete("all")
+        self.canvas.create_rectangle(0, 0, self.width, self.height, fill="#2f4f6f", outline="")
+        for p in self.particles:
+            x, y, length, speed = p["x"], p["y"], p["length"], p["speed"]
+            self.canvas.create_line(x, y, x, y + length, fill="#a0c8ff", width=2)
+            p["y"] += speed
+            if p["y"] > self.height:
+                p["y"] = random.randint(-20, 0)
+                p["x"] = random.randint(0, self.width)
+        self.animation_id = self.canvas.after(50, self._animate)
 
-def test_background_animator_runs():
-    app = ctk.CTk()
-    app.geometry("400x400")
+def main():
+    root = tk.Tk()
+    root.geometry("800x600")
+    canvas = tk.Canvas(root, highlightthickness=0)
+    canvas.place(x=0, y=0, relwidth=1, relheight=1)
+    canvas.lower()
 
-    animator = BackgroundAnimator(app, "path/to/your.gif")
-    animator.animate()
+    bg = SmartBackground(canvas)
+    bg.start_animation()
 
-    app.after(1000, app.destroy)
-    app.mainloop()
+    root.mainloop()
 
-# Then call this after GUI is built:
-app = ctk.CTk()
-app.geometry("400x400")
-app.after(1000, lambda: test_draw_background(app))
+if __name__ == "__main__":
+    main()

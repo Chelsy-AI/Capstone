@@ -152,7 +152,8 @@ class SmartBackgroundIntegration:
         self.bg_manager: Optional[DynamicBackgroundManager] = None
         self.is_enabled = True
         self.widget_frame: Optional[tk.Frame] = None
-        
+        print("[SmartBackground] __init__ called")
+
     def setup_canvas(self, width: int = 800, height: int = 600) -> tk.Canvas:
         """Setup canvas for weather animations"""
         if self.canvas:
@@ -266,6 +267,7 @@ class SmartBackgroundIntegration:
                 self.bg_manager.start_animation()
     
     def start_animation(self):
+        print("[DEBUG] Starting SmartBackground animation")
         """Start weather animation"""
         if self.bg_manager and self.is_enabled:
             self.bg_manager.start_animation()
@@ -274,7 +276,8 @@ class SmartBackgroundIntegration:
         """Stop weather animation"""
         if self.bg_manager:
             self.bg_manager.stop_animation()
-    
+        print(f"[SmartBackground] Starting animation: {weather_condition}")
+
     def toggle_animation(self) -> bool:
         """Toggle animation on/off"""
         self.is_enabled = not self.is_enabled

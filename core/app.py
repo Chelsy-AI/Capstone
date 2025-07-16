@@ -1,11 +1,11 @@
 import customtkinter as ctk
-from PIL import Image, ImageTk, ImageEnhance
+from PIL import Image, ImageTk
 from io import BytesIO
 import requests
 from datetime import datetime
 import threading
-import os
 import tkinter as tk
+import traceback
 
 from features.history_tracker.api import fetch_world_history
 from features.history_tracker.display import insert_temperature_history_as_grid
@@ -16,17 +16,18 @@ from core.theme import LIGHT_THEME, DARK_THEME
 from gui.gui_builder import build_gui
 from core.api import get_current_weather
 
-from features.smart_background.manager import DynamicBackgroundManager
+from gui.animation_gui import SmartBackground
+from features.smart_background.integration import SmartBackgroundIntegration
 
 
 class WeatherApp(ctk.CTk):
     def __init__(self):
         super().__init__()
+
         self.theme = LIGHT_THEME
         ctk.set_appearance_mode("light")
         self.title("Weather App")
         self.geometry("800x600")
-        self.configure(fg_color=self.theme["bg"])
 
         self.city_var = ctk.StringVar(value="New York")
         self.unit = "C"
@@ -36,78 +37,75 @@ class WeatherApp(ctk.CTk):
         self.metric_value_labels = {}
         self.icon_cache = {}
         self.current_weather_condition = None
-        self.background_label = None
 
-        self.bg_canvas = tk.Canvas(self, width=800, height=600, highlightthickness=0)
+        # Create animation canvas that fills the entire window
+        self.bg_canvas = tk.Canvas(self, highlightthickness=0)
         self.bg_canvas.place(x=0, y=0, relwidth=1, relheight=1)
-        self.after(100, lambda: self.bg_canvas.tag_lower("background_gradient"))
+        self.bg_canvas.lower("all")  # Send canvas behind all other widgets
 
-        self.smart_bg_manager = DynamicBackgroundManager(self.bg_canvas, width=800, height=600)
-        self.smart_bg_manager.set_weather("clear")
-        self.smart_bg_manager.start_animation()
+        # Validate and fill missing theme keys with defaults
+        def validate_theme(theme):
+            defaults = {
+                "bg": "#FFFFFF",
+                "fg": "#000000",
+                "button_bg": "#007ACC",
+                "button_fg": "#FFFFFF",
+                "text_bg": "#F0F0F0",
+                "text_fg": "#000000",
+                "entry_bg": "#FFFFFF"
+            }
+            for key, default_color in defaults.items():
+                val = theme.get(key)
+                if not val or not isinstance(val, str) or val.strip() == "":
+                    theme[key] = default_color
 
-        self.history_frame = None
-        self.temp_label = None
-        self.desc_label = None
-        self.update_label = None
-        self.icon_label = None
-        self.tomorrow_guess_frame = None
-        self.city_entry = None
+        validate_theme(self.theme)
+        self.configure(fg_color=self.theme["bg"])
 
+        # Build the foreground GUI widgets on top of the canvas
         build_gui(self)
-        self.setup_background()
-        if self.background_label:
-            self.background_label.lower()
 
+        # Initialize SmartBackground animation manager
+        self.smart_background = SmartBackground(self, self.bg_canvas)
+        self.smart_background.start_animation("clear")
+
+        # Also initialize the integration (if needed)
+        self.smart_bg_integration = SmartBackgroundIntegration(self)
+
+        # Start weather update in background thread safely
         self.after_idle(lambda: threading.Thread(target=self.safe_update_weather, daemon=True).start())
+
+        # Handle window close to stop animation cleanly
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
-    def setup_background(self):
-        self.background_label = ctk.CTkLabel(self, text="", fg_color="transparent")
-        self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
+        # Bind window resize event to update canvas size if needed
+        self.bind("<Configure>", self.on_window_resize)
 
-    def get_weather_condition_category(self, description, icon_code):
-        if not description and not icon_code:
-            return "default"
-        description = description.lower() if description else ""
-        icon_code = icon_code.lower() if icon_code else ""
-
-        if any(word in description for word in ["rain", "drizzle", "shower"]) or "rain" in icon_code:
-            return "rainy"
-        elif any(word in description for word in ["thunder", "storm"]) or "storm" in icon_code:
-            return "stormy"
-        elif any(word in description for word in ["snow", "blizzard"]) or "snow" in icon_code:
-            return "snowy"
-        elif any(word in description for word in ["cloud", "overcast"]) or "cloud" in icon_code:
-            return "cloudy"
-        elif any(word in description for word in ["clear", "sunny"]) or "clear" in icon_code or "sun" in icon_code:
-            return "sunny"
-        elif any(word in description for word in ["fog", "mist", "haze"]) or "fog" in icon_code:
-            return "foggy"
-        elif any(word in description for word in ["wind"]) or "wind" in icon_code:
-            return "windy"
-        else:
-            return "default"
+    def on_window_resize(self, event):
+        # Ensure the canvas always fills window exactly
+        self.bg_canvas.place_configure(width=event.width, height=event.height)
 
     def update_background(self, weather_condition):
-        self.smart_bg_manager.set_weather(weather_condition)
+        if self.smart_background:
+            try:
+                self.smart_background.update_background(weather_condition)
+            except Exception:
+                print("[ERROR] Exception in update_background:")
+                traceback.print_exc()
 
     def toggle_theme(self):
-        if self.smart_bg_manager:
-            self.smart_bg_manager.stop_animation()
-
         self.theme = DARK_THEME if self.theme == LIGHT_THEME else LIGHT_THEME
         ctk.set_appearance_mode("dark" if self.theme == DARK_THEME else "light")
         self.configure(fg_color=self.theme["bg"])
 
+        # Rebuild GUI (widgets only, not canvas)
         build_gui(self)
-        self.smart_bg_manager = DynamicBackgroundManager(self.bg_canvas, width=800, height=600)
-        self.smart_bg_manager.set_weather("clear")
-        self.smart_bg_manager.start_animation()
 
-        self.setup_background()
-        self.current_weather_condition = None
-        self.update_weather()
+        # Restart animation with default 'clear' condition
+        if self.smart_background:
+            self.smart_background.stop_animation()
+        self.smart_background = SmartBackground(self, self.bg_canvas)
+        self.smart_background.start_animation("clear")
 
     def toggle_temp_unit(self, event=None):
         self.unit = "F" if self.unit == "C" else "C"
@@ -116,7 +114,7 @@ class WeatherApp(ctk.CTk):
         self.update_weather_history()
 
     def update_temperature_label(self):
-        if self.temp_label is None:
+        if not hasattr(self, "temp_label") or self.temp_label is None:
             return
         if self.temp_c is None:
             self.temp_label.configure(text="N/A")
@@ -130,6 +128,7 @@ class WeatherApp(ctk.CTk):
             self.update_weather()
         except Exception as e:
             print(f"Error updating weather: {e}")
+            traceback.print_exc()
 
     def update_weather(self):
         city = self.city_var.get().strip() or "New York"
@@ -139,18 +138,18 @@ class WeatherApp(ctk.CTk):
         if data.get("error"):
             self.temp_c = None
             self.temp_f = None
-            if self.temp_label:
+            if hasattr(self, "temp_label") and self.temp_label:
                 self.temp_label.configure(text="N/A")
-            if self.desc_label:
+            if hasattr(self, "desc_label") and self.desc_label:
                 self.desc_label.configure(text=data["error"])
             for label in self.metric_value_labels.values():
                 label.configure(text="N/A")
-            if self.icon_label:
+            if hasattr(self, "icon_label") and self.icon_label:
                 self.icon_label.configure(image=None)
                 self.icon_label.image = None
-            if self.update_label:
+            if hasattr(self, "update_label") and self.update_label:
                 self.update_label.configure(text="")
-            if self.tomorrow_guess_frame:
+            if hasattr(self, "tomorrow_guess_frame") and self.tomorrow_guess_frame:
                 update_tomorrow_guess_display(self.tomorrow_guess_frame, "N/A", "N/A", "N/A")
             self.after(0, lambda: self.update_background("default"))
             return
@@ -164,13 +163,13 @@ class WeatherApp(ctk.CTk):
 
         self.update_temperature_label()
         description = data.get("description", "No description")
-        if self.desc_label:
+        if hasattr(self, "desc_label") and self.desc_label:
             self.desc_label.configure(text=description)
-        if self.update_label:
+        if hasattr(self, "update_label") and self.update_label:
             self.update_label.configure(text=f"Updated at {datetime.now().strftime('%Y-%m-%d %H:%M')}")
 
         icon_code = data.get("icon")
-        if icon_code and self.icon_label:
+        if icon_code and hasattr(self, "icon_label") and self.icon_label:
             if icon_code in self.icon_cache:
                 icon_image = self.icon_cache[icon_code]
             else:
@@ -190,7 +189,7 @@ class WeatherApp(ctk.CTk):
             else:
                 self.icon_label.configure(image=None)
                 self.icon_label.image = None
-        elif self.icon_label:
+        elif hasattr(self, "icon_label") and self.icon_label:
             self.icon_label.configure(image=None)
             self.icon_label.image = None
 
@@ -208,7 +207,7 @@ class WeatherApp(ctk.CTk):
             if label:
                 label.configure(text=val)
 
-        weather_condition = self.get_weather_condition_category(description, icon_code)
+        weather_condition = description.lower() if description else "clear"
         self.after(0, lambda: self.update_background(weather_condition))
         self.after(0, lambda: self.update_tomorrow_prediction(city))
         self.after(0, self.update_weather_history)
@@ -217,7 +216,7 @@ class WeatherApp(ctk.CTk):
         if city is None:
             city = self.city_var.get().strip()
         if not isinstance(city, str) or city == "":
-            if self.tomorrow_guess_frame:
+            if hasattr(self, "tomorrow_guess_frame") and self.tomorrow_guess_frame:
                 update_tomorrow_guess_display(self.tomorrow_guess_frame, "N/A", "N/A", "N/A")
             return
         predicted_temp, confidence, accuracy = get_tomorrows_prediction(city)
@@ -225,7 +224,7 @@ class WeatherApp(ctk.CTk):
             predicted_display = "N/A"
         else:
             predicted_display = f"{predicted_temp} °C" if self.unit == "C" else f"{round((predicted_temp * 9 / 5) + 32, 1)} °F"
-        if self.tomorrow_guess_frame:
+        if hasattr(self, "tomorrow_guess_frame") and self.tomorrow_guess_frame:
             update_tomorrow_guess_display(
                 self.tomorrow_guess_frame,
                 predicted_temp=predicted_display,
@@ -234,7 +233,7 @@ class WeatherApp(ctk.CTk):
             )
 
     def update_weather_history(self):
-        if getattr(self, "history_frame", None) and self.history_frame.winfo_exists():
+        if hasattr(self, "history_frame") and self.history_frame.winfo_exists():
             for widget in self.history_frame.winfo_children():
                 widget.destroy()
 
@@ -243,17 +242,22 @@ class WeatherApp(ctk.CTk):
         ):
             insert_temperature_history_as_grid(self.history_frame, self.city_var.get(), unit=self.unit)
         else:
-            label = ctk.CTkLabel(
-                self.history_frame,
-                text="Weather history not available.",
-                font=("Arial", 16),
-                text_color=self.theme["fg"],
-            )
-            label.pack(pady=10)
+            if hasattr(self, "history_frame") and self.history_frame:
+                label = ctk.CTkLabel(
+                    self.history_frame,
+                    text="Weather history not available.",
+                    font=("Arial", 16),
+                    text_color=self.theme["fg"],
+                )
+                label.pack(pady=10)
 
     def on_close(self):
-        if self.smart_bg_manager:
-            self.smart_bg_manager.stop_animation()
+        try:
+            if self.smart_background:
+                self.smart_background.stop_animation()
+        except Exception:
+            print("[ERROR] Exception stopping animation:")
+            traceback.print_exc()
         self.destroy()
 
 
