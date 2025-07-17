@@ -2,63 +2,141 @@ import customtkinter as ctk
 
 def create_tomorrow_guess_frame(parent, theme):
     """
-    Creates a frame (container) to display tomorrow's weather prediction.
-    
+    Creates a transparent frame to display tomorrow's weather prediction.
     """
     
-    # Create the main container frame with background color from theme
-    frame = ctk.CTkFrame(parent, fg_color=theme["bg"])
+    # Create the main container frame - transparent
+    frame = ctk.CTkFrame(parent, fg_color="transparent", corner_radius=0)
     
-    # Create a label to show the predicted temperature
+    # Create prediction info grid - transparent
+    info_grid = ctk.CTkFrame(frame, fg_color="transparent")
+    info_grid.pack(fill="x", padx=10)
+    
+    # Configure grid columns
+    info_grid.grid_columnconfigure((0, 1, 2), weight=1)
+    
+    # Temperature prediction - transparent
+    temp_section = ctk.CTkFrame(
+        info_grid, 
+        fg_color="transparent",
+        corner_radius=0
+    )
+    temp_section.grid(row=0, column=0, padx=10, pady=5, sticky="nsew")
+    
+    ctk.CTkLabel(
+        temp_section,
+        text="🌡️",
+        font=("Arial", 24),
+        text_color="white",
+        fg_color="transparent"
+    ).pack(pady=(5, 0))
+    
+    ctk.CTkLabel(
+        temp_section,
+        text="Temperature",
+        font=("Arial", 12, "bold"),
+        text_color="white",
+        fg_color="transparent"
+    ).pack()
+    
     temp_label = ctk.CTkLabel(
-        frame, 
+        temp_section, 
         text="--", 
-        font=("Arial", 24, "bold"), 
-        text_color=theme["text_fg"]
+        font=("Arial", 16, "bold"), 
+        text_color="yellow",
+        fg_color="transparent"
     )
-    # Position the temperature label with padding 
-    temp_label.pack(pady=(10, 5))
+    temp_label.pack(pady=(0, 5))
     
-    # Create a label to show how confident we are in the prediction
+    # Confidence section - transparent
+    confidence_section = ctk.CTkFrame(
+        info_grid,
+        fg_color="transparent",
+        corner_radius=0
+    )
+    confidence_section.grid(row=0, column=1, padx=10, pady=5, sticky="nsew")
+    
+    ctk.CTkLabel(
+        confidence_section,
+        text="📊",
+        font=("Arial", 24),
+        text_color="white",
+        fg_color="transparent"
+    ).pack(pady=(5, 0))
+    
+    ctk.CTkLabel(
+        confidence_section,
+        text="Confidence",
+        font=("Arial", 12, "bold"),
+        text_color="white",
+        fg_color="transparent"
+    ).pack()
+    
     confidence_label = ctk.CTkLabel(
-        frame, 
-        text="Confidence: --", 
-        font=("Arial", 16), 
-        text_color=theme["text_fg"]
+        confidence_section, 
+        text="--", 
+        font=("Arial", 14), 
+        text_color="lightgreen",
+        fg_color="transparent"
     )
-    # Position with equal padding above and below 
-    confidence_label.pack(pady=5)
+    confidence_label.pack(pady=(0, 5))
     
-    # Create a label to show how accurate our predictions have been historically
+    # Accuracy section - transparent
+    accuracy_section = ctk.CTkFrame(
+        info_grid,
+        fg_color="transparent",
+        corner_radius=0
+    )
+    accuracy_section.grid(row=0, column=2, padx=10, pady=5, sticky="nsew")
+    
+    ctk.CTkLabel(
+        accuracy_section,
+        text="🎯",
+        font=("Arial", 24),
+        text_color="white",
+        fg_color="transparent"
+    ).pack(pady=(5, 0))
+    
+    ctk.CTkLabel(
+        accuracy_section,
+        text="Accuracy",
+        font=("Arial", 12, "bold"),
+        text_color="white",
+        fg_color="transparent"
+    ).pack()
+    
     accuracy_label = ctk.CTkLabel(
-        frame, 
-        text="Accuracy: --%", 
-        font=("Arial", 16), 
-        text_color=theme["text_fg"]
+        accuracy_section, 
+        text="--%", 
+        font=("Arial", 14), 
+        text_color="lightcoral",
+        fg_color="transparent"
     )
-    # Position with 5 pixels above, 10 pixels below 
-    accuracy_label.pack(pady=(5, 10))
+    accuracy_label.pack(pady=(0, 5))
     
-    # IMPORTANT: Store references to the labels ON the frame object
-    # This allows us to update these labels later from other functions
+    # Store references to the labels ON the frame object
     frame.temp_label = temp_label
     frame.confidence_label = confidence_label
     frame.accuracy_label = accuracy_label
     
-    # Return the complete frame so it can be used by the main application
     return frame
 
 def update_tomorrow_guess_display(frame, predicted_temp, confidence, accuracy):
     """
     Updates the weather display with new prediction data.
-    
     """
     
     # Update the temperature display
-    frame.temp_label.configure(text=predicted_temp or "N/A")
+    if hasattr(frame, 'temp_label'):
+        frame.temp_label.configure(text=str(predicted_temp) if predicted_temp != "N/A" else "N/A")
     
     # Update the confidence display
-    frame.confidence_label.configure(text=f"Confidence: {confidence}")
+    if hasattr(frame, 'confidence_label'):
+        frame.confidence_label.configure(text=str(confidence) if confidence != "N/A" else "N/A")
     
     # Update the accuracy display
-    frame.accuracy_label.configure(text=f"Accuracy: {accuracy}")
+    if hasattr(frame, 'accuracy_label'):
+        if isinstance(accuracy, (int, float)):
+            frame.accuracy_label.configure(text=f"{accuracy}%")
+        else:
+            frame.accuracy_label.configure(text=str(accuracy) if accuracy != "N/A" else "N/A")

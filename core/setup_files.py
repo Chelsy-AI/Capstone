@@ -1,3 +1,60 @@
+#!/usr/bin/env python3
+"""
+Setup script to create necessary directories and files for the Weather App
+Run this script to set up the project structure properly.
+"""
+
+import os
+import sys
+
+def create_directory_structure():
+    """Create the necessary directory structure"""
+    directories = [
+        "gui",
+        "core", 
+        "features/tomorrows_guess",
+        "features/history_tracker",
+        "features/weather_icons",
+        "features/theme_switcher", 
+        "tests",
+        "data"
+    ]
+    
+    for directory in directories:
+        os.makedirs(directory, exist_ok=True)
+        print(f"✓ Created directory: {directory}")
+
+def create_init_files():
+    """Create __init__.py files for Python packages"""
+    init_files = [
+        "core/__init__.py",
+        "gui/__init__.py", 
+        "features/__init__.py",
+        "features/tomorrows_guess/__init__.py",
+        "features/history_tracker/__init__.py",
+        "features/weather_icons/__init__.py",
+        "features/theme_switcher/__init__.py",
+        "tests/__init__.py"
+    ]
+    
+    for init_file in init_files:
+        if not os.path.exists(init_file):
+            with open(init_file, 'w') as f:
+                f.write('# Package initialization\n')
+            print(f"✓ Created: {init_file}")
+
+def create_weather_animation_file():
+    """Create the weather animation file if it doesn't exist"""
+    animation_file = "gui/weather_animation.py"
+    
+    if not os.path.exists(animation_file):
+        # The content from the artifact above
+        animation_content = '''#!/usr/bin/env python3
+"""
+Weather Animation System for Weather Dashboard
+Provides realistic animated backgrounds that change based on weather conditions.
+"""
+
 import tkinter as tk
 import random
 import math
@@ -430,3 +487,63 @@ class WeatherAnimation:
     def is_animation_running(self):
         """Check if animation is currently running"""
         return self.is_running
+
+
+# Test function
+if __name__ == "__main__":
+    def test_animation():
+        root = tk.Tk()
+        root.title("Weather Animation Test")
+        root.geometry("800x600")
+        
+        canvas = tk.Canvas(root, bg='skyblue')
+        canvas.pack(fill=tk.BOTH, expand=True)
+        
+        animation = WeatherAnimation(canvas)
+        animation.start_animation("rain")
+        
+        def change_weather():
+            weathers = ["rain", "snow", "storm", "cloudy", "sunny", "mist", "clear"]
+            current = weathers[int(time.time() / 3) % len(weathers)]
+            animation.set_weather_type(current)
+            root.title(f"Weather Animation Test - {current}")
+            root.after(3000, change_weather)
+        
+        root.after(1000, change_weather)
+        root.mainloop()
+    
+    test_animation()
+'''
+        
+        with open(animation_file, 'w') as f:
+            f.write(animation_content)
+        print(f"✓ Created: {animation_file}")
+
+def check_python_version():
+    """Check if Python version is compatible"""
+    if sys.version_info < (3, 6):
+        print("❌ Python 3.6 or higher is required")
+        return False
+    print(f"✓ Python {sys.version_info.major}.{sys.version_info.minor} detected")
+    return True
+
+def main():
+    """Main setup function"""
+    print("🌤️  Weather App Setup")
+    print("=" * 50)
+    
+    if not check_python_version():
+        return
+    
+    create_directory_structure()
+    create_init_files()
+    create_weather_animation_file()
+    
+    print("\n✅ Setup completed successfully!")
+    print("\nNext steps:")
+    print("1. Install dependencies: pip install -r requirements.txt")
+    print("2. Run the app: python3 main.py")
+    print("3. Test animations: python3 gui/weather_animation.py")
+
+if __name__ == "__main__":
+    main()
