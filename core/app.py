@@ -18,482 +18,530 @@ from core.theme import LIGHT_THEME, DARK_THEME
 from core.api import get_current_weather
 
 # Import weather animation
+ANIMATION_AVAILABLE = False
+WeatherAnimation = None
+
 try:
     from gui.weather_animation import WeatherAnimation
     ANIMATION_AVAILABLE = True
-    print("✅ Weather animation loaded successfully")
-except ImportError:
-    print("⚠️ Weather animation module not found. Using fallback.")
-    ANIMATION_AVAILABLE = False
+    print("✅ Weather animation loaded")
+except ImportError as e:
+    print(f"❌ Animation not available: {e}")
 
 
 class WeatherApp(tk.Tk):
     def __init__(self):
         super().__init__()
-
-        self.title("Weather App")
-        self.geometry("900x700")
-        self.configure(bg="#87CEEB")
-
+        
+        self.title("Smart Weather App")
+        self.geometry("800x600")
+        self.minsize(700, 500)
+        
+        # Initialize variables
         self.city_var = tk.StringVar(value="New York")
         self.unit = "C"
         self.temp_c = None
         self.temp_f = None
-        self.metric_value_labels = {}
-        self.icon_cache = {}
-        self.current_weather_condition = "rain"
-        self.history_data = {}
+        self.is_dark_theme = False
+        
+        # Build GUI
+        self.build_gui()
+        
+        # Auto-load weather
+        self.after(1000, self.fetch_and_display)
+        
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
 
-        # Create animation canvas as background
-        self.bg_canvas = tk.Canvas(self, highlightthickness=0, bg="#87CEEB")
-        self.bg_canvas.place(x=0, y=0, relwidth=1, relheight=1)
+    def get_text_color(self):
+        """Get text color based on theme"""
+        return "white" if self.is_dark_theme else "black"
 
-        # Initialize weather animation
+    def build_gui(self):
+        """Build with WORKING animations"""
+        
+        # Clear existing widgets
+        for widget in self.winfo_children():
+            widget.destroy()
+        
+        # Configure main window
+        self.configure(bg="#87CEEB")
+        
+        # === ANIMATION CANVAS BACKGROUND ===
         if ANIMATION_AVAILABLE:
-            self.smart_background = WeatherAnimation(self.bg_canvas)
-            print("🎬 Starting rain animation...")
-            self.smart_background.start_animation("rain")
+            # Create canvas that fills entire window
+            self.animation_canvas = tk.Canvas(
+                self, 
+                width=800, 
+                height=600,
+                highlightthickness=0,
+                bg="#87CEEB"
+            )
+            self.animation_canvas.place(x=0, y=0, relwidth=1, relheight=1)
+            
+            # Initialize animation system
+            try:
+                self.smart_bg = WeatherAnimation(self.animation_canvas)
+                print("🎬 Animation system created")
+                
+                # Start animation after a delay
+                self.after(1000, self.start_initial_animation)
+                
+            except Exception as e:
+                print(f"❌ Animation initialization failed: {e}")
+                traceback.print_exc()
+                self.smart_bg = None
         else:
-            self.smart_background = None
+            print("❌ No animation available")
+            self.smart_bg = None
 
-        # Create text overlay frame directly on the main window (NOT on canvas)
-        self.text_frame = tk.Frame(self, bg="")
-        self.text_frame.place(x=0, y=0, relwidth=1, relheight=1)
-
-        # Make frame transparent by using system default background
+        # === CONTENT OVERLAY ===
+        # Create a frame that sits on top of the animation
+        self.overlay_frame = tk.Frame(self, bg="")
+        self.overlay_frame.place(x=0, y=0, relwidth=1, relheight=1)
+        
+        # Make overlay transparent
         try:
-            self.text_frame.configure(bg=self.cget('bg'))
+            self.overlay_frame.configure(bg="#87CEEB")
         except:
             pass
 
-        # Build GUI
-        self.build_gui()
+        # Create scrollable content
+        self.canvas = tk.Canvas(self.overlay_frame, highlightthickness=0, bg="#87CEEB")
+        self.scrollbar = tk.Scrollbar(self.overlay_frame, orient="vertical", command=self.canvas.yview)
+        self.scrollable_frame = tk.Frame(self.canvas, bg="#87CEEB")
 
-        # Start weather updates
-        self.after(2000, lambda: threading.Thread(target=self.safe_update_weather, daemon=True).start())
-
-        # Handle window events
-        self.protocol("WM_DELETE_WINDOW", self.on_close)
-        self.bind("<Configure>", self.on_window_resize)
-
-    def build_gui(self):
-        """Build text interface that floats over animation"""
-        
-        # Clear existing widgets in text frame
-        for widget in self.text_frame.winfo_children():
-            widget.destroy()
-
-        # Create scrollable area
-        canvas = tk.Canvas(self.text_frame, highlightthickness=0, bd=0)
-        scrollbar = tk.Scrollbar(self.text_frame, orient="vertical", command=canvas.yview)
-        scrollable_frame = tk.Frame(canvas)
-
-        scrollable_frame.bind(
+        self.scrollable_frame.bind(
             "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
         )
 
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
 
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.scrollbar.pack(side="right", fill="y")
 
-        # Configure canvas to be transparent
-        try:
-            canvas.configure(bg=self.cget('bg'))
-            scrollable_frame.configure(bg=self.cget('bg'))
-        except:
-            canvas.configure(bg="#87CEEB")
-            scrollable_frame.configure(bg="#87CEEB")
+        # Bind mousewheel
+        self.bind_all("<MouseWheel>", self._on_mousewheel)
 
-        self.metric_value_labels = {}
-        row = 0
+        # === BUILD CONTENT ===
+        self.create_content()
 
-        # Title
-        title_label = tk.Label(
-            scrollable_frame,
-            text="🌤️ Weather Dashboard",
-            font=("Arial", 32, "bold"),
-            fg="black",
-            bg="#87CEEB"
+        print("[GUI] Built with animation background")
+
+    def start_initial_animation(self):
+        """Start the initial animation"""
+        if self.smart_bg:
+            try:
+                print("🎬 Starting rain animation...")
+                self.smart_bg.start_animation("rain")
+                
+                # Verify animation started
+                self.after(2000, self.check_animation_status)
+                
+            except Exception as e:
+                print(f"❌ Failed to start animation: {e}")
+                traceback.print_exc()
+
+    def check_animation_status(self):
+        """Check if animation is running"""
+        if self.smart_bg:
+            running = self.smart_bg.is_animation_running()
+            particles = self.smart_bg.get_particle_count()
+            print(f"🎬 Animation status: Running={running}, Particles={particles}")
+
+    def create_content(self):
+        """Create all content elements"""
+        
+        # 1. ALL METRICS IN ONE ROW
+        self.create_metrics_row()
+        
+        # 2. TOGGLE MODE BUTTON
+        self.create_toggle_button()
+        
+        # 3. CITY ENTRY (no text box)
+        self.create_city_field()
+        
+        # 4. WEATHER DISPLAY
+        self.create_weather_info()
+        
+        # 5. TOMORROW'S PREDICTION
+        self.create_prediction_info()
+        
+        # 6. WEATHER HISTORY
+        self.create_history_info()
+
+    def create_metrics_row(self):
+        """All 6 metrics in one row"""
+        metrics_container = tk.Frame(self.scrollable_frame, bg="#87CEEB")
+        metrics_container.pack(pady=30)
+        
+        # Configure 6 columns
+        for i in range(6):
+            metrics_container.grid_columnconfigure(i, weight=1, minsize=120)
+        
+        metrics = [
+            ("Humidity", "💧", "humidity_value"),
+            ("Wind", "🌬️", "wind_value"), 
+            ("Pressure", "🧭", "pressure_value"),  # Compass symbol back
+            ("Visibility", "👁️", "visibility_value"),
+            ("UV Index", "☀️", "uv_value"),
+            ("Precipitation", "☔", "precipitation_value")
+        ]
+        
+        for col, (header, icon, attr_name) in enumerate(metrics):
+            # Header
+            tk.Label(metrics_container, text=header, font=("Arial", 12, "bold"), 
+                    fg=self.get_text_color(), bg="#87CEEB").grid(row=0, column=col, padx=8, pady=5)
+            
+            # Icon
+            tk.Label(metrics_container, text=icon, font=("Arial", 20), 
+                    bg="#87CEEB").grid(row=1, column=col, pady=8)
+            
+            # Value
+            value_label = tk.Label(metrics_container, text="--", font=("Arial", 14, "bold"), 
+                                 fg=self.get_text_color(), bg="#87CEEB")
+            value_label.grid(row=2, column=col, pady=5)
+            
+            # Store reference
+            setattr(self, attr_name, value_label)
+
+    def create_toggle_button(self):
+        """Toggle Mode button"""
+        self.theme_btn = tk.Button(
+            self.scrollable_frame,
+            text="Toggle Mode",
+            command=self.toggle_theme,
+            bg="darkblue",
+            fg="white",
+            font=("Arial", 12, "bold"),
+            relief="raised",
+            bd=3,
+            width=12
         )
-        title_label.grid(row=row, column=0, pady=30, padx=20)
-        row += 1
+        self.theme_btn.pack(pady=30)
 
-        # City Entry
-        city_label = tk.Label(
-            scrollable_frame,
-            text="🌍 Enter City:",
-            font=("Arial", 18, "bold"),
-            fg="black",
-            bg="#87CEEB"
-        )
-        city_label.grid(row=row, column=0, pady=10, padx=20)
-        row += 1
-
+    def create_city_field(self):
+        """City entry - same color as background"""
         self.city_entry = tk.Entry(
-            scrollable_frame,
+            self.scrollable_frame,
             textvariable=self.city_var,
-            font=("Arial", 16),
-            width=25,
+            font=("Arial", 20, "bold"),
+            width=20,
             justify="center",
-            bg="white",
-            fg="black"
+            bg="#87CEEB",
+            fg=self.get_text_color(),
+            relief="flat",
+            bd=0
         )
-        self.city_entry.grid(row=row, column=0, pady=10, padx=20)
-        self.city_entry.bind("<Return>", lambda e: threading.Thread(target=self.safe_update_weather, daemon=True).start())
-        row += 1
+        self.city_entry.pack(pady=20)
+        self.city_entry.bind("<Return>", lambda e: self.fetch_and_display())
+
+    def create_weather_info(self):
+        """Weather display"""
+        
+        # Weather Icon
+        self.icon_label = tk.Label(self.scrollable_frame, text="🌤️", font=("Arial", 48), bg="#87CEEB")
+        self.icon_label.pack(pady=15)
 
         # Temperature
         self.temp_label = tk.Label(
-            scrollable_frame,
+            self.scrollable_frame,
             text="Loading...",
-            font=("Arial", 48, "bold"),
-            fg="black",
+            font=("Arial", 36, "bold"),
+            fg=self.get_text_color(),
             bg="#87CEEB",
             cursor="hand2"
         )
-        self.temp_label.grid(row=row, column=0, pady=20, padx=20)
-        self.temp_label.bind("<Button-1>", self.toggle_temp_unit)
-        row += 1
+        self.temp_label.pack(pady=10)
+        self.temp_label.bind("<Button-1>", lambda e: self.toggle_unit())
 
-        # Weather Description
+        # Description
         self.desc_label = tk.Label(
-            scrollable_frame,
+            self.scrollable_frame,
             text="Fetching weather...",
-            font=("Arial", 20, "italic"),
-            fg="black",
+            font=("Arial", 18),
+            fg=self.get_text_color(),
             bg="#87CEEB"
         )
-        self.desc_label.grid(row=row, column=0, pady=10, padx=20)
-        row += 1
+        self.desc_label.pack(pady=10)
 
-        # Weather Icon
-        self.icon_label = tk.Label(
-            scrollable_frame,
-            text="",
-            bg="#87CEEB"
-        )
-        self.icon_label.grid(row=row, column=0, pady=10, padx=20)
-        row += 1
-
-        # Weather Details Title
-        details_title = tk.Label(
-            scrollable_frame,
-            text="📊 Weather Details",
-            font=("Arial", 20, "bold"),
-            fg="black",
-            bg="#87CEEB"
-        )
-        details_title.grid(row=row, column=0, pady=20, padx=20)
-        row += 1
-
-        # Weather Metrics Grid
-        metrics_frame = tk.Frame(scrollable_frame, bg="#87CEEB")
-        metrics_frame.grid(row=row, column=0, pady=10, padx=20)
-        
-        features = [
-            ("humidity", "💧", "Humidity"),
-            ("wind", "💨", "Wind"),
-            ("pressure", "🧭", "Pressure"),
-            ("visibility", "👁️", "Visibility"),
-            ("uv", "🕶️", "UV Index"),
-            ("precipitation", "☔", "Precipitation"),
-        ]
-
-        for i in range(3):
-            metrics_frame.grid_columnconfigure(i, weight=1)
-
-        for idx, (key, icon, label) in enumerate(features):
-            r = idx // 3
-            c = idx % 3
-            
-            container = tk.Frame(metrics_frame, bg="#87CEEB")
-            container.grid(row=r, column=c, padx=10, pady=5, sticky="nsew")
-            
-            tk.Label(container, text=icon, font=("Arial", 24), fg="black", bg="#87CEEB").pack()
-            tk.Label(container, text=label, font=("Arial", 12, "bold"), fg="black", bg="#87CEEB").pack()
-            
-            value_label = tk.Label(container, text="--", font=("Arial", 14), fg="black", bg="#87CEEB")
-            value_label.pack()
-            
-            self.metric_value_labels[key] = value_label
-        
-        row += 1
-
-        # Tomorrow's Prediction
-        pred_title = tk.Label(
-            scrollable_frame,
-            text="🔮 Tomorrow's Prediction",
-            font=("Arial", 18, "bold"),
-            fg="black",
-            bg="#87CEEB"
-        )
-        pred_title.grid(row=row, column=0, pady=20, padx=20)
-        row += 1
-
-        pred_frame = tk.Frame(scrollable_frame, bg="#87CEEB")
-        pred_frame.grid(row=row, column=0, pady=10, padx=20)
-        
-        for i in range(3):
-            pred_frame.grid_columnconfigure(i, weight=1)
-
-        # Temperature prediction
-        temp_frame = tk.Frame(pred_frame, bg="#87CEEB")
-        temp_frame.grid(row=0, column=0, padx=10)
-        tk.Label(temp_frame, text="🌡️", font=("Arial", 20), fg="black", bg="#87CEEB").pack()
-        tk.Label(temp_frame, text="Temperature", font=("Arial", 10, "bold"), fg="black", bg="#87CEEB").pack()
-        self.pred_temp_label = tk.Label(temp_frame, text="--", font=("Arial", 12), fg="black", bg="#87CEEB")
-        self.pred_temp_label.pack()
-
-        # Confidence
-        conf_frame = tk.Frame(pred_frame, bg="#87CEEB")
-        conf_frame.grid(row=0, column=1, padx=10)
-        tk.Label(conf_frame, text="📊", font=("Arial", 20), fg="black", bg="#87CEEB").pack()
-        tk.Label(conf_frame, text="Confidence", font=("Arial", 10, "bold"), fg="black", bg="#87CEEB").pack()
-        self.pred_confidence_label = tk.Label(conf_frame, text="--", font=("Arial", 12), fg="black", bg="#87CEEB")
-        self.pred_confidence_label.pack()
-
-        # Accuracy
-        acc_frame = tk.Frame(pred_frame, bg="#87CEEB")
-        acc_frame.grid(row=0, column=2, padx=10)
-        tk.Label(acc_frame, text="🎯", font=("Arial", 20), fg="black", bg="#87CEEB").pack()
-        tk.Label(acc_frame, text="Accuracy", font=("Arial", 10, "bold"), fg="black", bg="#87CEEB").pack()
-        self.pred_accuracy_label = tk.Label(acc_frame, text="--", font=("Arial", 12), fg="black", bg="#87CEEB")
-        self.pred_accuracy_label.pack()
-
-        row += 1
-
-        # Weather History
-        hist_title = tk.Label(
-            scrollable_frame,
-            text="📈 7-Day Weather History",
-            font=("Arial", 18, "bold"),
-            fg="black",
-            bg="#87CEEB"
-        )
-        hist_title.grid(row=row, column=0, pady=20, padx=20)
-        row += 1
-
-        self.history_frame = tk.Frame(scrollable_frame, bg="#87CEEB")
-        self.history_frame.grid(row=row, column=0, pady=10, padx=20)
-        row += 1
-
-        # Last Updated
+        # Last Update
         self.update_label = tk.Label(
-            scrollable_frame,
-            text="Starting up...",
+            self.scrollable_frame,
+            text="Starting...",
             font=("Arial", 12),
-            fg="black",
+            fg=self.get_text_color(),
             bg="#87CEEB"
         )
-        self.update_label.grid(row=row, column=0, pady=20, padx=20)
-        row += 1
+        self.update_label.pack(pady=5)
 
-        # Theme Toggle
-        theme_btn = tk.Button(
-            scrollable_frame,
-            text="🎨 Toggle Theme",
-            command=self.toggle_theme,
-            bg="darkgreen",
-            fg="white",
-            font=("Arial", 12, "bold")
-        )
-        theme_btn.grid(row=row, column=0, pady=20, padx=20)
-
-        scrollable_frame.grid_columnconfigure(0, weight=1)
-        print("[GUI] Built text overlay over animation background")
-
-    def on_window_resize(self, event):
-        """Handle window resize"""
-        if event.widget == self and self.smart_background:
-            self.smart_background.update_size(event.width, event.height)
-
-    def toggle_theme(self):
-        """Toggle theme - rebuild GUI"""
-        print("🎨 Theme toggled")
-        self.build_gui()
-
-    def toggle_temp_unit(self, event=None):
-        """Toggle between C and F"""
-        self.unit = "F" if self.unit == "C" else "C"
-        self.update_temperature_label()
-        print(f"🌡️ Unit changed to: {self.unit}")
-
-    def update_temperature_label(self):
-        """Update temperature display"""
-        if not hasattr(self, "temp_label"):
-            return
-        if self.temp_c is None:
-            self.temp_label.configure(text="N/A")
-        elif self.unit == "C":
-            self.temp_label.configure(text=f"{self.temp_c}°C")
-        else:
-            self.temp_label.configure(text=f"{self.temp_f}°F")
-
-    def safe_update_weather(self):
-        """Safe weather update"""
-        try:
-            self.update_weather()
-        except Exception as e:
-            print(f"❌ Weather error: {e}")
-
-    def update_weather(self):
-        """Main weather update function"""
-        city = self.city_var.get().strip() or "New York"
-        print(f"🌍 Updating weather for: {city}")
+    def create_prediction_info(self):
+        """Tomorrow's prediction - no emoji"""
+        tk.Label(self.scrollable_frame, text="Tomorrow's Prediction", 
+                font=("Arial", 18, "bold"), fg=self.get_text_color(), bg="#87CEEB").pack(pady=(40,15))
         
-        # Get weather data
-        data = get_current_weather(city)
-        self.history_data = fetch_world_history(city)
+        self.prediction_label = tk.Label(
+            self.scrollable_frame,
+            text="Loading prediction...",
+            font=("Arial", 16),
+            fg=self.get_text_color(),
+            bg="#87CEEB"
+        )
+        self.prediction_label.pack(pady=10)
 
-        if data.get("error"):
-            print(f"❌ Error: {data['error']}")
-            return
+    def create_history_info(self):
+        """Weather history - no emoji"""
+        tk.Label(self.scrollable_frame, text="Weather History", 
+                font=("Arial", 18, "bold"), fg=self.get_text_color(), bg="#87CEEB").pack(pady=(40,15))
+        
+        self.history_container = tk.Frame(self.scrollable_frame, bg="#87CEEB")
+        self.history_container.pack(pady=15)
+        
+        for i in range(7):
+            self.history_container.grid_columnconfigure(i, weight=1, minsize=90)
+        
+        self.history_labels = []
 
-        # Update temperature
-        temp_c = data.get("temperature")
+    def _on_mousewheel(self, event):
+        """Handle scrolling"""
+        self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+
+    def fetch_and_display(self):
+        """Fetch weather data"""
+        threading.Thread(target=self._fetch_weather, daemon=True).start()
+
+    def _fetch_weather(self):
+        """Background weather fetch"""
+        try:
+            city = self.city_var.get().strip() or "New York"
+            weather_data = get_current_weather(city)
+            
+            if weather_data.get("error"):
+                print(f"❌ Error: {weather_data['error']}")
+                return
+            
+            self.after(0, lambda: self.update_displays(weather_data, city))
+            
+        except Exception as e:
+            print(f"❌ Fetch error: {e}")
+
+    def update_displays(self, weather_data, city):
+        """Update all displays"""
+        # Update weather
+        temp_c = weather_data.get("temperature")
         if temp_c is not None:
             self.temp_c = round(temp_c, 1)
             self.temp_f = round((temp_c * 9 / 5) + 32, 1)
-
-        self.update_temperature_label()
-
-        # Update description
-        description = data.get("description", "No description")
-        if hasattr(self, "desc_label"):
-            self.desc_label.configure(text=description)
-
-        # Update timestamp
-        if hasattr(self, "update_label"):
-            timestamp = datetime.now().strftime('%H:%M:%S')
-            self.update_label.configure(text=f"Updated: {timestamp}")
-
-        # Update weather icon
-        self._update_weather_icon(data.get("icon"))
-
+            
+            if self.unit == "C":
+                self.temp_label.configure(text=f"{self.temp_c}°C")
+            else:
+                self.temp_label.configure(text=f"{self.temp_f}°F")
+        
+        description = weather_data.get("description", "No description")
+        self.desc_label.configure(text=description)
+        
+        timestamp = datetime.now().strftime('%H:%M:%S')
+        self.update_label.configure(text=f"Updated: {timestamp}")
+        
         # Update metrics
-        self._update_weather_metrics(data)
-
-        # UPDATE ANIMATION BASED ON WEATHER
-        weather_condition = description.lower() if description else "rain"
-        animation_type = self.map_weather_to_animation(weather_condition)
-        self.current_weather_condition = animation_type
+        humidity = weather_data.get("humidity", "N/A")
+        wind = weather_data.get("wind_speed", "N/A") 
+        pressure = weather_data.get("pressure", "N/A")
+        visibility = weather_data.get("visibility", "N/A")
+        uv = weather_data.get("uv_index", "N/A")
+        precipitation = weather_data.get("precipitation", "N/A")
         
-        if self.smart_background:
-            print(f"🎬 Changing animation to: {animation_type}")
-            self.smart_background.set_weather_type(animation_type)
-
-        # Update predictions and history
-        self.update_tomorrow_prediction(city)
-        self.update_weather_history()
-
-    def map_weather_to_animation(self, weather_condition):
-        """Map weather to animation type"""
-        condition = weather_condition.lower()
+        self.humidity_value.configure(text=f"{humidity}%" if humidity != "N/A" else "--")
+        self.wind_value.configure(text=f"{wind} m/s" if wind != "N/A" else "--")
+        self.pressure_value.configure(text=f"{pressure} hPa" if pressure != "N/A" else "--")
+        self.visibility_value.configure(text=f"{visibility} m" if visibility != "N/A" else "--")
+        self.uv_value.configure(text=str(uv) if uv != "N/A" else "--")
+        self.precipitation_value.configure(text=f"{precipitation} mm" if precipitation != "N/A" else "--")
         
-        if any(word in condition for word in ["rain", "drizzle", "shower"]):
-            return "rain"
-        elif any(word in condition for word in ["snow", "blizzard", "sleet"]):
-            return "snow"
-        elif any(word in condition for word in ["thunder", "storm", "lightning"]):
-            return "storm"
-        elif any(word in condition for word in ["cloud", "overcast", "broken"]):
-            return "cloudy"
-        elif any(word in condition for word in ["sun", "sunny", "clear"]):
-            return "sunny"
-        elif any(word in condition for word in ["mist", "fog", "haze"]):
-            return "mist"
-        else:
-            return "rain"
+        # Update icon
+        self._update_weather_icon(weather_data.get("icon"))
+        
+        # Update prediction
+        self.update_prediction(city)
+        
+        # Update history
+        self.update_history(city)
+        
+        # Update animation
+        self.update_animation(weather_data)
 
-    def update_tomorrow_prediction(self, city):
-        """Update prediction display"""
+    def update_prediction(self, city):
+        """Update prediction"""
         try:
             predicted_temp, confidence, accuracy = get_tomorrows_prediction(city)
             
-            if hasattr(self, "pred_temp_label"):
-                temp_display = f"{predicted_temp}°C" if predicted_temp else "N/A"
-                if self.unit == "F" and predicted_temp:
-                    temp_display = f"{round((predicted_temp * 9/5) + 32, 1)}°F"
+            if predicted_temp:
+                if self.unit == "C":
+                    temp_text = f"{predicted_temp}°C"
+                else:
+                    temp_f = round((predicted_temp * 9/5) + 32, 1)
+                    temp_text = f"{temp_f}°F"
                 
-                self.pred_temp_label.configure(text=temp_display)
-                self.pred_confidence_label.configure(text=str(confidence))
-                self.pred_accuracy_label.configure(text=f"{accuracy}%")
+                pred_text = f"{temp_text} | {confidence} | {accuracy}%"
+            else:
+                pred_text = "No prediction available"
+                
+            self.prediction_label.configure(text=pred_text)
+            
         except Exception as e:
-            print(f"🔮 Prediction error: {e}")
+            print(f"❌ Prediction error: {e}")
 
-    def update_weather_history(self):
-        """Update history display"""
-        if not hasattr(self, "history_frame"):
+    def update_history(self, city):
+        """Update history - black and white only"""
+        try:
+            for label in self.history_labels:
+                label.destroy()
+            self.history_labels.clear()
+            
+            history_data = fetch_world_history(city)
+            
+            if history_data and "time" in history_data:
+                times = history_data.get("time", [])
+                max_temps = history_data.get("temperature_2m_max", [])
+                min_temps = history_data.get("temperature_2m_min", [])
+                mean_temps = history_data.get("temperature_2m_mean", [])
+                
+                for col in range(min(7, len(times))):
+                    if col < len(max_temps) and col < len(min_temps):
+                        date = times[col][-5:] if len(times[col]) > 5 else times[col]
+                        max_temp = max_temps[col]
+                        min_temp = min_temps[col] 
+                        avg_temp = mean_temps[col] if col < len(mean_temps) else None
+                        
+                        if self.unit == "F":
+                            max_temp = round(max_temp * 9/5 + 32, 1)
+                            min_temp = round(min_temp * 9/5 + 32, 1)
+                            avg_temp = round(avg_temp * 9/5 + 32, 1) if avg_temp else None
+                        else:
+                            max_temp = round(max_temp, 1)
+                            min_temp = round(min_temp, 1)
+                            avg_temp = round(avg_temp, 1) if avg_temp else None
+                        
+                        unit_symbol = "°F" if self.unit == "F" else "°C"
+                        
+                        # Date
+                        date_label = tk.Label(self.history_container, text=f"📅{date}", 
+                                            font=("Arial", 9, "bold"), fg=self.get_text_color(), bg="#87CEEB")
+                        date_label.grid(row=0, column=col, padx=3, pady=2)
+                        self.history_labels.append(date_label)
+                        
+                        # Max - BLACK/WHITE ONLY
+                        max_label = tk.Label(self.history_container, text=f"🔺{max_temp}{unit_symbol}", 
+                                           font=("Arial", 9), fg=self.get_text_color(), bg="#87CEEB")
+                        max_label.grid(row=1, column=col, padx=3, pady=1)
+                        self.history_labels.append(max_label)
+                        
+                        # Min - BLACK/WHITE ONLY
+                        min_label = tk.Label(self.history_container, text=f"🔻{min_temp}{unit_symbol}", 
+                                           font=("Arial", 9), fg=self.get_text_color(), bg="#87CEEB")
+                        min_label.grid(row=2, column=col, padx=3, pady=1)
+                        self.history_labels.append(min_label)
+                        
+                        # Avg
+                        if avg_temp:
+                            avg_label = tk.Label(self.history_container, text=f"🌡️{avg_temp}{unit_symbol}", 
+                                               font=("Arial", 9), fg=self.get_text_color(), bg="#87CEEB")
+                            avg_label.grid(row=3, column=col, padx=3, pady=1)
+                            self.history_labels.append(avg_label)
+                        
+        except Exception as e:
+            print(f"❌ History error: {e}")
+
+    def update_animation(self, weather_data):
+        """Update animation based on weather"""
+        if not self.smart_bg:
+            print("❌ No animation system available")
             return
             
-        for widget in self.history_frame.winfo_children():
-            widget.destroy()
+        try:
+            description = weather_data.get("description", "").lower()
+            
+            if any(word in description for word in ["rain", "drizzle", "shower"]):
+                animation_type = "rain"
+            elif any(word in description for word in ["snow", "blizzard", "sleet"]):
+                animation_type = "snow"
+            elif any(word in description for word in ["thunder", "storm", "lightning"]):
+                animation_type = "storm"
+            elif any(word in description for word in ["cloud", "overcast", "broken"]):
+                animation_type = "cloudy"
+            elif any(word in description for word in ["clear", "sun", "sunny"]):
+                animation_type = "sunny"
+            elif any(word in description for word in ["mist", "fog", "haze"]):
+                animation_type = "mist"
+            else:
+                animation_type = "clear"
+            
+            print(f"🎬 Updating animation to: {animation_type}")
+            
+            if self.smart_bg.is_animation_running():
+                self.smart_bg.set_weather_type(animation_type)
+            else:
+                self.smart_bg.start_animation(animation_type)
+                
+            # Log animation status
+            particles = self.smart_bg.get_particle_count()
+            print(f"🎬 Animation updated: {particles} particles")
+            
+        except Exception as e:
+            print(f"❌ Animation update error: {e}")
+            traceback.print_exc()
 
-        if not isinstance(self.history_data, dict):
-            return
-
-        times = self.history_data.get("time", [])
-        max_temps = self.history_data.get("temperature_2m_max", [])
-        min_temps = self.history_data.get("temperature_2m_min", [])
+    def toggle_theme(self):
+        """Toggle theme"""
+        self.is_dark_theme = not self.is_dark_theme
+        self.build_gui()
         
-        for col in range(min(7, len(times))):
-            if col < len(times):
-                date = times[col][-5:] if len(times[col]) > 5 else times[col]  # Get MM-DD
-                max_temp = max_temps[col] if col < len(max_temps) else "N/A"
-                min_temp = min_temps[col] if col < len(min_temps) else "N/A"
-                
-                if max_temp != "N/A":
-                    max_temp = f"{round(max_temp)}°" if self.unit == "C" else f"{round(max_temp * 9/5 + 32)}°"
-                if min_temp != "N/A":
-                    min_temp = f"{round(min_temp)}°" if self.unit == "C" else f"{round(min_temp * 9/5 + 32)}°"
-                
-                tk.Label(self.history_frame, text=date, font=("Arial", 10, "bold"), fg="black", bg="#87CEEB").grid(row=0, column=col, padx=5)
-                tk.Label(self.history_frame, text=f"↑{max_temp}", fg="red", bg="#87CEEB").grid(row=1, column=col, padx=5)
-                tk.Label(self.history_frame, text=f"↓{min_temp}", fg="blue", bg="#87CEEB").grid(row=2, column=col, padx=5)
+        # Refresh data
+        if hasattr(self, 'temp_c') and self.temp_c is not None:
+            self.fetch_and_display()
+        
+        print(f"🎨 Theme: {'dark' if self.is_dark_theme else 'light'}")
+
+    def toggle_unit(self):
+        """Toggle temperature unit"""
+        self.unit = "F" if self.unit == "C" else "C"
+        self.fetch_and_display()
 
     def _update_weather_icon(self, icon_code):
         """Update weather icon"""
-        if not icon_code or not hasattr(self, "icon_label"):
+        if not icon_code:
             return
-
+            
         try:
             url = f"http://openweathermap.org/img/wn/{icon_code}@2x.png"
             response = requests.get(url, timeout=5)
             response.raise_for_status()
+            
             pil_img = Image.open(BytesIO(response.content))
             icon_image = ImageTk.PhotoImage(pil_img)
-            self.icon_label.configure(image=icon_image)
+            
+            self.icon_label.configure(image=icon_image, text="")
             self.icon_label.image = icon_image
-        except:
-            self.icon_label.configure(text="🌤️")
-
-    def _update_weather_metrics(self, data):
-        """Update weather metrics"""
-        metrics = {
-            "humidity": f"{data.get('humidity')}%" if data.get("humidity") else "N/A",
-            "wind": f"{data.get('wind_speed')} m/s" if data.get("wind_speed") else "N/A",
-            "pressure": f"{data.get('pressure')} hPa" if data.get("pressure") else "N/A",
-            "visibility": f"{data.get('visibility')} m" if data.get("visibility") else "N/A",
-            "uv": str(data.get("uv_index")) if data.get("uv_index") else "N/A",
-            "precipitation": f"{data.get('precipitation')} mm" if data.get("precipitation") else "N/A",
-        }
-
-        for key, val in metrics.items():
-            if key in self.metric_value_labels:
-                self.metric_value_labels[key].configure(text=val)
+            
+        except Exception as e:
+            print(f"Icon error: {e}")
+            self.icon_label.configure(text="🌤️", image="")
 
     def on_close(self):
-        """Handle app close"""
-        print("👋 Closing app...")
-        if self.smart_background:
-            self.smart_background.stop_animation()
+        """Clean up"""
+        if self.smart_bg:
+            try:
+                self.smart_bg.stop_animation()
+                print("🎬 Animation stopped")
+            except:
+                pass
         self.destroy()
 
 
 def run_app():
+    """Main entry point"""
     try:
         print("🚀 Starting Weather App...")
         app = WeatherApp()
