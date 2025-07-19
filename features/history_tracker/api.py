@@ -1,4 +1,3 @@
-from .geocode import get_lat_lon
 import requests
 import datetime
 import time
@@ -26,6 +25,62 @@ _weather_cache = {}
 # How long to keep cached data (in seconds)
 # 120 seconds = 2 minutes - reasonable for historical data that doesn't change
 CACHE_DURATION = 120
+
+def get_lat_lon(city):
+    """
+    Convert city name to latitude and longitude coordinates
+    
+    This function uses the Open-Meteo geocoding API to find the geographic
+    coordinates (latitude and longitude) for a given city name.
+    """
+    
+    # Input validation: ensure city is a valid string
+    if not isinstance(city, str):
+        # Log error and return None values for invalid input
+        return None, None
+    
+    # Construct the geocoding API URL with search parameters
+    url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1&language=en&format=json"
+    
+    try:
+        # Make HTTP GET request to the geocoding API
+        response = requests.get(url)
+        
+        # Check if the API request was successful (HTTP 200)
+        if response.status_code != 200:
+            # Log HTTP error and return None values
+            return None, None
+
+        # Parse the JSON response from the API
+        data = response.json()
+        
+        # Extract results array from the API response
+        results = data.get("results")
+        
+        # Check if we got valid results
+        if results and len(results) > 0:
+            # Extract latitude and longitude from the first result
+            lat = results[0].get("latitude")
+            lon = results[0].get("longitude")
+            
+            # Ensure both coordinates are present and valid
+            if lat is not None and lon is not None:
+                return lat, lon
+        
+        # Log when no results are found for the given city
+        return None, None
+        
+    except requests.exceptions.RequestException as e:
+        # Handle network-related errors (timeout, connection issues, etc.)
+        return None, None
+        
+    except ValueError as e:
+        # Handle JSON parsing errors
+        return None, None
+        
+    except Exception as e:
+        # Handle any other unexpected errors
+        return None, None
 
 def _is_cache_valid(city_key):
     """
@@ -115,7 +170,6 @@ def fetch_world_history(city):
     if lat is None or lon is None:
         return {}
     
-    
     # ────────────────────────────────────────────────────────────────────────── 
     # CALCULATE DATE RANGE
     # ────────────────────────────────────────────────────────────────────────── 
@@ -128,7 +182,6 @@ def fetch_world_history(city):
     # Convert dates to ISO format (YYYY-MM-DD) required by the API
     start_date_str = start_date.isoformat()
     end_date_str = end_date.isoformat()
-    
     
     # ────────────────────────────────────────────────────────────────────────── 
     # BUILD API REQUEST URL

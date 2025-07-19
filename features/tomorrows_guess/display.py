@@ -140,3 +140,4 @@ def update_tomorrow_guess_display(frame, predicted_temp, confidence, accuracy):
             frame.accuracy_label.configure(text=f"{accuracy}%")
         else:
             frame.accuracy_label.configure(text=str(accuracy) if accuracy != "N/A" else "N/A")
+            

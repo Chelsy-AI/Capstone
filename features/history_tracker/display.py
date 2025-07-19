@@ -11,7 +11,6 @@ from datetime import datetime, timedelta
 import customtkinter as ctk
 import threading
 from .api import fetch_world_history
-from features.history_tracker.api import fetch_world_history
 
 
 def insert_temperature_history_as_grid(parent, city, unit="C"):
@@ -265,3 +264,4 @@ def get_temperature_color(temp, unit="C"):
                 return "#5352ED"  # Cold blue
     except (ValueError, TypeError):
         return "#747D8C"  # Default gray for invalid values
+    

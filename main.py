@@ -60,14 +60,9 @@ def run_weather_app():
         # Create data directory
         create_data_directory()
         
-        # Import and run the fixed app
-        try:
-            # Try to import the fixed app first
-            exec(open('fixed_weather_app.py').read())
-        except FileNotFoundError:
-            # Fallback to original app structure
-            from core.app import run_app
-            run_app()
+        # Import and run the app
+        from config.weather_app import run_app
+        run_app()
         
         return True
         

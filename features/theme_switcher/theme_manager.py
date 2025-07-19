@@ -14,8 +14,7 @@ consistent theming across the entire application.
 import logging
 from typing import Optional, Dict, Any, Callable
 import customtkinter as ctk
-from core.theme import LIGHT_THEME, DARK_THEME
-from .user_preferences import load_user_theme_preference, save_user_theme_preference
+from config.themes import LIGHT_THEME, DARK_THEME
 
 # Configure logging for theme operations
 logger = logging.getLogger(__name__)
@@ -74,9 +73,6 @@ def set_day_mode(app) -> str:
         # Update main application colors
         _apply_theme_colors(app, LIGHT_THEME)
         
-        # Save user preference
-        save_user_theme_preference(THEME_LIGHT)
-        
         # Trigger theme change callback if available
         _trigger_theme_callback(app, THEME_LIGHT)
         
@@ -107,9 +103,6 @@ def set_night_mode(app) -> str:
         
         # Update main application colors
         _apply_theme_colors(app, DARK_THEME)
-        
-        # Save user preference
-        save_user_theme_preference(THEME_DARK)
         
         # Trigger theme change callback if available
         _trigger_theme_callback(app, THEME_DARK)
@@ -162,9 +155,8 @@ def get_user_preference() -> Optional[str]:
     
     """
     try:
-        preference = load_user_theme_preference()
-        logger.info(f"Loaded user theme preference: {preference}")
-        return preference
+        # For now, return None since user preferences are not implemented
+        return None
     except Exception as e:
         logger.error(f"Error loading user theme preference: {e}")
         return None

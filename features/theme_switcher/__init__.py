@@ -18,13 +18,6 @@ from .theme_manager import (
     reset_theme_to_default
 )
 
-from .user_preferences import (
-    save_user_theme_preference,
-    load_user_theme_preference,
-    clear_user_preferences,
-    get_preference_file_path
-)
-
 # Public API - These functions are available when importing the module
 __all__ = [
     # Core theme management functions
@@ -35,13 +28,7 @@ __all__ = [
     "get_user_preference",
     "get_current_theme",
     "is_dark_mode",
-    "reset_theme_to_default",
-    
-    # User preference management functions
-    "save_user_theme_preference",
-    "load_user_theme_preference",
-    "clear_user_preferences",
-    "get_preference_file_path",
+    "reset_theme_to_default"
 ]
 
 # Module version for tracking changes
