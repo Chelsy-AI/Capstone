@@ -380,3 +380,4 @@ class WeatherDisplay:
         
         # Clear history
         self._clear_history_labels()
+        

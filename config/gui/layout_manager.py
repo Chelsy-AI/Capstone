@@ -359,3 +359,4 @@ class LayoutManager:
             positions.append(x_pos)
         
         return positions, col_width
+    

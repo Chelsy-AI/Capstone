@@ -51,6 +51,8 @@ class WeatherGUI:
         self.temp_prediction = None
         self.accuracy_prediction = None
         self.confidence_prediction = None
+        
+        self.main_frame = None  
 
     def build_gui(self):
         """Build the complete GUI interface"""
@@ -185,3 +187,4 @@ class WeatherGUI:
         """Set widget references from layout manager"""
         for attr_name, widget in widget_refs.items():
             setattr(self, attr_name, widget)
+            

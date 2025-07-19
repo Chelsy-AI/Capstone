@@ -205,3 +205,4 @@ class AnimationController:
                 
             except Exception as e:
                 print(f"❌ Weather preview error: {e}")
+                

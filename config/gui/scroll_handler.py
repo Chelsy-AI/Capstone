@@ -275,3 +275,4 @@ class ScrollHandler:
         self.scroll_offset = 0
         self.update_widget_positions()
         self.update_scrollbar_position()
+        

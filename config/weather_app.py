@@ -13,6 +13,8 @@ from config.api import get_current_weather
 from config.storage import save_weather
 from config.gui import WeatherGUI
 
+from features.interactive_map.controller import MapController
+
 
 class WeatherApp(tk.Tk):
     """
@@ -54,6 +56,10 @@ class WeatherApp(tk.Tk):
         
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
+        # Map controller for interactive map
+        self.map_controller = MapController(self.gui.main_frame, self.city_var.get)
+
+
     def fetch_and_display(self):
         """Fetch and display weather data"""
         threading.Thread(target=self._fetch_weather, daemon=True).start()
@@ -85,7 +91,8 @@ class WeatherApp(tk.Tk):
             self.after(0, lambda: self.update_tomorrow_prediction(city))
             self.after(0, lambda: self.gui.update_history_display(city))
             self.after(0, lambda: self.gui.update_background_animation(weather_data))
-            
+            self.map_controller = MapController(self, self.city_var.get)
+
         except Exception as e:
             print(f"❌ Weather fetch error: {e}")
 
@@ -137,3 +144,4 @@ __all__ = ['run_app', 'WeatherApp']
 
 if __name__ == "__main__":
     run_app()
+    
