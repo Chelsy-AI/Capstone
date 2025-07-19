@@ -1,0 +1,63 @@
+2025-07-19 12:13:41,774 - WeatherApp - INFO - initialize_error_handling:518 - Weather App Error Handling System Initialized
+2025-07-19 12:13:41,775 - WeatherApp - INFO - log_system_info:409 - === SYSTEM INFORMATION ===
+2025-07-19 12:13:41,810 - WeatherApp - INFO - log_system_info:410 - Platform: macOS-15.4.1-x86_64-i386-64bit-Mach-O
+2025-07-19 12:13:41,810 - WeatherApp - INFO - log_system_info:411 - Python Version: 3.13.3 (v3.13.3:6280bb54784, Apr  8 2025, 10:47:54) [Clang 15.0.0 (clang-1500.3.9.4)]
+2025-07-19 12:13:41,810 - WeatherApp - INFO - log_system_info:412 - Python Executable: /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+2025-07-19 12:13:41,810 - WeatherApp - INFO - log_system_info:413 - Working Directory: /Users/drashtip/Documents/Capstone
+2025-07-19 12:13:41,810 - WeatherApp - INFO - log_system_info:414 - ==========================
+2025-07-19 12:27:39,429 - WeatherApp - INFO - initialize_error_handling:518 - Weather App Error Handling System Initialized
+2025-07-19 12:27:39,430 - WeatherApp - INFO - log_system_info:409 - === SYSTEM INFORMATION ===
+2025-07-19 12:27:39,453 - WeatherApp - INFO - log_system_info:410 - Platform: macOS-15.4.1-x86_64-i386-64bit-Mach-O
+2025-07-19 12:27:39,453 - WeatherApp - INFO - log_system_info:411 - Python Version: 3.13.3 (v3.13.3:6280bb54784, Apr  8 2025, 10:47:54) [Clang 15.0.0 (clang-1500.3.9.4)]
+2025-07-19 12:27:39,453 - WeatherApp - INFO - log_system_info:412 - Python Executable: /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+2025-07-19 12:27:39,453 - WeatherApp - INFO - log_system_info:413 - Working Directory: /Users/drashtip/Documents/Capstone
+2025-07-19 12:27:39,453 - WeatherApp - INFO - log_system_info:414 - ==========================
+2025-07-19 12:31:10,009 - WeatherApp - INFO - initialize_error_handling:518 - Weather App Error Handling System Initialized
+2025-07-19 12:31:10,009 - WeatherApp - INFO - log_system_info:409 - === SYSTEM INFORMATION ===
+2025-07-19 12:31:10,031 - WeatherApp - INFO - log_system_info:410 - Platform: macOS-15.4.1-x86_64-i386-64bit-Mach-O
+2025-07-19 12:31:10,031 - WeatherApp - INFO - log_system_info:411 - Python Version: 3.13.3 (v3.13.3:6280bb54784, Apr  8 2025, 10:47:54) [Clang 15.0.0 (clang-1500.3.9.4)]
+2025-07-19 12:31:10,031 - WeatherApp - INFO - log_system_info:412 - Python Executable: /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+2025-07-19 12:31:10,032 - WeatherApp - INFO - log_system_info:413 - Working Directory: /Users/drashtip/Documents/Capstone
+2025-07-19 12:31:10,032 - WeatherApp - INFO - log_system_info:414 - ==========================
+2025-07-19 12:42:02,220 - WeatherApp - INFO - initialize_error_handling:518 - Weather App Error Handling System Initialized
+2025-07-19 12:42:02,220 - WeatherApp - INFO - log_system_info:409 - === SYSTEM INFORMATION ===
+2025-07-19 12:42:02,242 - WeatherApp - INFO - log_system_info:410 - Platform: macOS-15.4.1-x86_64-i386-64bit-Mach-O
+2025-07-19 12:42:02,243 - WeatherApp - INFO - log_system_info:411 - Python Version: 3.13.3 (v3.13.3:6280bb54784, Apr  8 2025, 10:47:54) [Clang 15.0.0 (clang-1500.3.9.4)]
+2025-07-19 12:42:02,243 - WeatherApp - INFO - log_system_info:412 - Python Executable: /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+2025-07-19 12:42:02,243 - WeatherApp - INFO - log_system_info:413 - Working Directory: /Users/drashtip/Documents/Capstone
+2025-07-19 12:42:02,243 - WeatherApp - INFO - log_system_info:414 - ==========================
+2025-07-19 15:33:47,927 - WeatherApp - INFO - initialize_error_handling:518 - Weather App Error Handling System Initialized
+2025-07-19 15:33:47,928 - WeatherApp - INFO - log_system_info:409 - === SYSTEM INFORMATION ===
+2025-07-19 15:33:47,958 - WeatherApp - INFO - log_system_info:410 - Platform: macOS-15.4.1-x86_64-i386-64bit-Mach-O
+2025-07-19 15:33:47,959 - WeatherApp - INFO - log_system_info:411 - Python Version: 3.13.3 (v3.13.3:6280bb54784, Apr  8 2025, 10:47:54) [Clang 15.0.0 (clang-1500.3.9.4)]
+2025-07-19 15:33:47,959 - WeatherApp - INFO - log_system_info:412 - Python Executable: /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+2025-07-19 15:33:47,959 - WeatherApp - INFO - log_system_info:413 - Working Directory: /Users/drashtip/Documents/Capstone
+2025-07-19 15:33:47,959 - WeatherApp - INFO - log_system_info:414 - ==========================
+2025-07-19 15:38:44,123 - WeatherApp - INFO - initialize_error_handling:518 - Weather App Error Handling System Initialized
+2025-07-19 15:38:44,123 - WeatherApp - INFO - log_system_info:409 - === SYSTEM INFORMATION ===
+2025-07-19 15:38:44,147 - WeatherApp - INFO - log_system_info:410 - Platform: macOS-15.4.1-x86_64-i386-64bit-Mach-O
+2025-07-19 15:38:44,147 - WeatherApp - INFO - log_system_info:411 - Python Version: 3.13.3 (v3.13.3:6280bb54784, Apr  8 2025, 10:47:54) [Clang 15.0.0 (clang-1500.3.9.4)]
+2025-07-19 15:38:44,147 - WeatherApp - INFO - log_system_info:412 - Python Executable: /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+2025-07-19 15:38:44,148 - WeatherApp - INFO - log_system_info:413 - Working Directory: /Users/drashtip/Documents/Capstone
+2025-07-19 15:38:44,148 - WeatherApp - INFO - log_system_info:414 - ==========================
+2025-07-19 15:41:31,446 - WeatherApp - INFO - initialize_error_handling:518 - Weather App Error Handling System Initialized
+2025-07-19 15:41:31,447 - WeatherApp - INFO - log_system_info:409 - === SYSTEM INFORMATION ===
+2025-07-19 15:41:31,473 - WeatherApp - INFO - log_system_info:410 - Platform: macOS-15.4.1-x86_64-i386-64bit-Mach-O
+2025-07-19 15:41:31,474 - WeatherApp - INFO - log_system_info:411 - Python Version: 3.13.3 (v3.13.3:6280bb54784, Apr  8 2025, 10:47:54) [Clang 15.0.0 (clang-1500.3.9.4)]
+2025-07-19 15:41:31,474 - WeatherApp - INFO - log_system_info:412 - Python Executable: /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+2025-07-19 15:41:31,474 - WeatherApp - INFO - log_system_info:413 - Working Directory: /Users/drashtip/Documents/Capstone
+2025-07-19 15:41:31,474 - WeatherApp - INFO - log_system_info:414 - ==========================
+2025-07-19 15:51:34,153 - WeatherApp - INFO - initialize_error_handling:518 - Weather App Error Handling System Initialized
+2025-07-19 15:51:34,153 - WeatherApp - INFO - log_system_info:409 - === SYSTEM INFORMATION ===
+2025-07-19 15:51:34,179 - WeatherApp - INFO - log_system_info:410 - Platform: macOS-15.4.1-x86_64-i386-64bit-Mach-O
+2025-07-19 15:51:34,180 - WeatherApp - INFO - log_system_info:411 - Python Version: 3.13.3 (v3.13.3:6280bb54784, Apr  8 2025, 10:47:54) [Clang 15.0.0 (clang-1500.3.9.4)]
+2025-07-19 15:51:34,180 - WeatherApp - INFO - log_system_info:412 - Python Executable: /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+2025-07-19 15:51:34,180 - WeatherApp - INFO - log_system_info:413 - Working Directory: /Users/drashtip/Documents/Capstone
+2025-07-19 15:51:34,180 - WeatherApp - INFO - log_system_info:414 - ==========================
+2025-07-19 15:55:59,032 - WeatherApp - INFO - initialize_error_handling:518 - Weather App Error Handling System Initialized
+2025-07-19 15:55:59,033 - WeatherApp - INFO - log_system_info:409 - === SYSTEM INFORMATION ===
+2025-07-19 15:55:59,058 - WeatherApp - INFO - log_system_info:410 - Platform: macOS-15.4.1-x86_64-i386-64bit-Mach-O
+2025-07-19 15:55:59,058 - WeatherApp - INFO - log_system_info:411 - Python Version: 3.13.3 (v3.13.3:6280bb54784, Apr  8 2025, 10:47:54) [Clang 15.0.0 (clang-1500.3.9.4)]
+2025-07-19 15:55:59,059 - WeatherApp - INFO - log_system_info:412 - Python Executable: /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+2025-07-19 15:55:59,059 - WeatherApp - INFO - log_system_info:413 - Working Directory: /Users/drashtip/Documents/Capstone
+2025-07-19 15:55:59,059 - WeatherApp - INFO - log_system_info:414 - ==========================

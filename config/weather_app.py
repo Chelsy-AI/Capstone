@@ -46,7 +46,7 @@ class WeatherApp(tk.Tk):
         
         # Scroll offset for scrolling
         self.scroll_offset = 0
-        self.max_scroll = 300  # Maximum scroll distance
+        self.max_scroll = 500  # Increased to accommodate more content
         
         # Store widget references to prevent garbage collection
         self.widgets = []
@@ -60,188 +60,413 @@ class WeatherApp(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
     def build_gui(self):
-        """Build GUI with table-style metrics layout"""
+        """Build responsive GUI with centered, scalable layout"""
         
-        # Clear existing widgets but preserve references
+        # Clear existing widgets but preserve canvas and scrollbar
         for widget in self.winfo_children():
-            widget.destroy()
+            if not hasattr(widget, '_preserve') and widget != getattr(self, 'bg_canvas', None) and widget != getattr(self, 'scrollbar', None):
+                widget.destroy()
         self.widgets.clear()
         
-        # === Animation Background ===
-        self.bg_canvas = tk.Canvas(self, highlightthickness=0, bg="#87CEEB")
-        self.bg_canvas.place(x=0, y=0, relwidth=1, relheight=1)
+        # Bind resize event to handle responsive layout
+        self.bind("<Configure>", self._on_window_resize)
         
-        try:
-            self.smart_bg = WeatherAnimation(self.bg_canvas)
-            self.after(500, lambda: self.smart_bg.start_animation("clear"))
-            print("🎬 Animation ready")
-        except Exception as e:
-            print(f"❌ Animation failed: {e}")
-            self.smart_bg = None
+        # === Animation Background ===
+        if not hasattr(self, 'bg_canvas'):
+            self.bg_canvas = tk.Canvas(self, highlightthickness=0, bg="#87CEEB")
+            self.bg_canvas.place(x=0, y=0, relwidth=1, relheight=1)
+            self.bg_canvas._preserve = True
+            
+            try:
+                self.smart_bg = WeatherAnimation(self.bg_canvas)
+                self.after(500, lambda: self.smart_bg.start_animation("clear"))
+                print("🎬 Animation ready")
+            except Exception as e:
+                print(f"❌ Animation failed: {e}")
+                self.smart_bg = None
 
         # Add scrollbar
-        self.scrollbar = ttk.Scrollbar(self, orient="vertical", command=self._on_scroll)
-        self.scrollbar.place(x=780, y=0, height=600)
+        if not hasattr(self, 'scrollbar'):
+            self.scrollbar = ttk.Scrollbar(self, orient="vertical", command=self._on_scroll)
+            self.scrollbar.place(relx=0.98, y=0, relheight=1, width=20)
+            self.scrollbar._preserve = True
 
-        # Bind mousewheel
-        self.bind_all("<MouseWheel>", self._on_mousewheel)
-        self.bind_all("<Button-4>", self._on_mousewheel)
-        self.bind_all("<Button-5>", self._on_mousewheel)
+            # Bind mousewheel
+            self.bind_all("<MouseWheel>", self._on_mousewheel)
+            self.bind_all("<Button-4>", self._on_mousewheel)
+            self.bind_all("<Button-5>", self._on_mousewheel)
 
-        # === TABLE-STYLE METRICS LAYOUT ===
+        # Build responsive layout
+        self._build_responsive_layout()
+
+        print("[GUI] Responsive centered GUI ready")
+
+    def _build_responsive_layout(self):
+        """Build the responsive, centered layout"""
+        # Get current window dimensions
+        self.update_idletasks()
+        window_width = self.winfo_width()
+        window_height = self.winfo_height()
         
-        # Row 1: Headers
-        widgets = [
-            tk.Label(self, text="Humidity", font=("Arial", 12, "bold"), fg=self.text_color, bg="#87CEEB"),
-            tk.Label(self, text="Wind", font=("Arial", 12, "bold"), fg=self.text_color, bg="#87CEEB"),
-            tk.Label(self, text="Press.", font=("Arial", 12, "bold"), fg=self.text_color, bg="#87CEEB"),
-            tk.Label(self, text="Visibility", font=("Arial", 12, "bold"), fg=self.text_color, bg="#87CEEB"),
-            tk.Label(self, text="UV Index", font=("Arial", 12, "bold"), fg=self.text_color, bg="#87CEEB"),
-            tk.Label(self, text="Precip.", font=("Arial", 12, "bold"), fg=self.text_color, bg="#87CEEB")
-        ]
-        positions = [(80, 30), (200, 30), (300, 30), (400, 30), (500, 30), (600, 30)]
+        # === RESPONSIVE WEATHER METRICS LAYOUT ===
         
-        for widget, (x, y) in zip(widgets, positions):
-            widget.place(x=x, y=y - self.scroll_offset)
-            self.widgets.append(widget)
+        # Calculate responsive positioning for weather metrics only (6 columns)
+        metrics_count = 6  # humidity, wind, pressure, visibility, uv, precipitation
         
-        # Row 2: Emojis
-        emoji_widgets = [
-            tk.Label(self, text="💧", font=("Arial", 18), bg="#87CEEB"),
-            tk.Label(self, text="🌬️", font=("Arial", 18), bg="#87CEEB"),
-            tk.Label(self, text="🧭", font=("Arial", 18), bg="#87CEEB"),
-            tk.Label(self, text="👁️", font=("Arial", 18), bg="#87CEEB"),
-            tk.Label(self, text="☀️", font=("Arial", 18), bg="#87CEEB"),
-            tk.Label(self, text="🌧️", font=("Arial", 18), bg="#87CEEB")
-        ]
-        emoji_positions = [(95, 50), (210, 50), (315, 50), (425, 50), (525, 50), (620, 50)]
+        # Calculate column width based on window size
+        available_width = window_width - 40  # Leave 20px margin on each side
+        col_width = available_width / metrics_count
         
-        for widget, (x, y) in zip(emoji_widgets, emoji_positions):
-            widget.place(x=x, y=y - self.scroll_offset)
-            self.widgets.append(widget)
+        # Center the entire metrics row
+        start_x = 20  # Left margin
         
-        # Row 3: Values
-        self.humidity_value = tk.Label(self, text="--", font=("Arial", 12), fg=self.text_color, bg="#87CEEB")
-        self.humidity_value.place(x=85, y=75 - self.scroll_offset)
+        # Row 1: Headers (Weather Metrics Only)
+        metric_headers = ["Humidity", "Wind", "Press.", "Visibility", "UV Index", "Precip."]
+        for i, header in enumerate(metric_headers):
+            x_pos = start_x + (i * col_width) + (col_width / 2)
+            header_widget = tk.Label(
+                self, text=header, 
+                font=("Arial", int(10 + window_width/100), "bold"), 
+                fg=self.text_color, bg="#87CEEB",
+                anchor="center"
+            )
+            header_widget.place(x=x_pos, y=30 - self.scroll_offset, anchor="center")
+            self.widgets.append(header_widget)
+        
+        # Row 2: Emojis (Weather Metrics Only)
+        metric_emojis = ["💧", "🌬️", "🧭", "👁️", "☀️", "🌧️"]
+        for i, emoji in enumerate(metric_emojis):
+            x_pos = start_x + (i * col_width) + (col_width / 2)
+            emoji_widget = tk.Label(
+                self, text=emoji, 
+                font=("Arial", int(16 + window_width/80)), 
+                bg="#87CEEB",
+                anchor="center"
+            )
+            emoji_widget.place(x=x_pos, y=55 - self.scroll_offset, anchor="center")
+            self.widgets.append(emoji_widget)
+        
+        # Row 3: Values (Weather Metrics Only)
+        value_positions = []
+        for i in range(metrics_count):
+            x_pos = start_x + (i * col_width) + (col_width / 2)
+            value_positions.append((x_pos, 80 - self.scroll_offset))
+        
+        self.humidity_value = tk.Label(
+            self, text="--", 
+            font=("Arial", int(10 + window_width/120)), 
+            fg=self.text_color, bg="#87CEEB", anchor="center"
+        )
+        self.humidity_value.place(x=value_positions[0][0], y=value_positions[0][1], anchor="center")
         self.widgets.append(self.humidity_value)
         
-        self.wind_value = tk.Label(self, text="--", font=("Arial", 12), fg=self.text_color, bg="#87CEEB")
-        self.wind_value.place(x=195, y=75 - self.scroll_offset)
+        self.wind_value = tk.Label(
+            self, text="--", 
+            font=("Arial", int(10 + window_width/120)), 
+            fg=self.text_color, bg="#87CEEB", anchor="center"
+        )
+        self.wind_value.place(x=value_positions[1][0], y=value_positions[1][1], anchor="center")
         self.widgets.append(self.wind_value)
         
-        self.pressure_value = tk.Label(self, text="--", font=("Arial", 12), fg=self.text_color, bg="#87CEEB")
-        self.pressure_value.place(x=295, y=75 - self.scroll_offset)
+        self.pressure_value = tk.Label(
+            self, text="--", 
+            font=("Arial", int(10 + window_width/120)), 
+            fg=self.text_color, bg="#87CEEB", anchor="center"
+        )
+        self.pressure_value.place(x=value_positions[2][0], y=value_positions[2][1], anchor="center")
         self.widgets.append(self.pressure_value)
         
-        self.visibility_value = tk.Label(self, text="--", font=("Arial", 12), fg=self.text_color, bg="#87CEEB")
-        self.visibility_value.place(x=410, y=75 - self.scroll_offset)
+        self.visibility_value = tk.Label(
+            self, text="--", 
+            font=("Arial", int(10 + window_width/120)), 
+            fg=self.text_color, bg="#87CEEB", anchor="center"
+        )
+        self.visibility_value.place(x=value_positions[3][0], y=value_positions[3][1], anchor="center")
         self.widgets.append(self.visibility_value)
         
-        self.uv_value = tk.Label(self, text="--", font=("Arial", 12), fg=self.text_color, bg="#87CEEB")
-        self.uv_value.place(x=530, y=75 - self.scroll_offset)
+        self.uv_value = tk.Label(
+            self, text="--", 
+            font=("Arial", int(10 + window_width/120)), 
+            fg=self.text_color, bg="#87CEEB", anchor="center"
+        )
+        self.uv_value.place(x=value_positions[4][0], y=value_positions[4][1], anchor="center")
         self.widgets.append(self.uv_value)
         
-        self.precipitation_value = tk.Label(self, text="--", font=("Arial", 12), fg=self.text_color, bg="#87CEEB")
-        self.precipitation_value.place(x=615, y=75 - self.scroll_offset)
+        self.precipitation_value = tk.Label(
+            self, text="--", 
+            font=("Arial", int(10 + window_width/120)), 
+            fg=self.text_color, bg="#87CEEB", anchor="center"
+        )
+        self.precipitation_value.place(x=value_positions[5][0], y=value_positions[5][1], anchor="center")
         self.widgets.append(self.precipitation_value)
 
-        # Toggle Theme Button
+        # === CENTERED CONTROLS ===
+        
+        # Toggle Theme Button (centered)
         self.theme_btn = tk.Button(
             self,
             text="Toggle Theme",
             command=self.toggle_theme,
             bg="darkblue",
             fg="white",
-            font=("Arial", 12, "bold")
+            font=("Arial", int(10 + window_width/120), "bold")
         )
-        self.theme_btn.place(x=350, y=110 - self.scroll_offset)
+        self.theme_btn.place(x=window_width/2, y=120 - self.scroll_offset, anchor="center")
         self.widgets.append(self.theme_btn)
 
-        # City Input
-        city_label = tk.Label(self, text="City:", font=("Arial", 16), fg=self.text_color, bg="#87CEEB")
-        city_label.place(x=320, y=150 - self.scroll_offset)
-        self.widgets.append(city_label)
-        
+        # City Input (centered) - removed "City:" label
         self.city_entry = tk.Entry(
             self,
             textvariable=self.city_var,
-            font=("Arial", 16),
-            width=20,
+            font=("Arial", int(14 + window_width/80)),
+            width=max(15, int(window_width/50)),
             justify="center",
             bg="white",
             fg="black"
         )
-        self.city_entry.place(x=270, y=175 - self.scroll_offset)
+        self.city_entry.place(x=window_width/2, y=160 - self.scroll_offset, anchor="center")
         self.city_entry.bind("<Return>", lambda e: self.fetch_and_display())
         self.widgets.append(self.city_entry)
 
-        # Today's Weather
-        # Weather Icon
-        self.icon_label = tk.Label(self, text="🌤️", font=("Arial", 48), bg="#87CEEB")
-        self.icon_label.place(x=350, y=220 - self.scroll_offset)
+        # === CENTERED WEATHER DISPLAY ===
+        
+        # Weather Icon (centered)
+        self.icon_label = tk.Label(
+            self, text="🌤️", 
+            font=("Arial", int(40 + window_width/25)), 
+            bg="#87CEEB",
+            anchor="center"
+        )
+        self.icon_label.place(x=window_width/2, y=220 - self.scroll_offset, anchor="center")
         self.widgets.append(self.icon_label)
 
-        # Temperature
+        # Temperature (centered)
         self.temp_label = tk.Label(
             self,
             text="Loading...",
-            font=("Arial", 48, "bold"),
+            font=("Arial", int(40 + window_width/25), "bold"),
             fg=self.text_color,
             bg="#87CEEB",
-            cursor="hand2"
+            cursor="hand2",
+            anchor="center"
         )
-        self.temp_label.place(x=300, y=290 - self.scroll_offset)
+        self.temp_label.place(x=window_width/2, y=290 - self.scroll_offset, anchor="center")
         self.temp_label.bind("<Button-1>", lambda e: self.toggle_unit())
         self.widgets.append(self.temp_label)
 
-        # Description
+        # Description (centered)
         self.desc_label = tk.Label(
             self,
             text="Fetching weather...",
-            font=("Arial", 20),
+            font=("Arial", int(16 + window_width/60)),
             fg=self.text_color,
-            bg="#87CEEB"
+            bg="#87CEEB",
+            anchor="center"
         )
-        self.desc_label.place(x=250, y=360 - self.scroll_offset)
+        self.desc_label.place(x=window_width/2, y=350 - self.scroll_offset, anchor="center")
         self.widgets.append(self.desc_label)
 
-        # Tomorrow's Prediction
-        # Temperature
-        temp_pred_label = tk.Label(self, text="Temperature:", font=("Arial", 16), fg=self.text_color, bg="#87CEEB")
-        temp_pred_label.place(x=100, y=400 - self.scroll_offset)
-        self.widgets.append(temp_pred_label)
+        # === TOMORROW'S PREDICTION SECTION (MOVED BELOW TODAY'S WEATHER) ===
         
-        self.temp_prediction = tk.Label(self, text="Loading...", font=("Arial", 14), fg=self.text_color, bg="#87CEEB")
-        self.temp_prediction.place(x=220, y=400 - self.scroll_offset)
+        # Tomorrow's Prediction Title
+        prediction_title = tk.Label(
+            self, text="Tomorrow's Prediction", 
+            font=("Arial", int(18 + window_width/60), "bold"), 
+            fg=self.text_color, bg="#87CEEB",
+            anchor="center"
+        )
+        prediction_title.place(x=window_width/2, y=410 - self.scroll_offset, anchor="center")
+        self.widgets.append(prediction_title)
+
+        # Prediction metrics layout (3 columns)
+        prediction_count = 3
+        pred_col_width = available_width / prediction_count
+        pred_start_x = 20
+        
+        # Prediction Headers
+        prediction_headers = ["Temperature", "Accuracy", "Confidence"]
+        for i, header in enumerate(prediction_headers):
+            x_pos = pred_start_x + (i * pred_col_width) + (pred_col_width / 2)
+            header_widget = tk.Label(
+                self, text=header, 
+                font=("Arial", int(10 + window_width/100), "bold"), 
+                fg=self.text_color, bg="#87CEEB",
+                anchor="center"
+            )
+            header_widget.place(x=x_pos, y=440 - self.scroll_offset, anchor="center")
+            self.widgets.append(header_widget)
+        
+        # Prediction Emojis
+        prediction_emojis = ["🌡️", "💯", "😎"]
+        for i, emoji in enumerate(prediction_emojis):
+            x_pos = pred_start_x + (i * pred_col_width) + (pred_col_width / 2)
+            emoji_widget = tk.Label(
+                self, text=emoji, 
+                font=("Arial", int(16 + window_width/80)), 
+                bg="#87CEEB",
+                anchor="center"
+            )
+            emoji_widget.place(x=x_pos, y=465 - self.scroll_offset, anchor="center")
+            self.widgets.append(emoji_widget)
+
+        # Prediction Values
+        prediction_positions = []
+        for i in range(prediction_count):
+            x_pos = pred_start_x + (i * pred_col_width) + (pred_col_width / 2)
+            prediction_positions.append((x_pos, 490 - self.scroll_offset))
+        
+        self.temp_prediction = tk.Label(
+            self, text="--", 
+            font=("Arial", int(10 + window_width/120)), 
+            fg=self.text_color, bg="#87CEEB", anchor="center"
+        )
+        self.temp_prediction.place(x=prediction_positions[0][0], y=prediction_positions[0][1], anchor="center")
         self.widgets.append(self.temp_prediction)
         
-        # Confidence
-        conf_label = tk.Label(self, text="Confidence:", font=("Arial", 16), fg=self.text_color, bg="#87CEEB")
-        conf_label.place(x=100, y=430 - self.scroll_offset)
-        self.widgets.append(conf_label)
-        
-        self.confidence_prediction = tk.Label(self, text="Loading...", font=("Arial", 14), fg=self.text_color, bg="#87CEEB")
-        self.confidence_prediction.place(x=200, y=430 - self.scroll_offset)
-        self.widgets.append(self.confidence_prediction)
-        
-        # Accuracy
-        acc_label = tk.Label(self, text="Accuracy:", font=("Arial", 16), fg=self.text_color, bg="#87CEEB")
-        acc_label.place(x=100, y=460 - self.scroll_offset)
-        self.widgets.append(acc_label)
-        
-        self.accuracy_prediction = tk.Label(self, text="Loading...", font=("Arial", 14), fg=self.text_color, bg="#87CEEB")
-        self.accuracy_prediction.place(x=180, y=460 - self.scroll_offset)
+        self.accuracy_prediction = tk.Label(
+            self, text="--", 
+            font=("Arial", int(10 + window_width/120)), 
+            fg=self.text_color, bg="#87CEEB", anchor="center"
+        )
+        self.accuracy_prediction.place(x=prediction_positions[1][0], y=prediction_positions[1][1], anchor="center")
         self.widgets.append(self.accuracy_prediction)
+        
+        self.confidence_prediction = tk.Label(
+            self, text="--", 
+            font=("Arial", int(10 + window_width/120)), 
+            fg=self.text_color, bg="#87CEEB", anchor="center"
+        )
+        self.confidence_prediction.place(x=prediction_positions[2][0], y=prediction_positions[2][1], anchor="center")
+        self.widgets.append(self.confidence_prediction)
 
+        # === CENTERED HISTORY TITLE ===
+        
         # 7-Day History
-        history_title = tk.Label(self, text="History", font=("Arial", 20, "bold"), fg=self.text_color, bg="#87CEEB")
-        history_title.place(x=350, y=500 - self.scroll_offset)
+        history_title = tk.Label(
+            self, text="7-Day History", 
+            font=("Arial", int(18 + window_width/60), "bold"), 
+            fg=self.text_color, bg="#87CEEB",
+            anchor="center"
+        )
+        history_title.place(x=window_width/2, y=550 - self.scroll_offset, anchor="center")
         self.widgets.append(history_title)
 
-        # 7-Day History - NO HEADER
+        # History labels will be created in update_history_display
         self.history_labels = []
 
-        print("[GUI] Table-style metrics GUI ready")
+    def _on_window_resize(self, event):
+        """Handle window resize events"""
+        if event.widget == self:
+            # Rebuild layout when window is resized
+            self.after_idle(self._rebuild_layout_on_resize)
+
+    def _rebuild_layout_on_resize(self):
+        """Rebuild the layout when window is resized"""
+        try:
+            # Clear existing widgets first to prevent duplicates
+            for widget in self.winfo_children():
+                if widget != self.bg_canvas and widget != self.scrollbar:
+                    widget.destroy()
+            self.widgets.clear()
+            
+            # Clear history labels
+            self.history_labels.clear()
+            
+            # Rebuild layout
+            self._build_responsive_layout()
+            
+            # Restore current data
+            if self.current_weather_data:
+                self.update_weather_display(self.current_weather_data)
+            if self.current_prediction_data:
+                predicted_temp, confidence, accuracy = self.current_prediction_data
+                self.update_tomorrow_prediction_direct(predicted_temp, confidence, accuracy)
+            if self.current_history_data:
+                self._restore_history_data()
+        except Exception as e:
+            print(f"❌ Resize error: {e}")
+
+    def _restore_history_data(self):
+        """Restore history data without fetching again"""
+        try:
+            if not self.current_history_data:
+                return
+                
+            window_width = self.winfo_width()
+            days_to_show = len(self.current_history_data)
+            
+            for col, (date, max_temp, min_temp, unit_symbol, avg_temp) in enumerate(self.current_history_data):
+                if col >= 7:  # Limit to 7 days
+                    break
+                    
+                font_size = int(10 + window_width/120)
+                
+                # Create labels for this day
+                date_label = tk.Label(
+                    self, text=f"📅 {date}", 
+                    font=("Arial", font_size, "bold"),
+                    fg=self.text_color, bg="#87CEEB", anchor="center"
+                )
+                self.history_labels.append(date_label)
+                
+                max_label = tk.Label(
+                    self, text=f"🔺 {max_temp}{unit_symbol}", 
+                    font=("Arial", font_size),
+                    fg=self.text_color, bg="#87CEEB", anchor="center"
+                )
+                self.history_labels.append(max_label)
+                
+                min_label = tk.Label(
+                    self, text=f"🔻 {min_temp}{unit_symbol}", 
+                    font=("Arial", font_size),
+                    fg=self.text_color, bg="#87CEEB", anchor="center"
+                )
+                self.history_labels.append(min_label)
+                
+                if avg_temp:
+                    avg_label = tk.Label(
+                        self, text=f"🌡️ {avg_temp}{unit_symbol}", 
+                        font=("Arial", font_size),
+                        fg=self.text_color, bg="#87CEEB", anchor="center"
+                    )
+                    self.history_labels.append(avg_label)
+            
+            # Position the history labels
+            self._update_history_positions()
+            
+        except Exception as e:
+            print(f"❌ History restore error: {e}")
+
+    def update_tomorrow_prediction_direct(self, predicted_temp, confidence, accuracy):
+        """Update prediction values directly without fetching"""
+        try:
+            # Update temperature display
+            if predicted_temp:
+                if self.unit == "C":
+                    temp_text = f"{predicted_temp}°C"
+                else:
+                    temp_f = round((predicted_temp * 9/5) + 32, 1)
+                    temp_text = f"{temp_f}°F"
+                
+                self.temp_prediction.configure(text=temp_text)
+            else:
+                self.temp_prediction.configure(text="--")
+            
+            # Update accuracy display
+            if isinstance(accuracy, (int, float)):
+                self.accuracy_prediction.configure(text=f"{accuracy}%")
+            else:
+                self.accuracy_prediction.configure(text="--")
+            
+            # Update confidence display
+            if confidence and confidence != "N/A":
+                conf_text = str(confidence).replace('%', '') + '%'
+                self.confidence_prediction.configure(text=conf_text)
+            else:
+                self.confidence_prediction.configure(text="--")
+                
+        except Exception as e:
+            print(f"❌ Direct prediction update error: {e}")
 
     def _on_scroll(self, *args):
         """Handle scrollbar movement"""
@@ -288,54 +513,160 @@ class WeatherApp(tk.Tk):
             self.scrollbar.set(fraction, fraction + 0.1)
 
     def _update_widget_positions(self):
-        """Update all widget positions based on scroll offset"""
+        """Update all widget positions based on scroll offset - ALL elements scroll consistently"""
         try:
-            # Original positions for each widget type
-            positions = [
-                # Headers
-                (80, 30), (200, 30), (300, 30), (400, 30), (500, 30), (600, 30),
-                # Emojis  
-                (95, 50), (210, 50), (315, 50), (425, 50), (525, 50), (620, 50),
-                # Values
-                (85, 75), (195, 75), (295, 75), (410, 75), (530, 75), (615, 75),
-                # Theme button
-                (350, 110),
-                # City
-                (320, 150), (270, 175),
-                # Weather display
-                (350, 220), (300, 290), (250, 360),
+            window_width = self.winfo_width()
+            
+            # Calculate responsive positioning values
+            metrics_count = 6
+            available_width = window_width - 40
+            col_width = available_width / metrics_count
+            start_x = 20
+            
+            # For prediction section (3 columns)
+            prediction_count = 3
+            pred_col_width = available_width / prediction_count
+            pred_start_x = 20
+            
+            # Define base Y positions for ALL elements (before scroll offset)
+            base_positions = {
+                # Weather metrics
+                'metric_headers': 30,
+                'metric_emojis': 55,
+                'metric_values': 80,
+                # Controls
+                'theme_btn': 120,
+                'city_entry': 160,
+                # Today's weather
+                'icon_label': 220,
+                'temp_label': 290,
+                'desc_label': 350,
                 # Tomorrow's prediction
-                (100, 400), (220, 400), (100, 430), (200, 430), (100, 460), (180, 460),
-                # History title
-                (350, 500)
+                'prediction_title': 410,
+                'prediction_headers': 440,
+                'prediction_emojis': 465,
+                'prediction_values': 490,
+                # History
+                'history_title': 550,
+                'history_start': 590
+            }
+            
+            # Update ALL widgets in the widgets list with consistent scrolling
+            for i, widget in enumerate(self.widgets):
+                try:
+                    place_info = widget.place_info()
+                    if place_info:
+                        current_x = float(place_info.get('x', 0))
+                        
+                        # Determine base Y position based on widget index and type
+                        if i < 6:  # Weather metric headers
+                            base_y = base_positions['metric_headers']
+                        elif i < 12:  # Weather metric emojis
+                            base_y = base_positions['metric_emojis']
+                        elif i < 18:  # Weather metric values
+                            base_y = base_positions['metric_values']
+                        elif i == 18:  # Theme button
+                            base_y = base_positions['theme_btn']
+                        elif i == 19:  # City entry
+                            base_y = base_positions['city_entry']
+                        elif i == 20:  # Icon label
+                            base_y = base_positions['icon_label']
+                        elif i == 21:  # Temp label
+                            base_y = base_positions['temp_label']
+                        elif i == 22:  # Description label
+                            base_y = base_positions['desc_label']
+                        elif i == 23:  # Prediction title
+                            base_y = base_positions['prediction_title']
+                        elif i < 27:  # Prediction headers
+                            base_y = base_positions['prediction_headers']
+                        elif i < 30:  # Prediction emojis
+                            base_y = base_positions['prediction_emojis']
+                        elif i < 33:  # Prediction values
+                            base_y = base_positions['prediction_values']
+                        elif i == 33:  # History title
+                            base_y = base_positions['history_title']
+                        else:
+                            # For any other widgets, maintain relative positioning
+                            base_y = float(place_info.get('y', 0)) + self.scroll_offset
+                        
+                        # Apply scroll offset consistently
+                        new_y = base_y - self.scroll_offset
+                        widget.place(x=current_x, y=new_y, anchor="center")
+                        
+                except Exception:
+                    pass
+            
+            # Update specific named widgets with consistent scrolling
+            named_widgets = [
+                (getattr(self, 'humidity_value', None), start_x + (0 * col_width) + (col_width / 2), base_positions['metric_values']),
+                (getattr(self, 'wind_value', None), start_x + (1 * col_width) + (col_width / 2), base_positions['metric_values']),
+                (getattr(self, 'pressure_value', None), start_x + (2 * col_width) + (col_width / 2), base_positions['metric_values']),
+                (getattr(self, 'visibility_value', None), start_x + (3 * col_width) + (col_width / 2), base_positions['metric_values']),
+                (getattr(self, 'uv_value', None), start_x + (4 * col_width) + (col_width / 2), base_positions['metric_values']),
+                (getattr(self, 'precipitation_value', None), start_x + (5 * col_width) + (col_width / 2), base_positions['metric_values']),
+                (getattr(self, 'theme_btn', None), window_width / 2, base_positions['theme_btn']),
+                (getattr(self, 'city_entry', None), window_width / 2, base_positions['city_entry']),
+                (getattr(self, 'icon_label', None), window_width / 2, base_positions['icon_label']),
+                (getattr(self, 'temp_label', None), window_width / 2, base_positions['temp_label']),
+                (getattr(self, 'desc_label', None), window_width / 2, base_positions['desc_label']),
+                (getattr(self, 'temp_prediction', None), pred_start_x + (0 * pred_col_width) + (pred_col_width / 2), base_positions['prediction_values']),
+                (getattr(self, 'accuracy_prediction', None), pred_start_x + (1 * pred_col_width) + (pred_col_width / 2), base_positions['prediction_values']),
+                (getattr(self, 'confidence_prediction', None), pred_start_x + (2 * pred_col_width) + (pred_col_width / 2), base_positions['prediction_values']),
             ]
             
-            # Update positions for existing widgets
-            for i, widget in enumerate(self.widgets):
-                if i < len(positions):
-                    x, y = positions[i]
-                    widget.place(x=x, y=y - self.scroll_offset)
+            # Apply consistent scrolling to all named widgets
+            for widget, x, base_y in named_widgets:
+                if widget:
+                    try:
+                        new_y = base_y - self.scroll_offset
+                        widget.place(x=x, y=new_y, anchor="center")
+                    except Exception:
+                        pass
             
-            # Update history labels if they exist
-            start_y = 650
-            for col, label in enumerate(self.history_labels):
-                if col % 4 == 0:  # Date labels (every 4th label)
-                    x_pos = 50 + (col // 4) * 100
-                    y_pos = start_y
-                elif col % 4 == 1:  # Max temp
-                    x_pos = 50 + ((col - 1) // 4) * 100
-                    y_pos = start_y + 20
-                elif col % 4 == 2:  # Min temp
-                    x_pos = 50 + ((col - 2) // 4) * 100
-                    y_pos = start_y + 40
-                else:  # Average temp
-                    x_pos = 50 + ((col - 3) // 4) * 100
-                    y_pos = start_y + 60
-                
-                label.place(x=x_pos, y=y_pos - self.scroll_offset)
+            # Update history labels with consistent scrolling
+            self._update_history_positions()
                 
         except Exception as e:
             print(f"❌ Position update error: {e}")
+
+    def _update_history_positions(self):
+        """Update history label positions for responsive layout"""
+        try:
+            window_width = self.winfo_width()
+            start_y = 590  # Updated to match base_positions
+            
+            # Calculate responsive positioning for history
+            history_count = min(7, len(self.history_labels) // 4) if self.history_labels else 0
+            if history_count > 0:
+                available_width = window_width - 40
+                col_width = available_width / history_count
+                start_x = 20
+                
+                for col in range(history_count):
+                    col_start_idx = col * 4
+                    if col_start_idx + 3 < len(self.history_labels):
+                        x_pos = start_x + (col * col_width) + (col_width / 2)
+                        
+                        # Apply consistent scroll offset to all history elements
+                        # Date label
+                        self.history_labels[col_start_idx].place(
+                            x=x_pos, y=start_y - self.scroll_offset, anchor="center"
+                        )
+                        # Max temp
+                        self.history_labels[col_start_idx + 1].place(
+                            x=x_pos, y=(start_y + 25) - self.scroll_offset, anchor="center"
+                        )
+                        # Min temp
+                        self.history_labels[col_start_idx + 2].place(
+                            x=x_pos, y=(start_y + 50) - self.scroll_offset, anchor="center"
+                        )
+                        # Avg temp
+                        if col_start_idx + 3 < len(self.history_labels):
+                            self.history_labels[col_start_idx + 3].place(
+                                x=x_pos, y=(start_y + 75) - self.scroll_offset, anchor="center"
+                            )
+        except Exception as e:
+            print(f"❌ History position update error: {e}")
 
     def fetch_and_display(self):
         """Fetch and display weather data"""
@@ -413,33 +744,21 @@ class WeatherApp(tk.Tk):
             print(f"❌ Display update error: {e}")
 
     def update_tomorrow_prediction(self, city):
-        """Update tomorrow's prediction"""
+        """Update tomorrow's prediction metrics"""
         try:
             predicted_temp, confidence, accuracy = get_tomorrows_prediction(city)
             
             # Store data for preservation
             self.current_prediction_data = (predicted_temp, confidence, accuracy)
             
-            if predicted_temp:
-                if self.unit == "C":
-                    temp_text = f"{predicted_temp}°C"
-                else:
-                    temp_f = round((predicted_temp * 9/5) + 32, 1)
-                    temp_text = f"{temp_f}°F"
-                
-                self.temp_prediction.configure(text=temp_text)
-                self.confidence_prediction.configure(text=confidence)
-                self.accuracy_prediction.configure(text=f"{accuracy}%")
-            else:
-                self.temp_prediction.configure(text="No prediction available")
-                self.confidence_prediction.configure(text="--")
-                self.accuracy_prediction.configure(text="--")
+            # Update using the direct method
+            self.update_tomorrow_prediction_direct(predicted_temp, confidence, accuracy)
                 
         except Exception as e:
             print(f"❌ Prediction error: {e}")
 
     def update_history_display(self, city):
-        """Update 7-day history"""
+        """Update 7-day history with responsive layout"""
         try:
             # Clear old history
             for label in self.history_labels:
@@ -454,8 +773,10 @@ class WeatherApp(tk.Tk):
                 max_temps = history_data.get("temperature_2m_max", [])
                 min_temps = history_data.get("temperature_2m_min", [])
                 
-                start_y = 650
-                for col in range(min(7, len(times))):
+                window_width = self.winfo_width()
+                days_to_show = min(7, len(times))
+                
+                for col in range(days_to_show):
                     if col < len(max_temps) and col < len(min_temps):
                         date = times[col][-5:] if len(times[col]) > 5 else times[col]
                         max_temp = max_temps[col]
@@ -475,32 +796,44 @@ class WeatherApp(tk.Tk):
                         # Store data for preservation
                         self.current_history_data.append((date, max_temp, min_temp, unit_symbol, avg_temp))
                         
-                        x_pos = 50 + col * 100
+                        # Create responsive positioned labels
+                        font_size = int(10 + window_width/120)
                         
                         # Date with emoji
-                        date_label = tk.Label(self, text=f"📅 {date}", font=("Arial", 12, "bold"),
-                                            fg=self.text_color, bg="#87CEEB")
-                        date_label.place(x=x_pos, y=start_y - self.scroll_offset)
+                        date_label = tk.Label(
+                            self, text=f"📅 {date}", 
+                            font=("Arial", font_size, "bold"),
+                            fg=self.text_color, bg="#87CEEB", anchor="center"
+                        )
                         self.history_labels.append(date_label)
                         
                         # Max temp with emoji
-                        max_label = tk.Label(self, text=f"🔺 {max_temp}{unit_symbol}", font=("Arial", 11),
-                                           fg=self.text_color, bg="#87CEEB")
-                        max_label.place(x=x_pos, y=start_y + 20 - self.scroll_offset)
+                        max_label = tk.Label(
+                            self, text=f"🔺 {max_temp}{unit_symbol}", 
+                            font=("Arial", font_size),
+                            fg=self.text_color, bg="#87CEEB", anchor="center"
+                        )
                         self.history_labels.append(max_label)
                         
                         # Min temp with emoji
-                        min_label = tk.Label(self, text=f"🔻 {min_temp}{unit_symbol}", font=("Arial", 11),
-                                           fg=self.text_color, bg="#87CEEB")
-                        min_label.place(x=x_pos, y=start_y + 40 - self.scroll_offset)
+                        min_label = tk.Label(
+                            self, text=f"🔻 {min_temp}{unit_symbol}", 
+                            font=("Arial", font_size),
+                            fg=self.text_color, bg="#87CEEB", anchor="center"
+                        )
                         self.history_labels.append(min_label)
                         
                         # Average temp with emoji
                         if avg_temp:
-                            avg_label = tk.Label(self, text=f"🌡️ {avg_temp}{unit_symbol}", font=("Arial", 11),
-                                               fg=self.text_color, bg="#87CEEB")
-                            avg_label.place(x=x_pos, y=start_y + 60 - self.scroll_offset)
+                            avg_label = tk.Label(
+                                self, text=f"🌡️ {avg_temp}{unit_symbol}", 
+                                font=("Arial", font_size),
+                                fg=self.text_color, bg="#87CEEB", anchor="center"
+                            )
                             self.history_labels.append(avg_label)
+                
+                # Position the history labels responsively
+                self._update_history_positions()
                         
         except Exception as e:
             print(f"❌ History error: {e}")
@@ -623,7 +956,7 @@ class WeatherApp(tk.Tk):
 def run_app():
     """Main entry point"""
     try:
-        print("🚀 Starting Weather App with Table-Style Metrics...")
+        print("🚀 Starting Weather App with Responsive Layout...")
         app = WeatherApp()
         print("✅ App started successfully")
         app.mainloop()

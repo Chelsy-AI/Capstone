@@ -1,143 +1,128 @@
-import customtkinter as ctk
+import tkinter as tk
 
 def create_tomorrow_guess_frame(parent, theme):
     """
-    Creates a transparent frame to display tomorrow's weather prediction.
+    Creates a table-style frame to display tomorrow's weather prediction.
+    Format:
+    | Temperature | Accuracy | Confidence |
+    | 🌡️          | 💯       | 😎         |
+    | 80.9F       | 85%      | 90%        |
     """
     
     # Create the main container frame - transparent
-    frame = ctk.CTkFrame(parent, fg_color="transparent", corner_radius=0)
+    frame = tk.Frame(parent, bg="#87CEEB")
     
-    # Create prediction info grid - transparent
-    info_grid = ctk.CTkFrame(frame, fg_color="transparent")
-    info_grid.pack(fill="x", padx=10)
+    # Table headers
+    headers = ["Temperature", "Accuracy", "Confidence"]
+    emojis = ["🌡️", "💯", "😎"]
     
-    # Configure grid columns
-    info_grid.grid_columnconfigure((0, 1, 2), weight=1)
+    # Header row
+    for col, header in enumerate(headers):
+        header_label = tk.Label(
+            frame, 
+            text=header, 
+            font=("Arial", 12, "bold"), 
+            fg="black", 
+            bg="#87CEEB",
+            relief="solid",
+            borderwidth=1,
+            width=12,
+            height=1
+        )
+        header_label.grid(row=0, column=col, sticky="nsew", padx=1, pady=1)
     
-    # Temperature prediction - transparent
-    temp_section = ctk.CTkFrame(
-        info_grid, 
-        fg_color="transparent",
-        corner_radius=0
-    )
-    temp_section.grid(row=0, column=0, padx=10, pady=5, sticky="nsew")
+    # Emoji row
+    for col, emoji in enumerate(emojis):
+        emoji_label = tk.Label(
+            frame, 
+            text=emoji, 
+            font=("Arial", 18), 
+            fg="black", 
+            bg="#87CEEB",
+            relief="solid",
+            borderwidth=1,
+            width=12,
+            height=1
+        )
+        emoji_label.grid(row=1, column=col, sticky="nsew", padx=1, pady=1)
     
-    ctk.CTkLabel(
-        temp_section,
-        text="🌡️",
-        font=("Arial", 24),
-        text_color="white",
-        fg_color="transparent"
-    ).pack(pady=(5, 0))
-    
-    ctk.CTkLabel(
-        temp_section,
-        text="Temperature",
-        font=("Arial", 12, "bold"),
-        text_color="white",
-        fg_color="transparent"
-    ).pack()
-    
-    temp_label = ctk.CTkLabel(
-        temp_section, 
+    # Value row - create labels that we can update
+    temp_label = tk.Label(
+        frame, 
         text="--", 
-        font=("Arial", 16, "bold"), 
-        text_color="yellow",
-        fg_color="transparent"
+        font=("Arial", 14, "bold"), 
+        fg="black", 
+        bg="#87CEEB",
+        relief="solid",
+        borderwidth=1,
+        width=12,
+        height=1
     )
-    temp_label.pack(pady=(0, 5))
+    temp_label.grid(row=2, column=0, sticky="nsew", padx=1, pady=1)
     
-    # Confidence section - transparent
-    confidence_section = ctk.CTkFrame(
-        info_grid,
-        fg_color="transparent",
-        corner_radius=0
-    )
-    confidence_section.grid(row=0, column=1, padx=10, pady=5, sticky="nsew")
-    
-    ctk.CTkLabel(
-        confidence_section,
-        text="📊",
-        font=("Arial", 24),
-        text_color="white",
-        fg_color="transparent"
-    ).pack(pady=(5, 0))
-    
-    ctk.CTkLabel(
-        confidence_section,
-        text="Confidence",
-        font=("Arial", 12, "bold"),
-        text_color="white",
-        fg_color="transparent"
-    ).pack()
-    
-    confidence_label = ctk.CTkLabel(
-        confidence_section, 
+    accuracy_label = tk.Label(
+        frame, 
         text="--", 
-        font=("Arial", 14), 
-        text_color="lightgreen",
-        fg_color="transparent"
+        font=("Arial", 14, "bold"), 
+        fg="black", 
+        bg="#87CEEB",
+        relief="solid",
+        borderwidth=1,
+        width=12,
+        height=1
     )
-    confidence_label.pack(pady=(0, 5))
+    accuracy_label.grid(row=2, column=1, sticky="nsew", padx=1, pady=1)
     
-    # Accuracy section - transparent
-    accuracy_section = ctk.CTkFrame(
-        info_grid,
-        fg_color="transparent",
-        corner_radius=0
+    confidence_label = tk.Label(
+        frame, 
+        text="--", 
+        font=("Arial", 14, "bold"), 
+        fg="black", 
+        bg="#87CEEB",
+        relief="solid",
+        borderwidth=1,
+        width=12,
+        height=1
     )
-    accuracy_section.grid(row=0, column=2, padx=10, pady=5, sticky="nsew")
+    confidence_label.grid(row=2, column=2, sticky="nsew", padx=1, pady=1)
     
-    ctk.CTkLabel(
-        accuracy_section,
-        text="🎯",
-        font=("Arial", 24),
-        text_color="white",
-        fg_color="transparent"
-    ).pack(pady=(5, 0))
+    # Configure grid weights for proper sizing
+    for col in range(3):
+        frame.grid_columnconfigure(col, weight=1)
     
-    ctk.CTkLabel(
-        accuracy_section,
-        text="Accuracy",
-        font=("Arial", 12, "bold"),
-        text_color="white",
-        fg_color="transparent"
-    ).pack()
-    
-    accuracy_label = ctk.CTkLabel(
-        accuracy_section, 
-        text="--%", 
-        font=("Arial", 14), 
-        text_color="lightcoral",
-        fg_color="transparent"
-    )
-    accuracy_label.pack(pady=(0, 5))
-    
-    # Store references to the labels ON the frame object
+    # Store references to the value labels ON the frame object
     frame.temp_label = temp_label
-    frame.confidence_label = confidence_label
     frame.accuracy_label = accuracy_label
+    frame.confidence_label = confidence_label
     
     return frame
 
+
 def update_tomorrow_guess_display(frame, predicted_temp, confidence, accuracy):
     """
-    Updates the weather display with new prediction data.
+    Updates the table display with new prediction data.
     """
     
     # Update the temperature display
     if hasattr(frame, 'temp_label'):
-        frame.temp_label.configure(text=str(predicted_temp) if predicted_temp != "N/A" else "N/A")
-    
-    # Update the confidence display
-    if hasattr(frame, 'confidence_label'):
-        frame.confidence_label.configure(text=str(confidence) if confidence != "N/A" else "N/A")
+        if predicted_temp is not None:
+            # Format temperature with unit (assuming Fahrenheit as shown in example)
+            frame.temp_label.configure(text=f"{predicted_temp}°F")
+        else:
+            frame.temp_label.configure(text="--")
     
     # Update the accuracy display
     if hasattr(frame, 'accuracy_label'):
         if isinstance(accuracy, (int, float)):
             frame.accuracy_label.configure(text=f"{accuracy}%")
         else:
-            frame.accuracy_label.configure(text=str(accuracy) if accuracy != "N/A" else "N/A")
-            
+            frame.accuracy_label.configure(text="--")
+    
+    # Update the confidence display
+    if hasattr(frame, 'confidence_label'):
+        if confidence and confidence != "N/A":
+            # Remove the % if it's already included
+            conf_text = str(confidence).replace('%', '') + '%'
+            frame.confidence_label.configure(text=conf_text)
+        else:
+            frame.confidence_label.configure(text="--")
