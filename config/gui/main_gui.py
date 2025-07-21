@@ -313,7 +313,7 @@ class WeatherGUI:
         buttons = [
             ("Toggle Theme", lambda: self.app.toggle_theme(), left_x, y_start),
             ("Tomorrow's Prediction", lambda: self.show_page("prediction"), right_x, y_start),
-            ("7-Day History", lambda: self.show_page("history"), left_x, y_start + button_height + 30),
+            ("Weather History", lambda: self.show_page("history"), left_x, y_start + button_height + 30),
             ("Map View", lambda: self.show_page("map"), right_x, y_start + button_height + 30)
         ]
         
@@ -421,7 +421,7 @@ class WeatherGUI:
         self.set_widget_references(widget_refs)
 
     def _build_history_page(self):
-        """Build 7-day history page"""
+        """Build weather history page"""
         window_width = self.app.winfo_width()
         bg_color = self._get_canvas_bg_color()
         
@@ -431,7 +431,7 @@ class WeatherGUI:
         # Title
         title = tk.Label(
             self.app,
-            text="7-Day Weather History",
+            text="Weather History",
             font=("Arial", int(24 + window_width/50), "bold"),
             fg=self.app.text_color,
             bg=bg_color,
@@ -440,24 +440,11 @@ class WeatherGUI:
         title.place(x=window_width/2, y=100, anchor="center")
         self.widgets.append(title)
         
-        # Loading message
-        loading_label = tk.Label(
-            self.app,
-            text="🔄 Loading 7-day history...",
-            font=("Arial", 16),
-            fg=self.app.text_color,
-            bg=bg_color,
-            anchor="center"
-        )
-        loading_label.place(x=window_width/2, y=200, anchor="center")
-        self.widgets.append(loading_label)
-        
         # Force update history display when building history page
-        if self.app.current_weather_data:
-            city = self.app.city_var.get()
-            print(f"[GUI] History page built, fetching history for {city}")
-            # Use after to ensure the page is built first
-            self.app.after(100, lambda: self.update_history_display(city))
+        city = self.app.city_var.get()
+        print(f"[GUI] History page built, fetching history for '{city}'")
+        # Use after to ensure the page is built first
+        self.app.after(100, lambda: self.update_history_display(city))
 
     def _build_map_page(self):
         """Build map view page"""

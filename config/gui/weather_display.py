@@ -172,9 +172,17 @@ class WeatherDisplay:
             print(f"❌ Prediction update error: {e}")
 
     def update_history_display(self, city):
-        """Update 7-day history display from Open-Meteo API"""
+        """Update weather history display from Open-Meteo API"""
         try:
-            print(f"[WeatherDisplay] Fetching 7-day history for {city}...")
+            print(f"[WeatherDisplay] Fetching weather history for {city}...")
+            
+            # Only proceed if we're on the history page
+            if self.gui.current_page != "history":
+                print(f"[WeatherDisplay] Not on history page, current page: {self.gui.current_page}")
+                return
+            
+            # Clear any existing history labels first
+            self._clear_history_labels()
             
             # Fetch new history data from Open-Meteo API
             from features.history_tracker.api import fetch_world_history
@@ -185,21 +193,12 @@ class WeatherDisplay:
             if history_data and "time" in history_data:
                 print(f"[WeatherDisplay] Found history data with {len(history_data['time'])} days")
                 
-                # Store the history data
-                self._store_history_data(history_data)
+                # Create display directly from API data
+                self._create_history_display_directly(history_data)
                 
-                # Only create visual display if we're on history page
-                if self.gui.current_page == "history":
-                    print("[WeatherDisplay] Creating history display for history page")
-                    self._clear_history_labels()
-                    self._create_history_labels_for_page(history_data)
-                else:
-                    print(f"[WeatherDisplay] History data stored (currently on {self.gui.current_page} page)")
             else:
                 print("[WeatherDisplay] No history data received from API")
-                # Try to show an error message on history page
-                if self.gui.current_page == "history":
-                    self._show_history_error()
+                self._show_history_error()
             
             print("✅ History update process completed")
             
@@ -207,8 +206,144 @@ class WeatherDisplay:
             print(f"❌ History update error: {e}")
             import traceback
             traceback.print_exc()
-            if self.gui.current_page == "history":
+            self._show_history_error()
+
+    def _create_history_display_directly(self, history_data):
+        """Create history display directly from API data"""
+        try:
+            print("[WeatherDisplay] Creating history display directly from API data...")
+            
+            times = history_data.get("time", [])
+            max_temps = history_data.get("temperature_2m_max", [])
+            min_temps = history_data.get("temperature_2m_min", [])
+            
+            if not times or not max_temps or not min_temps:
+                print("[WeatherDisplay] Missing temperature data in API response")
                 self._show_history_error()
+                return
+            
+            window_width = self.app.winfo_width()
+            days_to_show = min(7, len(times))
+            
+            # Calculate layout
+            start_y = 200  # Increased from 150 to add 2 rows distance (about 50px)
+            available_width = window_width - 60
+            col_width = available_width / days_to_show
+            start_x = 30
+            
+            print(f"[WeatherDisplay] Creating display for {days_to_show} days")
+            
+            for col in range(days_to_show):
+                if col < len(max_temps) and col < len(min_temps):
+                    # Get data for this day
+                    date = times[col][-5:] if len(times[col]) > 5 else times[col]
+                    max_temp = max_temps[col]
+                    min_temp = min_temps[col]
+                    
+                    print(f"[WeatherDisplay] Day {col}: {date}, Max: {max_temp}, Min: {min_temp}")
+                    
+                    # Calculate position
+                    x_pos = start_x + (col * col_width) + (col_width / 2)
+                    
+                    # Create labels for this day
+                    self._create_day_labels(date, max_temp, min_temp, x_pos, start_y, window_width)
+            
+            print(f"✅ Created history display for {days_to_show} days")
+            
+        except Exception as e:
+            print(f"❌ Error creating history display directly: {e}")
+            import traceback
+            traceback.print_exc()
+            self._show_history_error()
+
+    def _create_day_labels(self, date, max_temp, min_temp, x_pos, y_start, window_width):
+        """Create labels for a single day - simplified version"""
+        try:
+            font_size = int(12 + window_width/100)
+            bg_color = self._get_canvas_bg_color()
+            
+            # Handle None values
+            if max_temp is None or min_temp is None:
+                max_text = "N/A"
+                min_text = "N/A"
+                avg_text = "N/A"
+                max_color = "gray"
+                min_color = "gray"
+                avg_color = "gray"
+            else:
+                # Convert temperatures if needed
+                if self.app.unit == "F":
+                    max_temp = round(max_temp * 9/5 + 32, 1)
+                    min_temp = round(min_temp * 9/5 + 32, 1)
+                    avg_temp = round((max_temp + min_temp) / 2, 1)
+                    unit_symbol = "°F"
+                else:
+                    max_temp = round(max_temp, 1)
+                    min_temp = round(min_temp, 1)
+                    avg_temp = round((max_temp + min_temp) / 2, 1)
+                    unit_symbol = "°C"
+                
+                max_text = f"{max_temp}{unit_symbol}"
+                min_text = f"{min_temp}{unit_symbol}"
+                avg_text = f"{avg_temp}{unit_symbol}"
+                max_color = "red"
+                min_color = "blue"
+                avg_color = self.app.text_color
+            
+            print(f"[WeatherDisplay] Creating labels for {date}: Max {max_text}, Min {min_text}, Avg {avg_text}")
+            
+            # Date label
+            date_label = tk.Label(
+                self.app,
+                text=f"📅 {date}",
+                font=("Arial", font_size, "bold"),
+                fg=self.app.text_color, 
+                bg=bg_color,
+                anchor="center"
+            )
+            date_label.place(x=x_pos, y=y_start, anchor="center")
+            self.gui.history_labels.append(date_label)
+            
+            # Max temperature label
+            max_label = tk.Label(
+                self.app,
+                text=f"🔺 {max_text}",
+                font=("Arial", font_size),
+                fg=max_color, 
+                bg=bg_color,
+                anchor="center"
+            )
+            max_label.place(x=x_pos, y=y_start + 40, anchor="center")
+            self.gui.history_labels.append(max_label)
+            
+            # Min temperature label
+            min_label = tk.Label(
+                self.app,
+                text=f"🔻 {min_text}",
+                font=("Arial", font_size),
+                fg=min_color, 
+                bg=bg_color,
+                anchor="center"
+            )
+            min_label.place(x=x_pos, y=y_start + 80, anchor="center")
+            self.gui.history_labels.append(min_label)
+            
+            # Average temperature label
+            avg_label = tk.Label(
+                self.app,
+                text=f"🌡️ {avg_text}",
+                font=("Arial", font_size),
+                fg=avg_color, 
+                bg=bg_color,
+                anchor="center"
+            )
+            avg_label.place(x=x_pos, y=y_start + 120, anchor="center")
+            self.gui.history_labels.append(avg_label)
+            
+        except Exception as e:
+            print(f"❌ Error creating day labels: {e}")
+            import traceback
+            traceback.print_exc()
 
     def _show_history_error(self):
         """Show error message on history page"""
@@ -218,9 +353,9 @@ class WeatherDisplay:
             
             error_label = tk.Label(
                 self.app,
-                text="❌ Unable to load 7-day history data\nPlease check your internet connection",
+                text="📊 Weather History\n\nNo historical data available for this location.\nTry refreshing or selecting a different city.",
                 font=("Arial", 16),
-                fg="red",
+                fg=self.app.text_color,
                 bg=bg_color,
                 anchor="center",
                 justify="center"
@@ -279,6 +414,7 @@ class WeatherDisplay:
                     print(f"[WeatherDisplay] Stored: {date} - Max: {max_temp}°C, Min: {min_temp}°C, Avg: {avg_temp}°C")
                     
             print(f"✅ Stored {len(self.app.current_history_data)} days of history data")
+            print(f"[WeatherDisplay] Final stored data: {self.app.current_history_data}")
             
         except Exception as e:
             print(f"❌ History data storage error: {e}")
