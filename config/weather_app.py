@@ -3,6 +3,11 @@ import threading
 import traceback
 import sys
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+api_key = os.getenv("weatherdb_api_key")
 
 # Add the project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -12,26 +17,25 @@ from config.themes import LIGHT_THEME, DARK_THEME
 from config.api import get_current_weather
 from config.storage import save_weather
 from config.gui import WeatherGUI
-
 from features.interactive_map.controller import MapController
 
 
 class WeatherApp(tk.Tk):
     """
     Weather Application Main Logic
-    
+
     This class handles the core business logic and data management
     for the weather application. All GUI components are handled by 
     the modular GUI system in config.gui.
     """
-    
+
     def __init__(self):
         super().__init__()
-        
+
         self.title("Smart Weather App")
         self.geometry("800x600")
         self.minsize(700, 500)
-        
+
         # Initialize variables
         self.city_var = tk.StringVar(value="New York")
         self.unit = "C"
@@ -39,26 +43,29 @@ class WeatherApp(tk.Tk):
         self.temp_f = None
         self.theme = LIGHT_THEME
         self.text_color = "black"
-        
+
         # Data storage to preserve across rebuilds
         self.current_weather_data = {}
         self.current_prediction_data = {}
         self.current_history_data = []
-        
+
         # Initialize modular GUI system
         self.gui = WeatherGUI(self)
-        
+
         # Build GUI
         self.gui.build_gui()
-        
+
         # Auto-load weather
         self.after(1000, self.fetch_and_display)
-        
+
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
         # Map controller for interactive map
-        self.map_controller = MapController(self.gui.main_frame, self.city_var.get)
-
+        self.map_controller = MapController(
+            self.gui.main_frame,
+            self.city_var.get,
+            api_key
+        )
 
     def fetch_and_display(self):
         """Fetch and display weather data"""
@@ -69,29 +76,29 @@ class WeatherApp(tk.Tk):
         try:
             city = self.city_var.get().strip() or "New York"
             print(f"🌍 Fetching weather for: {city}")
-            
+
             weather_data = get_current_weather(city)
-            
+
             if weather_data.get("error"):
                 print(f"❌ Error: {weather_data['error']}")
                 return
-            
+
             # Save to CSV
             try:
                 save_weather(weather_data)
                 print("✅ Weather data saved to CSV")
             except Exception as e:
                 print(f"⚠️ CSV save error: {e}")
-            
+
             # Store data for preservation across rebuilds
             self.current_weather_data = weather_data
-            
+
             # Update GUI components
             self.after(0, lambda: self.gui.update_weather_display(weather_data))
             self.after(0, lambda: self.update_tomorrow_prediction(city))
             self.after(0, lambda: self.gui.update_history_display(city))
             self.after(0, lambda: self.gui.update_background_animation(weather_data))
-            self.map_controller = MapController(self, self.city_var.get)
+            self.map_controller = MapController(self, self.city_var.get, api_key)
 
         except Exception as e:
             print(f"❌ Weather fetch error: {e}")
@@ -100,13 +107,13 @@ class WeatherApp(tk.Tk):
         """Update tomorrow's prediction metrics"""
         try:
             predicted_temp, confidence, accuracy = get_tomorrows_prediction(city)
-            
+
             # Store data for preservation
             self.current_prediction_data = (predicted_temp, confidence, accuracy)
-            
+
             # Update using the GUI method
             self.gui.update_tomorrow_prediction_direct(predicted_temp, confidence, accuracy)
-                
+
         except Exception as e:
             print(f"❌ Prediction error: {e}")
 
@@ -144,4 +151,3 @@ __all__ = ['run_app', 'WeatherApp']
 
 if __name__ == "__main__":
     run_app()
-    

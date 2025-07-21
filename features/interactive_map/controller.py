@@ -28,7 +28,7 @@ class MapController:
         self.map_widget.pack(fill="both", expand=True)
 
         self.tile_server_template = (
-            "https://tile.openweathermap.org/map/{layer}/{z}/{x}/{y}.png?appid={api_key}"
+        "https://tile.openweathermap.org/map/{layer}/{{z}}/{{x}}/{{y}}.png?appid={api_key}"
         )
 
         self.marker = None
