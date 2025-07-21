@@ -6,10 +6,10 @@ import requests
 
 class WeatherDisplay:
     """
-    Weather Display Manager
+    Weather Display Manager for Paginated System
     
     Handles all weather data visualization including current weather,
-    predictions, history, and weather icon updates.
+    predictions, history, and weather icon updates across different pages.
     """
     
     def __init__(self, app, gui_controller):
@@ -21,9 +21,9 @@ class WeatherDisplay:
         try:
             if self.gui.bg_canvas:
                 return self.gui.bg_canvas.cget("bg")
-            return "#87CEEB"  # Default fallback
+            return "#87CEEB"
         except:
-            return "#87CEEB"  # Safe fallback
+            return "#87CEEB"
 
     def update_weather_display(self, weather_data):
         """Update the main weather display with current data"""
@@ -119,58 +119,171 @@ class WeatherDisplay:
         try:
             print("[WeatherDisplay] Updating prediction display...")
             
-            # Update temperature prediction
-            if self.gui.temp_prediction:
-                if predicted_temp:
-                    if self.app.unit == "C":
-                        temp_text = f"{predicted_temp}°C"
-                    else:
-                        temp_f = round((predicted_temp * 9/5) + 32, 1)
-                        temp_text = f"{temp_f}°F"
-                    self.gui.temp_prediction.configure(text=temp_text)
-                else:
-                    self.gui.temp_prediction.configure(text="--")
+            # Always store the data first
+            self.app.current_prediction_data = (predicted_temp, confidence, accuracy)
             
-            # Update accuracy prediction
-            if self.gui.accuracy_prediction:
-                if isinstance(accuracy, (int, float)):
-                    self.gui.accuracy_prediction.configure(text=f"{accuracy}%")
-                else:
-                    self.gui.accuracy_prediction.configure(text="--")
-            
-            # Update confidence prediction
-            if self.gui.confidence_prediction:
-                if confidence and confidence != "N/A":
-                    conf_text = str(confidence).replace('%', '') + '%'
-                    self.gui.confidence_prediction.configure(text=conf_text)
-                else:
-                    self.gui.confidence_prediction.configure(text="--")
-                    
-            print("✅ Prediction display updated")
+            # Only update widgets if we're on the prediction page and widgets exist
+            if self.gui.current_page == "prediction":
+                # Check if widgets still exist before updating
+                # Update temperature prediction
+                if hasattr(self.gui, 'temp_prediction') and self.gui.temp_prediction:
+                    try:
+                        if predicted_temp:
+                            if self.app.unit == "C":
+                                temp_text = f"{predicted_temp}°C"
+                            else:
+                                temp_f = round((predicted_temp * 9/5) + 32, 1)
+                                temp_text = f"{temp_f}°F"
+                            self.gui.temp_prediction.configure(text=temp_text)
+                        else:
+                            self.gui.temp_prediction.configure(text="--")
+                    except tk.TclError:
+                        # Widget was destroyed, skip update
+                        pass
+                
+                # Update accuracy prediction
+                if hasattr(self.gui, 'accuracy_prediction') and self.gui.accuracy_prediction:
+                    try:
+                        if isinstance(accuracy, (int, float)):
+                            self.gui.accuracy_prediction.configure(text=f"{accuracy}%")
+                        else:
+                            self.gui.accuracy_prediction.configure(text="--")
+                    except tk.TclError:
+                        # Widget was destroyed, skip update
+                        pass
+                
+                # Update confidence prediction
+                if hasattr(self.gui, 'confidence_prediction') and self.gui.confidence_prediction:
+                    try:
+                        if confidence and confidence != "N/A":
+                            conf_text = str(confidence).replace('%', '') + '%'
+                            self.gui.confidence_prediction.configure(text=conf_text)
+                        else:
+                            self.gui.confidence_prediction.configure(text="--")
+                    except tk.TclError:
+                        # Widget was destroyed, skip update
+                        pass
+                        
+                print("✅ Prediction display updated on prediction page")
+            else:
+                print("✅ Prediction data stored (not on prediction page)")
                     
         except Exception as e:
             print(f"❌ Prediction update error: {e}")
 
     def update_history_display(self, city):
-        """Update 7-day history display"""
+        """Update 7-day history display from Open-Meteo API"""
         try:
-            print(f"[WeatherDisplay] Updating history for {city}...")
+            print(f"[WeatherDisplay] Fetching 7-day history for {city}...")
             
-            # Clear old history
-            self._clear_history_labels()
-            
-            # Fetch new history data
+            # Fetch new history data from Open-Meteo API
             from features.history_tracker.api import fetch_world_history
             history_data = fetch_world_history(city)
             
-            if history_data and "time" in history_data:
-                self._create_history_labels(history_data)
-                self._position_history_labels()
+            print(f"[WeatherDisplay] Raw history data: {history_data}")
             
-            print("✅ History display updated")
+            if history_data and "time" in history_data:
+                print(f"[WeatherDisplay] Found history data with {len(history_data['time'])} days")
+                
+                # Store the history data
+                self._store_history_data(history_data)
+                
+                # Only create visual display if we're on history page
+                if self.gui.current_page == "history":
+                    print("[WeatherDisplay] Creating history display for history page")
+                    self._clear_history_labels()
+                    self._create_history_labels_for_page(history_data)
+                else:
+                    print(f"[WeatherDisplay] History data stored (currently on {self.gui.current_page} page)")
+            else:
+                print("[WeatherDisplay] No history data received from API")
+                # Try to show an error message on history page
+                if self.gui.current_page == "history":
+                    self._show_history_error()
+            
+            print("✅ History update process completed")
             
         except Exception as e:
             print(f"❌ History update error: {e}")
+            import traceback
+            traceback.print_exc()
+            if self.gui.current_page == "history":
+                self._show_history_error()
+
+    def _show_history_error(self):
+        """Show error message on history page"""
+        try:
+            window_width = self.app.winfo_width()
+            bg_color = self._get_canvas_bg_color()
+            
+            error_label = tk.Label(
+                self.app,
+                text="❌ Unable to load 7-day history data\nPlease check your internet connection",
+                font=("Arial", 16),
+                fg="red",
+                bg=bg_color,
+                anchor="center",
+                justify="center"
+            )
+            error_label.place(x=window_width/2, y=300, anchor="center")
+            self.gui.history_labels.append(error_label)
+            
+        except Exception as e:
+            print(f"Error showing history error message: {e}")
+    
+    def _store_history_data(self, history_data):
+        """Store history data for later restoration"""
+        try:
+            print("[WeatherDisplay] Processing history data for storage...")
+            
+            times = history_data.get("time", [])
+            max_temps = history_data.get("temperature_2m_max", [])
+            min_temps = history_data.get("temperature_2m_min", [])
+            
+            print(f"[WeatherDisplay] Times: {times}")
+            print(f"[WeatherDisplay] Max temps: {max_temps}")
+            print(f"[WeatherDisplay] Min temps: {min_temps}")
+            
+            if not times or not max_temps or not min_temps:
+                print("[WeatherDisplay] Missing required temperature data")
+                return
+            
+            # Clear existing stored data
+            self.app.current_history_data.clear()
+            
+            days_to_show = min(7, len(times))
+            print(f"[WeatherDisplay] Processing {days_to_show} days")
+            
+            for col in range(days_to_show):
+                if col < len(max_temps) and col < len(min_temps):
+                    # Process temperature data with None checks
+                    date = times[col][-5:] if len(times[col]) > 5 else times[col]
+                    max_temp = max_temps[col]
+                    min_temp = min_temps[col]
+                    
+                    print(f"[WeatherDisplay] Day {col}: {date}, Max: {max_temp}, Min: {min_temp}")
+                    
+                    # Handle None values by showing "N/A" instead of skipping
+                    if max_temp is None or min_temp is None:
+                        print(f"[WeatherDisplay] Day {col} has None values, storing as N/A")
+                        self.app.current_history_data.append((date, "N/A", "N/A", "°C", "N/A"))
+                        continue
+                        
+                    avg_temp = round((max_temp + min_temp) / 2, 1)
+                    
+                    # Store in Celsius first, convert for display later
+                    unit_symbol = "°C"
+                    
+                    # Store data for preservation
+                    self.app.current_history_data.append((date, max_temp, min_temp, unit_symbol, avg_temp))
+                    print(f"[WeatherDisplay] Stored: {date} - Max: {max_temp}°C, Min: {min_temp}°C, Avg: {avg_temp}°C")
+                    
+            print(f"✅ Stored {len(self.app.current_history_data)} days of history data")
+            
+        except Exception as e:
+            print(f"❌ History data storage error: {e}")
+            import traceback
+            traceback.print_exc()
 
     def _clear_history_labels(self):
         """Clear existing history labels"""
@@ -179,14 +292,21 @@ class WeatherDisplay:
         self.gui.history_labels.clear()
         self.app.current_history_data.clear()
 
-    def _create_history_labels(self, history_data):
-        """Create history labels from data"""
+    def _create_history_labels_for_page(self, history_data):
+        """Create history labels optimized for page display"""
         times = history_data.get("time", [])
         max_temps = history_data.get("temperature_2m_max", [])
         min_temps = history_data.get("temperature_2m_min", [])
         
         window_width = self.app.winfo_width()
+        window_height = self.app.winfo_height()
         days_to_show = min(7, len(times))
+        
+        # Calculate layout for history page
+        start_y = 150
+        available_width = window_width - 60
+        col_width = available_width / days_to_show
+        start_x = 30
         
         for col in range(days_to_show):
             if col < len(max_temps) and col < len(min_temps):
@@ -210,91 +330,122 @@ class WeatherDisplay:
                 # Store data for preservation
                 self.app.current_history_data.append((date, max_temp, min_temp, unit_symbol, avg_temp))
                 
-                # Create labels
-                self._create_history_labels_for_day(date, max_temp, min_temp, avg_temp, unit_symbol, window_width)
-
-    def _create_history_labels_for_day(self, date, max_temp, min_temp, avg_temp, unit_symbol, window_width):
-        """Create labels for a single day's history with canvas background color"""
-        font_size = int(10 + window_width/120)
+                # Calculate position
+                x_pos = start_x + (col * col_width) + (col_width / 2)
+                
+    def _create_history_labels_for_day_page(self, date, max_temp, min_temp, avg_temp, unit_symbol, x_pos, y_start, window_width):
+        """Create labels for a single day's history optimized for page layout"""
+        font_size = int(12 + window_width/100)
         bg_color = self._get_canvas_bg_color()
         
-        # Date label - canvas background color
+        # Handle N/A values
+        if max_temp == "N/A" or min_temp == "N/A" or avg_temp == "N/A":
+            max_text = "N/A"
+            min_text = "N/A"
+            avg_text = "N/A"
+        else:
+            # Convert temperatures based on current unit setting
+            if self.app.unit == "F" and unit_symbol == "°C":
+                # Convert from Celsius to Fahrenheit
+                max_temp = round(max_temp * 9/5 + 32, 1)
+                min_temp = round(min_temp * 9/5 + 32, 1)
+                avg_temp = round(avg_temp * 9/5 + 32, 1)
+                unit_symbol = "°F"
+            elif self.app.unit == "C" and unit_symbol == "°F":
+                # Convert from Fahrenheit to Celsius
+                max_temp = round((max_temp - 32) * 5/9, 1)
+                min_temp = round((min_temp - 32) * 5/9, 1)
+                avg_temp = round((avg_temp - 32) * 5/9, 1)
+                unit_symbol = "°C"
+            
+            max_text = f"{max_temp}{unit_symbol}"
+            min_text = f"{min_temp}{unit_symbol}"
+            avg_text = f"{avg_temp}{unit_symbol}"
+        
+        print(f"[WeatherDisplay] Creating labels for {date}: Max {max_text}, Min {min_text}, Avg {avg_text}")
+        
+        # Date label
         date_label = tk.Label(
-            self.app,  # Place on main app for proper event handling
+            self.app,
             text=f"📅 {date}",
             font=("Arial", font_size, "bold"),
             fg=self.app.text_color, 
-            bg=bg_color,  # Use canvas background color
+            bg=bg_color,
             anchor="center",
             relief="flat",
             borderwidth=0
         )
+        date_label.place(x=x_pos, y=y_start, anchor="center")
         self.gui.history_labels.append(date_label)
         
-        # Max temperature label - canvas background color
+        # Max temperature label
         max_label = tk.Label(
-            self.app,  # Place on main app for proper event handling
-            text=f"🔺 {max_temp}{unit_symbol}",
+            self.app,
+            text=f"🔺 {max_text}",
             font=("Arial", font_size),
-            fg=self.app.text_color, 
-            bg=bg_color,  # Use canvas background color
+            fg="red" if max_text != "N/A" else "gray", 
+            bg=bg_color,
             anchor="center",
             relief="flat",
             borderwidth=0
         )
+        max_label.place(x=x_pos, y=y_start + 40, anchor="center")
         self.gui.history_labels.append(max_label)
         
-        # Min temperature label - canvas background color
+        # Min temperature label
         min_label = tk.Label(
-            self.app,  # Place on main app for proper event handling
-            text=f"🔻 {min_temp}{unit_symbol}",
+            self.app,
+            text=f"🔻 {min_text}",
             font=("Arial", font_size),
-            fg=self.app.text_color, 
-            bg=bg_color,  # Use canvas background color
+            fg="blue" if min_text != "N/A" else "gray", 
+            bg=bg_color,
             anchor="center",
             relief="flat",
             borderwidth=0
         )
+        min_label.place(x=x_pos, y=y_start + 80, anchor="center")
         self.gui.history_labels.append(min_label)
         
-        # Average temperature label - canvas background color
-        if avg_temp:
-            avg_label = tk.Label(
-                self.app,  # Place on main app for proper event handling
-                text=f"🌡️ {avg_temp}{unit_symbol}",
-                font=("Arial", font_size),
-                fg=self.app.text_color, 
-                bg=bg_color,  # Use canvas background color
-                anchor="center",
-                relief="flat",
-                borderwidth=0
-            )
-            self.gui.history_labels.append(avg_label)
-
-    def _position_history_labels(self):
-        """Position history labels responsively"""
-        # Delegate to scroll handler for positioning
-        self.gui.scroll_handler._update_history_positions()
+        # Average temperature label
+        avg_label = tk.Label(
+            self.app,
+            text=f"🌡️ {avg_text}",
+            font=("Arial", font_size),
+            fg=self.app.text_color if avg_text != "N/A" else "gray", 
+            bg=bg_color,
+            anchor="center",
+            relief="flat",
+            borderwidth=0
+        )
+        avg_label.place(x=x_pos, y=y_start + 120, anchor="center")
+        self.gui.history_labels.append(avg_label)
 
     def restore_history_data(self):
         """Restore history data without fetching again"""
         try:
-            if not self.app.current_history_data:
+            if not self.app.current_history_data or self.gui.current_page != "history":
                 return
                 
             print("[WeatherDisplay] Restoring history data...")
             
             window_width = self.app.winfo_width()
+            start_y = 150
+            available_width = window_width - 60
+            days_count = len(self.app.current_history_data)
+            col_width = available_width / days_count
+            start_x = 30
             
             for col, (date, max_temp, min_temp, unit_symbol, avg_temp) in enumerate(self.app.current_history_data):
                 if col >= 7:  # Limit to 7 days
                     break
                 
+                x_pos = start_x + (col * col_width) + (col_width / 2)
+                
                 # Create labels for this day
-                self._create_history_labels_for_day(date, max_temp, min_temp, avg_temp, unit_symbol, window_width)
-            
-            # Position the labels
-            self._position_history_labels()
+                self._create_history_labels_for_day_page(
+                    date, max_temp, min_temp, avg_temp, unit_symbol,
+                    x_pos, start_y, window_width
+                )
             
             print("✅ History data restored")
             
@@ -314,7 +465,7 @@ class WeatherDisplay:
         print(f"🎨 Theme toggled to: {self.app.text_color}")
 
     def _update_widget_colors(self):
-        """Update colors for all relevant widgets"""
+        """Update colors for all relevant widgets across all pages"""
         bg_color = self._get_canvas_bg_color()
         
         # Main display widgets - use canvas background color
@@ -380,4 +531,3 @@ class WeatherDisplay:
         
         # Clear history
         self._clear_history_labels()
-        

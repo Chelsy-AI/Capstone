@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+"""
+Test script to debug the 7-day history API
+Run this separately to see what data is being returned
+"""
+
+import sys
+import os
+
+# Add project root to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from features.history_tracker.api import fetch_world_history
+
+def test_history_api():
+    """Test the history API with different cities"""
+    cities = ["New York", "London", "Tokyo", "Paris"]
+    
+    for city in cities:
+        print(f"\n🌍 Testing history API for: {city}")
+        print("=" * 50)
+        
+        try:
+            data = fetch_world_history(city)
+            
+            if data:
+                print(f"✅ Received data for {city}")
+                print(f"Keys in data: {list(data.keys())}")
+                
+                if "time" in data:
+                    times = data["time"]
+                    print(f"Number of days: {len(times)}")
+                    print(f"Date range: {times[0]} to {times[-1]}")
+                
+                if "temperature_2m_max" in data:
+                    max_temps = data["temperature_2m_max"]
+                    print(f"Max temps: {max_temps}")
+                
+                if "temperature_2m_min" in data:
+                    min_temps = data["temperature_2m_min"]
+                    print(f"Min temps: {min_temps}")
+                
+            else:
+                print(f"❌ No data received for {city}")
+                
+        except Exception as e:
+            print(f"❌ Error testing {city}: {e}")
+            import traceback
+            traceback.print_exc()
+
+if __name__ == "__main__":
+    test_history_api()
+    

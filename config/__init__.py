@@ -3,7 +3,7 @@ Config Module - Main Application Components
 """
 
 from .weather_app import WeatherApp, run_app
-from .gui import WeatherGUI, LayoutManager, ScrollHandler, WeatherDisplay, AnimationController
+from .gui import WeatherGUI, WeatherDisplay, AnimationController
 from .error_handler import (
     handle_api_errors, 
     handle_gui_errors, 
