@@ -78,10 +78,11 @@ class WeatherApp(tk.Tk):
                 print(f"❌ Error: {weather_data['error']}")
                 return
 
-            # Save to CSV
+            # Save to CSV with proper city name
             try:
-                save_weather(weather_data)
-                print("✅ Weather data saved to CSV")
+                # Pass the city name explicitly to ensure proper tracking
+                save_weather(weather_data, city)
+                print(f"✅ Weather data saved to CSV for {city}")
             except Exception as e:
                 print(f"⚠️ CSV save error: {e}")
 

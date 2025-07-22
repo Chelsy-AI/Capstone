@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 """
 Fixed Weather Data Storage Module
-Ensures all weather data is properly saved to CSV files
+Ensures all weather data is properly saved to CSV files with city tracking
 """
 
 import csv 
 import os  
 from datetime import datetime 
 
-def save_weather(data, filepath="data/weather_history.csv"):
+def save_weather(data, city_name=None, filepath="data/weather_history.csv"):
     """
-    Save weather data to CSV file with proper error handling and data extraction.
+    Save weather data to CSV file with proper city tracking.
     
     Args:
         data: Dictionary containing weather data from the API
+        city_name: Name of the city (will extract from data if not provided)
         filepath: Path where to save the CSV file
     """
     try:
@@ -40,12 +41,12 @@ def save_weather(data, filepath="data/weather_history.csv"):
             # Extract data safely
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             
-            # Extract basic weather info
-            city = data.get('name', 'Unknown')
+            # Get city name - try multiple sources
+            city = city_name or data.get('name') or data.get('city') or 'Unknown'
+            
+            # Extract weather data
             temperature = data.get('temperature', 'N/A')
             description = data.get('description', 'N/A')
-            
-            # Extract additional metrics
             humidity = data.get('humidity', 'N/A')
             wind_speed = data.get('wind_speed', 'N/A')
             pressure = data.get('pressure', 'N/A')
@@ -127,6 +128,31 @@ def get_recent_weather(city, limit=10, filepath="data/weather_history.csv"):
         
     except Exception as e:
         print(f"❌ Error getting recent weather: {e}")
+        return []
+
+
+def get_searched_cities(filepath="data/weather_history.csv"):
+    """
+    Get list of all unique cities that have been searched.
+    
+    Returns:
+        List of unique city names
+    """
+    try:
+        all_records = load_weather_history(filepath)
+        
+        # Extract unique cities
+        cities = set()
+        for record in all_records:
+            city = record.get('city', '').strip()
+            if city and city != 'Unknown':
+                cities.add(city)
+        
+        # Return sorted list
+        return sorted(list(cities))
+        
+    except Exception as e:
+        print(f"❌ Error getting searched cities: {e}")
         return []
 
 
@@ -220,7 +246,6 @@ if __name__ == "__main__":
     
     # Test data
     test_weather_data = {
-        "name": "Test City",
         "temperature": 22.5,
         "description": "Clear sky",
         "humidity": 60,
@@ -231,14 +256,19 @@ if __name__ == "__main__":
         "precipitation": 0.0
     }
     
-    # Test saving
-    print("Testing save_weather...")
-    save_weather(test_weather_data, "test_weather.csv")
+    # Test saving with city name
+    print("Testing save_weather with city name...")
+    save_weather(test_weather_data, "Test City", "test_weather.csv")
     
     # Test loading
     print("Testing load_weather_history...")
     history = load_weather_history("test_weather.csv")
     print(f"Loaded {len(history)} records")
+    
+    # Test getting searched cities
+    print("Testing get_searched_cities...")
+    cities = get_searched_cities("test_weather.csv")
+    print(f"Searched cities: {cities}")
     
     # Test stats
     print("Testing get_weather_stats...")
@@ -253,4 +283,3 @@ if __name__ == "__main__":
         pass
     
     print("🧪 Storage tests completed")
-    
