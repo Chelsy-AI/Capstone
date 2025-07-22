@@ -1,13 +1,6 @@
 import tkinter as tk
 
 def create_tomorrow_guess_frame(parent, theme):
-    """
-    Creates a table-style frame to display tomorrow's weather prediction.
-    Format:
-    | Temperature | Accuracy | Confidence |
-    | 🌡️          | 💯       | 😎         |
-    | 80.9F       | 85%      | 90%        |
-    """
     
     # Create the main container frame - transparent
     frame = tk.Frame(parent, bg="#87CEEB")

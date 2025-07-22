@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-Fixed Weather Animation System with Dynamic Background Updates
-This version addresses all previous issues and provides working animations
+Weather Animation System with Dynamic Background Updates
 """
 
 import tkinter as tk
@@ -202,7 +201,6 @@ class WeatherAnimation:
         self.frame_delay = int(1000 / self.fps)
         self.max_particles = 150
         
-        print(f"[WeatherAnimation] Initialized animation system")
         
         # Bind events
         try:
@@ -215,7 +213,6 @@ class WeatherAnimation:
         if event.widget == self.canvas:
             self.width = max(event.width, 100)
             self.height = max(event.height, 100)
-            print(f"[WeatherAnimation] Canvas resized to: {self.width}x{self.height}")
             
             # Update all particles with new boundaries
             for particle in self.particles:
@@ -227,7 +224,6 @@ class WeatherAnimation:
         """Update animation size"""
         self.width = max(width, 100)
         self.height = max(height, 100)
-        print(f"[WeatherAnimation] Size updated to: {self.width}x{self.height}")
         
         # Update particles
         for particle in self.particles:
@@ -237,7 +233,6 @@ class WeatherAnimation:
 
     def start_animation(self, weather_type="clear"):
         """Start weather animation"""
-        print(f"[WeatherAnimation] Starting animation: {weather_type}")
         
         self.current_weather = weather_type
         
@@ -246,14 +241,12 @@ class WeatherAnimation:
             self.is_running = True
             self._initialize_particles()
             self._start_animation_loop()
-            print(f"[WeatherAnimation] Animation started with {len(self.particles)} particles")
         else:
             # Just change weather type if already running
             self.set_weather_type(weather_type)
 
     def stop_animation(self):
         """Stop weather animation"""
-        print("[WeatherAnimation] Stopping animation")
         self.is_running = False
         
         # Cancel animation loop
@@ -270,11 +263,9 @@ class WeatherAnimation:
     def set_weather_type(self, weather_type):
         """Change weather type and reinitialize particles"""
         if weather_type != self.current_weather:
-            print(f"[WeatherAnimation] Changing weather type: {self.current_weather} -> {weather_type}")
             self.current_weather = weather_type
             self._cleanup_particles()
             self._initialize_particles()
-            print(f"[WeatherAnimation] Particles reinitialized: {len(self.particles)}")
 
     def _start_animation_loop(self):
         """Start the main animation loop"""
@@ -311,7 +302,6 @@ class WeatherAnimation:
                         if particle.is_off_screen():
                             particles_to_remove.append(i)
                     except Exception as e:
-                        print(f"[WeatherAnimation] Particle error: {e}")
                         particles_to_remove.append(i)
                 else:
                     particles_to_remove.append(i)
@@ -336,7 +326,6 @@ class WeatherAnimation:
             self.animation_id = self.canvas.after(self.frame_delay, self._animate_frame)
             
         except Exception as e:
-            print(f"[WeatherAnimation] Animation error: {e}")
             # Try to continue animation
             if self.is_running:
                 self.animation_id = self.canvas.after(self.frame_delay, self._animate_frame)
@@ -346,7 +335,6 @@ class WeatherAnimation:
         self._cleanup_particles()
         self.lightning_timer = 0
         
-        print(f"[WeatherAnimation] Initializing particles for: {self.current_weather}")
         
         weather_handlers = {
             "rain": self._create_rain_particles,
@@ -361,7 +349,6 @@ class WeatherAnimation:
         handler = weather_handlers.get(self.current_weather, self._create_clear_particles)
         handler()
         
-        print(f"[WeatherAnimation] Created {len(self.particles)} particles")
 
     def _create_rain_particles(self):
         """Create rain particles"""
@@ -487,7 +474,7 @@ class WeatherAnimation:
                 self._draw_sun()
                 
         except Exception as e:
-            print(f"[WeatherAnimation] Background draw error: {e}")
+            pass
 
     def _draw_sun(self):
         """Draw sun for sunny weather"""
@@ -516,7 +503,7 @@ class WeatherAnimation:
                 fill="#FFD700", outline="#FFA500", width=2, tags="background"
             )
         except Exception as e:
-            print(f"[WeatherAnimation] Sun draw error: {e}")
+            pass
 
     def _draw_lightning(self):
         """Draw lightning for storms"""
@@ -552,10 +539,9 @@ class WeatherAnimation:
                         tags="background"
                     )
                 
-                print("[WeatherAnimation] Lightning strike!")
                 
             except Exception as e:
-                print(f"[WeatherAnimation] Lightning error: {e}")
+                pass
 
     def _cleanup_particles(self):
         """Clean up all particles"""
@@ -573,7 +559,7 @@ class WeatherAnimation:
             self.canvas.delete("background")
             
         except Exception as e:
-            print(f"[WeatherAnimation] Cleanup error: {e}")
+            pass
 
     # Public interface methods
     def get_particle_count(self):

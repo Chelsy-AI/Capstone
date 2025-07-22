@@ -1,4 +1,3 @@
-# __init__.py for tomorrows_guess module
 # This file makes Python treat the folder as a package and controls what gets imported
 
 from .predictor import get_tomorrows_prediction

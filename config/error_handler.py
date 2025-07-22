@@ -192,8 +192,7 @@ def show_error_message(title: str, message: str, error_type: str = "error"):
         else:
             messagebox.showerror(title, message)
     except Exception:
-        # Fallback to console if GUI is not available
-        print(f"{title}: {message}")
+        pass
 
 def show_network_error():
     """Show network connectivity error message"""

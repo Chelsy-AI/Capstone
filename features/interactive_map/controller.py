@@ -60,7 +60,6 @@ class MapController:
     def setup_base_map(self):
         self.map_view.set_tile_server(self.base_tile_server, max_zoom=22)
         self.map_view.set_zoom(self.current_zoom)
-        print("[MapController] Base map set with OSM tiles")
 
     def update_map(self):
         city = self.get_city_callback()
@@ -74,19 +73,15 @@ class MapController:
             if self.marker:
                 self.map_view.delete(self.marker)
             self.marker = self.map_view.set_marker(self.current_lat, self.current_lon, text=city)
-            print(f"[MapController] Map centered on {city} at {self.current_lat}, {self.current_lon}")
 
     def update_weather_overlay(self):
         layer = self.layer_var.get()
-        print(f"[MapController] Selected overlay layer: {layer}")
 
         if layer == "none":
             self.map_view.set_tile_server(self.base_tile_server, max_zoom=22)
-            print("[MapController] Set tile server to base OSM tiles")
         else:
             composite_url = f"{self.tile_server_url}/tiles/{layer}/{{z}}/{{x}}/{{y}}.png"
             self.map_view.set_tile_server(composite_url, max_zoom=10)
-            print(f"[MapController] Set tile server to composite URL: {composite_url}")
 
     def geocode_city(self, city_name):
         try:
@@ -103,15 +98,12 @@ class MapController:
                 lon = float(data[0]['lon'])
                 return lat, lon
         except Exception as e:
-            print(f"[MapController] Geocoding error: {e}")
             return None
 
     def refresh(self):
-        print("[MapController] Refreshing map and overlay")
         self.update_map()
         self.update_weather_overlay()
 
     def cleanup(self):
         if self.map_view:
             self.map_view.destroy()
-            print("[MapController] MapView destroyed")

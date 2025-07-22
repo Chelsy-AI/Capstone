@@ -58,7 +58,6 @@ def serve_tile(layer, z, x, y):
         return "Internal Server Error", 500
 
 def start_tile_server(*args, **kwargs):
-    print("[TileServer] Starting tile server on http://127.0.0.1:5005")
     app.run(host="127.0.0.1", port=5005, debug=False, use_reloader=False)
 
 if __name__ == "__main__":

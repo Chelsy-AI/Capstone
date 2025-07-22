@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Simple animation test to verify the weather animation system works
 Run this to see if animations are displaying properly

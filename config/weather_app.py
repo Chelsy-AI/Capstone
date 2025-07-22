@@ -21,7 +21,7 @@ from config.gui import WeatherGUI
 
 class WeatherApp(tk.Tk):
     """
-    Weather Application Main Logic with Dynamic Background Updates
+    Weather Application Main Logic with Dynamic Background Updates and Sun/Moon Integration
 
     This class handles the core business logic and data management
     for the weather application. All GUI components are handled by 
@@ -31,9 +31,9 @@ class WeatherApp(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        self.title("Smart Weather App")
-        self.geometry("800x600")
-        self.minsize(700, 500)
+        self.title("Smart Weather App with Sun & Moon Phases")
+        self.geometry("800x700")  # Increased height for new button
+        self.minsize(700, 600)    # Increased minimum height
 
         # Initialize variables
         self.city_var = tk.StringVar(value="New York")
@@ -47,6 +47,7 @@ class WeatherApp(tk.Tk):
         self.current_weather_data = {}
         self.current_prediction_data = {}
         self.current_history_data = []
+        self.current_sun_moon_data = {}  # Add sun/moon data storage
 
         # Initialize modular GUI system
         self.gui = WeatherGUI(self)
@@ -97,10 +98,9 @@ class WeatherApp(tk.Tk):
                             # Widget might be destroyed, skip
                             pass
                             
-            print(f"[WeatherApp] Updated all label backgrounds to: {new_bg_color}")
             
         except Exception as e:
-            print(f"[WeatherApp] Error updating label backgrounds: {e}")
+            pass
 
     def fetch_and_display(self):
         """Fetch and display weather data"""
@@ -110,21 +110,18 @@ class WeatherApp(tk.Tk):
         """Fetch weather in background thread"""
         try:
             city = self.city_var.get().strip() or "New York"
-            print(f"🌍 Fetching weather for: {city}")
 
             weather_data = get_current_weather(city)
 
             if weather_data.get("error"):
-                print(f"❌ Error: {weather_data['error']}")
                 return
 
             # Save to CSV with proper city name
             try:
                 # Pass the city name explicitly to ensure proper tracking
                 save_weather(weather_data, city)
-                print(f"✅ Weather data saved to CSV for {city}")
             except Exception as e:
-                print(f"⚠️ CSV save error: {e}")
+                pass
 
             # Store data for preservation across rebuilds
             self.current_weather_data = weather_data
@@ -134,9 +131,12 @@ class WeatherApp(tk.Tk):
             self.after(0, lambda: self.update_tomorrow_prediction(city))
             self.after(0, lambda: self.gui.update_history_display(city))
             self.after(0, lambda: self.gui.update_background_animation(weather_data))
+            
+            # Update sun/moon page when city changes
+            self.after(0, lambda: self.gui.update_sun_moon_display(city))
 
         except Exception as e:
-            print(f"❌ Weather fetch error: {e}")
+            pass
 
     def update_tomorrow_prediction(self, city):
         """Update tomorrow's prediction metrics"""
@@ -145,41 +145,96 @@ class WeatherApp(tk.Tk):
 
             # Store data for preservation
             self.current_prediction_data = (predicted_temp, confidence, accuracy)
-            print(f"✅ Prediction data stored: {predicted_temp}°C, {confidence}, {accuracy}%")
 
             # Update using the GUI method - this will handle page-specific display
             self.gui.update_tomorrow_prediction_direct(predicted_temp, confidence, accuracy)
 
         except Exception as e:
-            print(f"❌ Prediction error: {e}")
             # Store empty data so we don't keep trying
             self.current_prediction_data = (None, "N/A", 0)
 
     def toggle_theme(self):
-        """Toggle theme - delegate to GUI"""
+        """Toggle theme - delegate to GUI and update sun/moon"""
         self.gui.toggle_theme()
+        
+        # Update sun/moon theme if controller exists
+        if hasattr(self.gui, 'sun_moon_controller'):
+            self.gui.sun_moon_controller.handle_theme_change()
 
     def toggle_unit(self):
         """Toggle temperature unit"""
         self.unit = "F" if self.unit == "C" else "C"
-        print(f"🌡️ Unit changed to: {self.unit}")
         self.fetch_and_display()
+
+    def get_current_sun_moon_data(self):
+        """Get current sun/moon data for other components"""
+        if hasattr(self.gui, 'sun_moon_controller'):
+            return self.gui.sun_moon_controller.get_current_data()
+        return {}
+
+    def is_currently_daytime(self):
+        """Check if it's currently daytime based on sun/moon data"""
+        if hasattr(self.gui, 'sun_moon_controller'):
+            return self.gui.sun_moon_controller.is_daytime()
+        
+        # Fallback to simple time check
+        import datetime
+        current_hour = datetime.datetime.now().hour
+        return 6 <= current_hour < 18
+
+    def get_current_moon_phase(self):
+        """Get current moon phase information"""
+        if hasattr(self.gui, 'sun_moon_controller'):
+            return self.gui.sun_moon_controller.get_moon_phase()
+        return {}
+
+    def get_current_sun_position(self):
+        """Get current sun position"""
+        if hasattr(self.gui, 'sun_moon_controller'):
+            return self.gui.sun_moon_controller.get_sun_position()
+        return {}
+
+    def refresh_all_data(self):
+        """Refresh all data (weather, predictions, sun/moon)"""
+        city = self.city_var.get().strip() or "New York"
+        
+        # Refresh weather data
+        self.fetch_and_display()
+        
+        # Refresh sun/moon data if on that page
+        if hasattr(self.gui, 'sun_moon_controller'):
+            self.gui.sun_moon_controller.refresh_data()
+
+    def show_sun_moon_page(self):
+        """Directly show the sun/moon page"""
+        if hasattr(self.gui, 'show_page'):
+            self.gui.show_page("sun_moon")
 
     def on_close(self):
         """Clean up resources"""
+        
+        # Clean up GUI resources
         self.gui.cleanup_animation()
+        
+        # Clean up sun/moon controller
+        if hasattr(self.gui, 'sun_moon_controller'):
+            self.gui.sun_moon_controller.cleanup()
+        
         self.destroy()
 
 
 def run_app():
     """Main entry point"""
     try:
-        print("🚀 Starting Weather App with Modular GUI...")
         app = WeatherApp()
-        print("✅ App started successfully")
+        
+        # Optional: Start auto-refresh for sun/moon data
+        if hasattr(app.gui, 'sun_moon_controller'):
+            app.gui.sun_moon_controller.start_auto_refresh(interval_minutes=30)
+        
         app.mainloop()
+        
     except Exception as e:
-        print(f"💥 Error: {e}")
         traceback.print_exc()
 
 

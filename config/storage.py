@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Fixed Weather Data Storage Module
+Weather Data Storage Module
 Ensures all weather data is properly saved to CSV files with city tracking
 """
 
@@ -60,13 +60,9 @@ def save_weather(data, city_name=None, filepath="data/weather_history.csv"):
                 humidity, wind_speed, pressure, visibility,
                 uv_index, precipitation
             ])
-            
-            print(f"✅ Weather data saved: {city} at {timestamp}")
-            
-    except PermissionError:
-        print("⚠️ Permission denied - file might be open in Excel")
+                        
     except Exception as e:
-        print(f"❌ Error saving weather data: {e}")
+        pass
 
 
 def load_weather_history(filepath="data/weather_history.csv"):
@@ -88,11 +84,9 @@ def load_weather_history(filepath="data/weather_history.csv"):
             for row in reader:
                 weather_history.append(row)
         
-        print(f"✅ Loaded {len(weather_history)} weather records")
         return weather_history
         
     except Exception as e:
-        print(f"❌ Error loading weather history: {e}")
         return []
 
 
@@ -127,7 +121,6 @@ def get_recent_weather(city, limit=10, filepath="data/weather_history.csv"):
         return city_records[:limit]
         
     except Exception as e:
-        print(f"❌ Error getting recent weather: {e}")
         return []
 
 
@@ -152,7 +145,6 @@ def get_searched_cities(filepath="data/weather_history.csv"):
         return sorted(list(cities))
         
     except Exception as e:
-        print(f"❌ Error getting searched cities: {e}")
         return []
 
 
@@ -169,14 +161,11 @@ def clear_weather_history(filepath="data/weather_history.csv"):
     try:
         if os.path.isfile(filepath):
             os.remove(filepath)
-            print(f"✅ Weather history cleared: {filepath}")
             return True
         else:
-            print(f"⚠️ No history file found: {filepath}")
             return True
             
     except Exception as e:
-        print(f"❌ Error clearing weather history: {e}")
         return False
 
 
@@ -235,14 +224,12 @@ def get_weather_stats(filepath="data/weather_history.csv"):
         return stats
         
     except Exception as e:
-        print(f"❌ Error getting weather stats: {e}")
         return {"error": str(e)}
 
 
 # Example usage and testing
 if __name__ == "__main__":
     # Test the storage functions
-    print("🧪 Testing weather storage functions...")
     
     # Test data
     test_weather_data = {
@@ -257,29 +244,20 @@ if __name__ == "__main__":
     }
     
     # Test saving with city name
-    print("Testing save_weather with city name...")
     save_weather(test_weather_data, "Test City", "test_weather.csv")
     
     # Test loading
-    print("Testing load_weather_history...")
     history = load_weather_history("test_weather.csv")
-    print(f"Loaded {len(history)} records")
     
     # Test getting searched cities
-    print("Testing get_searched_cities...")
     cities = get_searched_cities("test_weather.csv")
-    print(f"Searched cities: {cities}")
     
     # Test stats
-    print("Testing get_weather_stats...")
     stats = get_weather_stats("test_weather.csv")
-    print(f"Stats: {stats}")
     
     # Clean up test file
     try:
         os.remove("test_weather.csv")
-        print("✅ Test file cleaned up")
     except:
         pass
     
-    print("🧪 Storage tests completed")

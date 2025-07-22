@@ -3,11 +3,12 @@ from tkinter import ttk
 
 from .weather_display import WeatherDisplay
 from .animation_controller import AnimationController
+from features.sun_moon_phases.controller import SunMoonController
 
 
 class WeatherGUI:
     """
-    Main GUI Controller with Transparent Label Fix
+    Main GUI Controller with Transparent Label Fix and Sun/Moon Integration
     """
     
     def __init__(self, parent_app):
@@ -17,6 +18,7 @@ class WeatherGUI:
         # Initialize GUI components
         self.weather_display = WeatherDisplay(self.app, self)
         self.animation_controller = AnimationController(self.app, self)
+        self.sun_moon_controller = SunMoonController(self.app, self)
         
         # Page management
         self.current_page = "main"
@@ -51,15 +53,12 @@ class WeatherGUI:
 
     def build_gui(self):
         """Build the complete GUI interface with page system"""
-        print("[GUI] Building paginated interface...")
         
         self._clear_widgets()
         self.app.bind("<Configure>", self._on_window_resize)
         self._setup_background()
         self.show_page("main")
         
-        print("[GUI] Paginated interface ready")
-
     def _clear_widgets(self):
         """Clear existing widgets while preserving special elements"""
         for widget in self.app.winfo_children():
@@ -85,7 +84,6 @@ class WeatherGUI:
 
     def show_page(self, page_name):
         """Show a specific page"""
-        print(f"[GUI] Showing page: {page_name}")
         
         self._cleanup_page_resources()
         self._clear_page_widgets()
@@ -99,6 +97,8 @@ class WeatherGUI:
             self._build_history_page()
         elif page_name == "map":
             self._build_map_page()
+        elif page_name == "sun_moon":
+            self._build_sun_moon_page()
         
         self._restore_current_data()
 
@@ -107,7 +107,6 @@ class WeatherGUI:
         if hasattr(self, 'map_controller'):
             try:
                 del self.map_controller
-                print("🗑️ Map controller cleaned up")
             except:
                 pass
 
@@ -136,7 +135,7 @@ class WeatherGUI:
             text=text,
             font=font,
             fg=fg,
-            bg=canvas_bg,  # Match canvas background exactly!
+            bg=canvas_bg,  
             anchor=anchor,
             relief="flat",
             borderwidth=0,
@@ -298,7 +297,7 @@ class WeatherGUI:
         self.set_widget_references(widget_refs)
 
     def _build_navigation_buttons(self, window_width, y_start):
-        """Build navigation buttons"""
+        """Build navigation buttons including Sun & Moon"""
         button_width = 150
         button_height = 40
         button_spacing = 60
@@ -313,7 +312,8 @@ class WeatherGUI:
             ("Toggle Theme", lambda: self.app.toggle_theme(), left_x, y_start),
             ("Tomorrow's Prediction", lambda: self.show_page("prediction"), right_x, y_start),
             ("Weather History", lambda: self.show_page("history"), left_x, y_start + button_height + 30),
-            ("Map View", lambda: self.show_page("map"), right_x, y_start + button_height + 30)
+            ("Map View", lambda: self.show_page("map"), right_x, y_start + button_height + 30),
+            ("☀️ Sun & Moon 🌙", lambda: self.show_page("sun_moon"), center_x, y_start + (button_height + 30) * 2)
         ]
         
         for text, command, x, y in buttons:
@@ -435,7 +435,6 @@ class WeatherGUI:
         
         # Force update history display when building history page
         city = self.app.city_var.get()
-        print(f"[GUI] History page built, fetching history for '{city}'")
         self.app.after(100, lambda: self.update_history_display(city))
 
     def _build_map_page(self):
@@ -504,9 +503,7 @@ class WeatherGUI:
             api_key = os.getenv("weatherdb_api_key")
             
             self.map_controller = MapController(map_frame, self.app.city_var.get, api_key, show_grid=True)
-            print("✅ Map controller initialized for map page with grid visibility")
         except Exception as e:
-            print(f"❌ Map controller error: {e}")
             # Fallback placeholder - TRANSPARENT
             map_placeholder = self._create_label(
                 map_frame,
@@ -516,6 +513,19 @@ class WeatherGUI:
                 x=300,
                 y=200
             )
+
+    def _build_sun_moon_page(self):
+        """Build sun/moon phases page"""
+        window_width = self.app.winfo_width()
+        window_height = self.app.winfo_height()
+        
+        
+        # Use the controller to build the page
+        self.sun_moon_controller.build_page(window_width, window_height)
+        
+        # Update display with current city
+        city = self.app.city_var.get().strip() or "New York"
+        self.sun_moon_controller.update_display(city)
 
     def _show_map_info(self):
         """Show map overlay information"""
@@ -550,12 +560,11 @@ class WeatherGUI:
     def _rebuild_current_page(self):
         """Rebuild current page when window is resized"""
         try:
-            print(f"[GUI] Rebuilding page for resize: {self.current_page}")
             current_page = self.current_page
             self.show_page(current_page)
             self._restore_current_data()
         except Exception as e:
-            print(f"❌ Resize error: {e}")
+            pass
 
     def _restore_current_data(self):
         """Restore current data after page rebuild"""
@@ -587,6 +596,11 @@ class WeatherGUI:
         """Update background animation"""
         self.animation_controller.update_background_animation(weather_data)
 
+    def update_sun_moon_display(self, city):
+        """Update sun/moon display"""
+        if hasattr(self, 'sun_moon_controller'):
+            self.sun_moon_controller.update_display(city)
+
     def toggle_theme(self):
         """Toggle theme"""
         self.weather_display.toggle_theme()
@@ -594,6 +608,10 @@ class WeatherGUI:
     def cleanup_animation(self):
         """Clean up animation resources"""
         self.animation_controller.cleanup_animation()
+        
+        # Clean up sun/moon controller
+        if hasattr(self, 'sun_moon_controller'):
+            self.sun_moon_controller.cleanup()
 
     def get_widgets(self):
         """Get the widgets list"""

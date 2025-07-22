@@ -45,7 +45,6 @@ class WeatherDisplay:
     def update_weather_display(self, weather_data):
         """Update the main weather display with current data"""
         try:
-            print("[WeatherDisplay] Updating weather display...")
             
             self._update_temperature_display(weather_data)
             self._update_description_display(weather_data)
@@ -53,10 +52,9 @@ class WeatherDisplay:
             self._update_weather_icon(weather_data.get("icon"))
             
             description = weather_data.get("description", "No description")
-            print(f"✅ Weather display updated: {description}")
             
         except Exception as e:
-            print(f"❌ Weather display update error: {e}")
+            pass
 
     def _update_temperature_display(self, weather_data):
         """Update temperature labels"""
@@ -134,7 +132,6 @@ class WeatherDisplay:
             self.gui.icon_label.configure(bg=self._get_canvas_bg_color())
             
         except Exception as e:
-            print(f"Icon fetch error: {e}")
             try:
                 self.gui.icon_label.configure(text="🌤️", image="")
                 # Fix blue box behind fallback icon
@@ -145,7 +142,6 @@ class WeatherDisplay:
     def update_tomorrow_prediction_direct(self, predicted_temp, confidence, accuracy):
         """Update tomorrow's prediction display"""
         try:
-            print("[WeatherDisplay] Updating prediction display...")
             
             self.app.current_prediction_data = (predicted_temp, confidence, accuracy)
             
@@ -193,21 +189,15 @@ class WeatherDisplay:
                         self.gui.confidence_prediction.configure(bg=canvas_bg)
                     except tk.TclError:
                         pass
-                        
-                print("✅ Prediction display updated on prediction page")
-            else:
-                print("✅ Prediction data stored (not on prediction page)")
-                    
+                                            
         except Exception as e:
-            print(f"❌ Prediction update error: {e}")
+            pass
 
     def update_history_display(self, city):
         """Update weather history display"""
         try:
-            print(f"[WeatherDisplay] Fetching weather history for {city}...")
             
             if self.gui.current_page != "history":
-                print(f"[WeatherDisplay] Not on history page, current page: {self.gui.current_page}")
                 return
             
             self._clear_history_labels()
@@ -216,22 +206,17 @@ class WeatherDisplay:
             history_data = fetch_world_history(city)
             
             if history_data and "time" in history_data:
-                print(f"[WeatherDisplay] Found history data with {len(history_data['time'])} days")
                 self._create_history_display_directly(history_data)
             else:
-                print("[WeatherDisplay] No history data received from API")
                 self._show_history_error()
             
-            print("✅ History update process completed")
             
         except Exception as e:
-            print(f"❌ History update error: {e}")
             self._show_history_error()
 
     def _create_history_display_directly(self, history_data):
         """Create history display with transparent backgrounds"""
         try:
-            print("[WeatherDisplay] Creating history display...")
             
             times = history_data.get("time", [])
             max_temps = history_data.get("temperature_2m_max", [])
@@ -258,10 +243,8 @@ class WeatherDisplay:
                     x_pos = start_x + (col * col_width) + (col_width / 2)
                     self._create_day_labels(date, max_temp, min_temp, x_pos, start_y, window_width)
             
-            print(f"✅ Created history display for {days_to_show} days")
             
         except Exception as e:
-            print(f"❌ Error creating history display: {e}")
             self._show_history_error()
 
     def _create_day_labels(self, date, max_temp, min_temp, x_pos, y_start, window_width):
@@ -340,7 +323,7 @@ class WeatherDisplay:
             self.gui.history_labels.append(avg_label)
             
         except Exception as e:
-            print(f"❌ Error creating day labels: {e}")
+            pass
 
     def _show_history_error(self):
         """Show error message with transparent background"""
@@ -359,7 +342,7 @@ class WeatherDisplay:
             self.gui.history_labels.append(error_label)
             
         except Exception as e:
-            print(f"Error showing history error message: {e}")
+            pass
     
     def _clear_history_labels(self):
         """Clear existing history labels"""
@@ -374,7 +357,6 @@ class WeatherDisplay:
 
     def toggle_theme(self):
         """Toggle application theme and fix all blue boxes"""
-        print("[WeatherDisplay] Toggling theme...")
         
         # Toggle text color
         self.app.text_color = "white" if self.app.text_color == "black" else "black"
@@ -382,7 +364,6 @@ class WeatherDisplay:
         # Update ALL widget backgrounds to match canvas
         self._fix_all_blue_boxes()
         
-        print(f"🎨 Theme toggled to: {self.app.text_color}")
 
     def _fix_all_blue_boxes(self):
         """Fix blue boxes on ALL widgets by setting canvas background"""
