@@ -1,6 +1,6 @@
 """
-Sun and Moon Phases Display Module - Improved Layout
-Enhanced sky/horizon visualization with clean text-only layout (no boxes)
+Sun and Moon Phases Display Module - CLEAN ORGANIZED LAYOUT
+Clear, readable visualization with proper spacing and organization
 """
 
 import tkinter as tk
@@ -11,7 +11,7 @@ from .api import get_moon_phase_emoji, format_time_for_display, calculate_golden
 
 class SunMoonDisplay:
     """
-    Improved Sun and Moon Display with enhanced visualization and clean text layout
+    Clean and organized Sun and Moon Display - NO OVERLAPPING LABELS
     """
     
     def __init__(self, app, gui_controller):
@@ -32,33 +32,33 @@ class SunMoonDisplay:
         self.star_particles = []
         
     def build_sun_moon_page(self, window_width, window_height):
-        """Build the improved sun/moon phases page"""
+        """Build CLEAN organized sun/moon page"""
         
         # Back button
         self._add_back_button()
         
-        # Main title
-        self._build_page_header(window_width)
+        # Clean header
+        self._build_clean_header(window_width)
         
-        # Enhanced celestial visualization
-        self._build_enhanced_celestial_display(window_width, window_height)
+        # ORGANIZED celestial display - NO OVERLAPS
+        self._build_clean_celestial_display(window_width, window_height)
         
-        # Clean text-only information sections
-        self._build_text_sections(window_width, window_height)
+        # Well-spaced information sections
+        self._build_organized_text_sections(window_width, window_height)
             
-    def _build_page_header(self, window_width):
-        """Build the page header"""
-        # Main title
+    def _build_clean_header(self, window_width):
+        """Build clean header with proper spacing"""
+        # Main title - Clean and simple
         title_main = self._create_black_label(
             self.app,
-            text="☀️ Astronomical Data 🌙",
+            text="Sun & Moon",
             font=("Arial", int(28 + window_width/40), "bold"),
             x=window_width/2,
             y=80
         )
         self.gui.widgets.append(title_main)
         
-        # Subtitle with current time
+        # Subtitle with current time - well spaced
         self.time_label = self._create_black_label(
             self.app,
             text="Loading celestial information...",
@@ -68,186 +68,182 @@ class SunMoonDisplay:
         )
         self.gui.widgets.append(self.time_label)
     
-    def _build_enhanced_celestial_display(self, window_width, window_height):
-        """Build enhanced celestial visualization with improved sky/horizon/ground"""
+    def _build_clean_celestial_display(self, window_width, window_height):
+        """Build CLEAN celestial visualization - NO OVERLAPPING"""
         viz_y = 160
-        viz_height = 200
+        viz_height = 180  # Smaller height for better organization
         center_x = window_width // 2
         
-        # Sky dome with gradient effect using multiple rectangles
-        sky_colors = ["#87CEEB", "#B0E0E6", "#ADD8E6", "#E0F6FF"]
-        for i, color in enumerate(sky_colors):
-            sky_section = tk.Frame(
-                self.app,
-                height=viz_height//4,
-                bg=color,
-                relief="flat",
-                borderwidth=0
-            )
-            sky_section.place(x=50, y=viz_y + i*(viz_height//4), width=window_width-100)
-            self.gui.widgets.append(sky_section)
+        # Clean sky with clear boundaries
+        sky_frame = tk.Frame(
+            self.app,
+            height=viz_height,
+            bg="#87CEEB",
+            relief="solid",
+            borderwidth=2
+        )
+        sky_frame.place(x=80, y=viz_y, width=window_width-160)
+        self.gui.widgets.append(sky_frame)
         
-        # Horizon line with enhanced styling
-        horizon_y = viz_y + viz_height - 50
+        # Clear horizon line
+        horizon_y = viz_y + viz_height - 30
         horizon_line = tk.Frame(
             self.app,
             height=4,
-            bg="#8B4513",  # Earth brown
-            relief="raised",
+            bg="#8B4513",
+            relief="solid",
             borderwidth=1
         )
         horizon_line.place(x=80, y=horizon_y, width=window_width-160)
         self.gui.widgets.append(horizon_line)
         
-        # Ground with textured appearance
-        ground_colors = ["#8B4513", "#A0522D", "#CD853F"]
-        for i, color in enumerate(ground_colors):
-            ground_section = tk.Frame(
-                self.app,
-                height=15,
-                bg=color,
-                relief="flat",
-                borderwidth=0
-            )
-            ground_section.place(x=50, y=horizon_y + 4 + i*15, width=window_width-100)
-            self.gui.widgets.append(ground_section)
+        # Clean ground
+        ground_frame = tk.Frame(
+            self.app,
+            height=25,
+            bg="#A0522D",
+            relief="solid",
+            borderwidth=1
+        )
+        ground_frame.place(x=80, y=horizon_y+4, width=window_width-160)
+        self.gui.widgets.append(ground_frame)
         
-        # Enhanced directional indicators
-        directions = [
-            ("🌅 East", 120, horizon_y - 10),
-            ("🌇 West", window_width - 120, horizon_y - 10),
-            ("⬆️ Zenith", center_x, viz_y + 20),
-            ("⬇️ Nadir", center_x, horizon_y + 60)
-        ]
+        # CLEAN directional labels - NO OVERLAP
+        # East - far left
+        east_label = self._create_black_label(
+            self.app,
+            text="East",
+            font=("Arial", 12, "bold"),
+            x=100,
+            y=horizon_y - 20
+        )
+        self.gui.widgets.append(east_label)
         
-        for direction, x, y in directions:
-            dir_label = self._create_black_label(
-                self.app,
-                text=direction,
-                font=("Arial", int(12 + window_width/100), "bold"),
-                x=x,
-                y=y
-            )
-            self.gui.widgets.append(dir_label)
+        # West - far right
+        west_label = self._create_black_label(
+            self.app,
+            text="West", 
+            font=("Arial", 12, "bold"),
+            x=window_width - 100,
+            y=horizon_y - 20
+        )
+        self.gui.widgets.append(west_label)
         
-        # Elevation grid lines for reference
-        for elevation in [30, 60]:
-            grid_y = horizon_y - (elevation / 90) * (viz_height - 50)
-            grid_line = tk.Frame(
-                self.app,
-                height=1,
-                bg="#CCCCCC",
-                relief="flat",
-                borderwidth=0
-            )
-            grid_line.place(x=100, y=grid_y, width=window_width-200)
-            self.gui.widgets.append(grid_line)
-            
-            # Elevation labels
-            elev_label = self._create_black_label(
-                self.app,
-                text=f"{elevation}°",
-                font=("Arial", 10),
-                x=90,
-                y=grid_y
-            )
-            self.gui.widgets.append(elev_label)
+        # Zenith - top center
+        zenith_label = self._create_black_label(
+            self.app,
+            text="Zenith",
+            font=("Arial", 12, "bold"),
+            x=center_x,
+            y=viz_y + 15
+        )
+        self.gui.widgets.append(zenith_label)
         
-        # Enhanced atmosphere indicators
-        atmosphere_labels = [
-            ("🌌 Deep Sky", center_x, viz_y + 30),
-            ("☁️ Cloud Layer", center_x, viz_y + 80),
-            ("🌊 Atmosphere", center_x, horizon_y - 30),
-            ("🌍 Earth Surface", center_x, horizon_y + 25)
-        ]
+        # Clean elevation markers - NO OVERLAP
+        # 60° line
+        grid_60_y = horizon_y - 90
+        grid_60_line = tk.Frame(
+            self.app,
+            height=1,
+            bg="#666666",
+            relief="flat"
+        )
+        grid_60_line.place(x=100, y=grid_60_y, width=window_width-200)
+        self.gui.widgets.append(grid_60_line)
         
-        for label_text, x, y in atmosphere_labels:
-            atmo_label = self._create_black_label(
-                self.app,
-                text=label_text,
-                font=("Arial", int(11 + window_width/120)),
-                x=x,
-                y=y
-            )
-            self.gui.widgets.append(atmo_label)
+        # 60° label - far left, no overlap
+        deg_60_label = self._create_black_label(
+            self.app,
+            text="60°",
+            font=("Arial", 10),
+            x=75,
+            y=grid_60_y
+        )
+        self.gui.widgets.append(deg_60_label)
         
-        # Enhanced sun indicator with glow effect
+        # 30° line
+        grid_30_y = horizon_y - 45
+        grid_30_line = tk.Frame(
+            self.app,
+            height=1,
+            bg="#666666",
+            relief="flat"
+        )
+        grid_30_line.place(x=100, y=grid_30_y, width=window_width-200)
+        self.gui.widgets.append(grid_30_line)
+        
+        # 30° label - far left, no overlap
+        deg_30_label = self._create_black_label(
+            self.app,
+            text="30°",
+            font=("Arial", 10),
+            x=75,
+            y=grid_30_y
+        )
+        self.gui.widgets.append(deg_30_label)
+        
+        # Sun indicator - positioned clearly
         self.sun_indicator = self._create_black_label(
             self.app,
             text="☀️",
-            font=("Arial", int(40 + window_width/25)),
+            font=("Arial", 35),
             x=window_width/3,
-            y=horizon_y - 60
+            y=horizon_y - 40
         )
         self.gui.widgets.append(self.sun_indicator)
         
-        # Enhanced moon indicator
+        # Moon indicator - positioned clearly, no overlap
         self.moon_indicator = self._create_black_label(
             self.app,
             text="🌙",
-            font=("Arial", int(40 + window_width/25)),
+            font=("Arial", 35),
             x=2*window_width/3,
             y=horizon_y - 40
         )
         self.gui.widgets.append(self.moon_indicator)
-        
-        # Compass rose for better orientation
-        compass_elements = [
-            ("N", center_x, viz_y - 20),
-            ("S", center_x, horizon_y + 80),
-            ("E", window_width - 80, horizon_y),
-            ("W", 80, horizon_y)
-        ]
-        
-        for direction, x, y in compass_elements:
-            compass_label = self._create_black_label(
-                self.app,
-                text=f"🧭 {direction}",
-                font=("Arial", 10, "bold"),
-                x=x,
-                y=y
-            )
-            self.gui.widgets.append(compass_label)
     
-    def _build_text_sections(self, window_width, window_height):
-        """Build clean text-only information sections (no boxes)"""
-        sections_y = 400
-        section_spacing = 30
+    def _build_organized_text_sections(self, window_width, window_height):
+        """Build well-organized text sections with proper spacing"""
+        sections_start_y = 380
         
-        # Calculate positioning for 4 sections in 2x2 grid
-        available_width = window_width - 80
+        # Calculate clean layout
+        available_width = window_width - 100
         section_width = available_width // 2
         
-        left_x = 60
-        right_x = left_x + section_width
-        top_y = sections_y
-        bottom_y = sections_y + 100
+        left_x = 70
+        right_x = left_x + section_width + 20
         
-        # Section positions
+        # Row 1: Solar and Lunar Data
+        row1_y = sections_start_y
+        
+        # Row 2: Positions and Times  
+        row2_y = sections_start_y + 120
+        
+        # Create sections with clear spacing
         sections = [
-            ("sun_section", "☀️ Solar Data", left_x, top_y),
-            ("moon_section", "🌙 Lunar Data", right_x, top_y),
-            ("position_section", "🧭 Celestial Positions", left_x, bottom_y),
-            ("time_section", "⏰ Rise & Set Times", right_x, bottom_y)
+            ("sun_section", "☀️ Solar Data", left_x, row1_y),
+            ("moon_section", "🌙 Lunar Data", right_x, row1_y),
+            ("position_section", "🧭 Positions", left_x, row2_y),
+            ("time_section", "⏰ Golden Hours", right_x, row2_y)
         ]
         
         for section_id, title, x, y in sections:
-            self._create_text_section(section_id, title, x, y)
+            self._create_clean_text_section(section_id, title, x, y)
     
-    def _create_text_section(self, section_id, title, x, y):
-        """Create a text-only information section"""
-        # Section title (bold, larger)
+    def _create_clean_text_section(self, section_id, title, x, y):
+        """Create a clean, well-spaced text section"""
+        # Section title - clear positioning
         title_label = self._create_black_label(
             self.app,
             text=title,
-            font=("Arial", 16, "bold"),
+            font=("Arial", 15, "bold"),
             x=x,
             y=y,
-            anchor="w"
+            anchor="nw"
         )
         self.gui.widgets.append(title_label)
         
-        # Content area for data
+        # Content area - properly spaced below title
         content_label = self._create_black_label(
             self.app,
             text="Loading...",
@@ -273,7 +269,7 @@ class SunMoonDisplay:
             parent,
             text=text,
             font=font,
-            fg="black",  # Always black text
+            fg="black",
             bg=canvas_bg,
             anchor=anchor,
             relief="flat",
@@ -286,21 +282,20 @@ class SunMoonDisplay:
         return label
     
     def update_sun_moon_display(self, sun_moon_data):
-        """Update the improved display with new data"""
+        """Update the display with new data"""
         try:
-            
             if sun_moon_data.get("error"):
                 self._show_error_display(sun_moon_data["error"])
                 return
             
-            # Update header time display
+            # Update header
             self._update_header_time(sun_moon_data)
             
-            # Update celestial positions
-            self._update_celestial_positions(sun_moon_data)
+            # Update celestial positions - CLEAN positioning
+            self._update_celestial_positions_clean(sun_moon_data)
             
             # Update text sections
-            self._update_text_sections(sun_moon_data)
+            self._update_text_sections_clean(sun_moon_data)
                         
         except Exception as e:
             self._show_error_display(str(e))
@@ -326,104 +321,102 @@ class SunMoonDisplay:
         except Exception as e:
             pass
     
-    def _update_text_sections(self, data):
-        """Update all text sections with organized data"""
+    def _update_text_sections_clean(self, data):
+        """Update text sections with clean formatting"""
         try:
-            # Sun Section
+            # Sun Section - clean format
             if "sun_section" in self.info_sections:
                 sunrise = format_time_for_display(data.get("sunrise"))
                 sunset = format_time_for_display(data.get("sunset"))
                 solar_noon = format_time_for_display(data.get("solar_noon"))
+                status = 'Above Horizon' if data.get('is_daytime') else 'Below Horizon'
                 
-                sun_content = f"""🌅 Sunrise: {sunrise}
-🌇 Sunset: {sunset}
-🌞 Solar Noon: {solar_noon}
-☀️ Status: {'Above Horizon' if data.get('is_daytime') else 'Below Horizon'}"""
+                sun_content = f"""Sunrise: {sunrise}
+Sunset: {sunset}
+Solar Noon: {solar_noon}
+Status: {status}"""
                 
                 self.info_sections["sun_section"]["content"].configure(text=sun_content)
             
-            # Moon Section
+            # Moon Section - clean format
             if "moon_section" in self.info_sections:
                 moon_phase_name = data.get("moon_phase_name", "Unknown")
                 moon_illumination = data.get("moon_illumination", 0)
                 moon_emoji = get_moon_phase_emoji(data.get("moon_phase", 0))
+                visibility = 'Visible' if data.get('moon_position', {}).get('elevation', 0) > 0 else 'Below Horizon'
                 
-                moon_content = f"""{moon_emoji} Phase: {moon_phase_name}
-💡 Illumination: {moon_illumination:.1f}%
-🌙 Cycle: {data.get('moon_phase', 0):.3f}
-✨ Visibility: {'Visible' if data.get('moon_position', {}).get('elevation', 0) > 0 else 'Below Horizon'}"""
+                moon_content = f"""{moon_emoji} {moon_phase_name}
+Illumination: {moon_illumination:.1f}%
+Cycle: {data.get('moon_phase', 0):.3f}
+Visibility: {visibility}"""
                 
                 self.info_sections["moon_section"]["content"].configure(text=moon_content)
             
-            # Position Section
+            # Position Section - clean format
             if "position_section" in self.info_sections:
                 sun_pos = data.get("sun_position", {})
                 moon_pos = data.get("moon_position", {})
                 
-                position_content = f"""☀️ Sun Elevation: {sun_pos.get('elevation', 0):.1f}°
-🧭 Sun Azimuth: {sun_pos.get('azimuth', 0):.1f}°
-🌙 Moon Elevation: {moon_pos.get('elevation', 0):.1f}°
-🧭 Moon Azimuth: {moon_pos.get('azimuth', 0):.1f}°"""
+                position_content = f"""Sun: {sun_pos.get('elevation', 0):.1f}° / {sun_pos.get('azimuth', 0):.1f}°
+Moon: {moon_pos.get('elevation', 0):.1f}° / {moon_pos.get('azimuth', 0):.1f}°
+
+(Elevation / Azimuth)"""
                 
                 self.info_sections["position_section"]["content"].configure(text=position_content)
             
-            # Time Section with Golden Hour
+            # Time Section - clean format
             if "time_section" in self.info_sections:
                 golden_hour = calculate_golden_hour(data.get("sunrise"), data.get("sunset"))
                 
-                time_content = f"""🌅 Golden Hour Morning:
-   {golden_hour.get('morning_start', 'N/A')} - {golden_hour.get('morning_end', 'N/A')}
-🌇 Golden Hour Evening:
-   {golden_hour.get('evening_start', 'N/A')} - {golden_hour.get('evening_end', 'N/A')}"""
+                time_content = f"""Morning:
+{golden_hour.get('morning_start', 'N/A')} - {golden_hour.get('morning_end', 'N/A')}
+
+Evening:
+{golden_hour.get('evening_start', 'N/A')} - {golden_hour.get('evening_end', 'N/A')}"""
                 
                 self.info_sections["time_section"]["content"].configure(text=time_content)
             
         except Exception as e:
             pass
     
-    def _update_celestial_positions(self, data):
-        """Update sun and moon positions with enhanced calculations"""
+    def _update_celestial_positions_clean(self, data):
+        """Update sun and moon positions with CLEAN positioning"""
         try:
             window_width = self.app.winfo_width()
             
             # Get position data
             sun_pos = data.get("sun_position", {})
-            sun_elevation = sun_pos.get("elevation", 45)
+            sun_elevation = max(0, sun_pos.get("elevation", 45))  # Keep above horizon for visibility
             sun_azimuth = sun_pos.get("azimuth", 180)
             
             moon_pos = data.get("moon_position", {})
-            moon_elevation = moon_pos.get("elevation", 30)
+            moon_elevation = max(0, moon_pos.get("elevation", 30))  # Keep above horizon for visibility
             moon_azimuth = moon_pos.get("azimuth", 90)
             
-            # Calculate screen positions with better mapping
-            horizon_y = 310  # Horizon line position
-            sky_height = 150  # Available sky space above horizon
+            # Calculate CLEAN screen positions
+            horizon_y = 290  # Fixed horizon line position
+            sky_height = 120  # Available sky space
             
-            # Sun position calculation
-            if sun_elevation >= 0:  # Above horizon
-                sun_y = horizon_y - (sun_elevation / 90) * sky_height
-                # Map azimuth to screen position (0° = North, 90° = East, 180° = South, 270° = West)
-                azimuth_factor = (sun_azimuth - 90) / 180  # Convert to -1 to 1 range for East-West
-                sun_x = window_width/2 + azimuth_factor * (window_width/4)
-            else:  # Below horizon
-                sun_y = horizon_y + abs(sun_elevation / 90) * 30
-                sun_x = window_width/3
+            # Sun position - clean calculation
+            sun_y = horizon_y - (sun_elevation / 90) * sky_height
+            sun_x = 150 + (sun_azimuth / 360) * (window_width - 300)  # Keep in bounds
             
-            # Moon position calculation
-            if moon_elevation >= 0:
-                moon_y = horizon_y - (moon_elevation / 90) * sky_height
-                moon_azimuth_factor = (moon_azimuth - 90) / 180
-                moon_x = window_width/2 + moon_azimuth_factor * (window_width/4)
-            else:
-                moon_y = horizon_y + abs(moon_elevation / 90) * 30
-                moon_x = 2*window_width/3
+            # Moon position - clean calculation, avoid overlap
+            moon_y = horizon_y - (moon_elevation / 90) * sky_height
+            moon_x = 150 + (moon_azimuth / 360) * (window_width - 300)  # Keep in bounds
+            
+            # Ensure no overlap
+            if abs(sun_x - moon_x) < 80:
+                if moon_x > sun_x:
+                    moon_x = sun_x + 80
+                else:
+                    moon_x = sun_x - 80
             
             # Update positions
             if hasattr(self, 'sun_indicator'):
                 self.sun_indicator.place(x=sun_x, y=sun_y, anchor="center")
             
             if hasattr(self, 'moon_indicator'):
-                # Update moon with phase
                 moon_phase = data.get("moon_phase", 0.25)
                 moon_emoji = get_moon_phase_emoji(moon_phase)
                 
@@ -497,7 +490,7 @@ class SunMoonDisplay:
         self.gui.widgets.append(back_btn)
     
     def start_celestial_animation(self):
-        """Start enhanced celestial animations"""
+        """Start celestial animations"""
         try:
             self.animation_running = True
             self._animate_celestial_background()
@@ -515,14 +508,14 @@ class SunMoonDisplay:
             pass
     
     def _animate_celestial_background(self):
-        """Animate enhanced background effects"""
+        """Animate background effects"""
         if not self.animation_running:
             return
         
         try:
-            # Enhanced star twinkling
+            # Simple star twinkling
             if hasattr(self.gui, 'bg_canvas') and self.gui.bg_canvas:
-                self._add_enhanced_stars()
+                self._add_simple_stars()
             
             # Schedule next frame
             self.animation_id = self.app.after(4000, self._animate_celestial_background)
@@ -530,8 +523,8 @@ class SunMoonDisplay:
         except Exception as e:
             pass
     
-    def _add_enhanced_stars(self):
-        """Add enhanced twinkling star effects"""
+    def _add_simple_stars(self):
+        """Add simple star effects"""
         try:
             canvas = self.gui.bg_canvas
             width = canvas.winfo_width()
@@ -540,32 +533,15 @@ class SunMoonDisplay:
             # Remove old stars
             canvas.delete("star")
             
-            # Add subtle star patterns
-            for _ in range(random.randint(6, 15)):
+            # Add a few simple stars
+            for _ in range(random.randint(3, 8)):
                 x = random.randint(100, width - 100)
                 y = random.randint(50, height//2)
                 
-                # Small, subtle stars
-                size = random.choice([1, 2])
-                colors = ["#FFFFFF", "#FFFFCC", "#E6E6FA"]
-                color = random.choice(colors)
-                
-                # Create main star
                 canvas.create_oval(
-                    x - size, y - size, x + size, y + size,
-                    fill=color, outline="", tags="star"
+                    x - 1, y - 1, x + 1, y + 1,
+                    fill="white", outline="", tags="star"
                 )
-                
-                # Occasional sparkle
-                if size == 2 and random.random() < 0.3:
-                    canvas.create_line(
-                        x - 4, y, x + 4, y,
-                        fill=color, width=1, tags="star"
-                    )
-                    canvas.create_line(
-                        x, y - 4, x, y + 4,
-                        fill=color, width=1, tags="star"
-                    )
             
         except Exception as e:
             pass
@@ -574,10 +550,6 @@ class SunMoonDisplay:
         """Clean up resources"""
         try:
             self.stop_celestial_animation()
-            
-            # Clear section references
             self.info_sections.clear()
-                        
         except Exception as e:
             pass
-        

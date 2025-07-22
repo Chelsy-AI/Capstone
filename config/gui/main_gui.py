@@ -297,7 +297,7 @@ class WeatherGUI:
         self.set_widget_references(widget_refs)
 
     def _build_navigation_buttons(self, window_width, y_start):
-        """Build navigation buttons including Sun & Moon"""
+        """Build navigation buttons including Sun & Moon WITHOUT EMOJIS"""
         button_width = 150
         button_height = 40
         button_spacing = 60
@@ -313,7 +313,7 @@ class WeatherGUI:
             ("Tomorrow's Prediction", lambda: self.show_page("prediction"), right_x, y_start),
             ("Weather History", lambda: self.show_page("history"), left_x, y_start + button_height + 30),
             ("Map View", lambda: self.show_page("map"), right_x, y_start + button_height + 30),
-            ("☀️ Sun & Moon 🌙", lambda: self.show_page("sun_moon"), center_x, y_start + (button_height + 30) * 2)
+            ("Sun & Moon", lambda: self.show_page("sun_moon"), center_x, y_start + (button_height + 30) * 2)  # REMOVED EMOJIS
         ]
         
         for text, command, x, y in buttons:
@@ -379,7 +379,7 @@ class WeatherGUI:
             self.widgets.append(header_widget)
         
         # Emojis - TRANSPARENT
-        prediction_emojis = ["🌡️", "💯", "😎"]
+        prediction_emojis = ["🌡️", "🎯", "😎"]
         for i, emoji in enumerate(prediction_emojis):
             x_pos = start_x + (i * col_width) + (col_width / 2)
             emoji_widget = self._create_label(

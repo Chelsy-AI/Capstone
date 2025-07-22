@@ -7,7 +7,7 @@ def create_tomorrow_guess_frame(parent, theme):
     
     # Table headers
     headers = ["Temperature", "Accuracy", "Confidence"]
-    emojis = ["🌡️", "💯", "😎"]
+    emojis = ["🌡️", "🎯", "😎"]
     
     # Header row
     for col, header in enumerate(headers):

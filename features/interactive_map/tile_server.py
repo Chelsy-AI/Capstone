@@ -39,13 +39,19 @@ def serve_tile(layer, z, x, y):
             output.seek(0)
             return send_file(output, mimetype='image/png')
 
-        # Darken the overlay (2+ shades darker)
+        # Make the overlay MUCH DARKER (2+ shades darker as requested)
         overlay_img = Image.open(BytesIO(overlay_resp.content)).convert("RGBA")
+        
+        # Apply much stronger darkening - 2+ shades darker
         enhancer = ImageEnhance.Brightness(overlay_img)
-        darker_overlay = enhancer.enhance(0.5)  # Darker than before
+        much_darker_overlay = enhancer.enhance(0.3)  # Much darker than before (was 0.5, now 0.3)
+        
+        # Optional: Also reduce contrast slightly for better visibility
+        contrast_enhancer = ImageEnhance.Contrast(much_darker_overlay)
+        final_overlay = contrast_enhancer.enhance(0.8)  # Slightly reduce contrast
 
         # Composite overlay on top of base
-        base_img.paste(darker_overlay, (0, 0), darker_overlay)
+        base_img.paste(final_overlay, (0, 0), final_overlay)
 
         # Return the combined image
         output = BytesIO()

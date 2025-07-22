@@ -6,7 +6,7 @@ import requests
 
 class WeatherDisplay:
     """
-    Weather Display Manager - Blue Box Background Fix
+    Weather Display Manager - Fixed Black Text for History
     """
     
     def __init__(self, app, gui_controller):
@@ -194,7 +194,7 @@ class WeatherDisplay:
             pass
 
     def update_history_display(self, city):
-        """Update weather history display"""
+        """Update weather history display with ALL BLACK TEXT"""
         try:
             
             if self.gui.current_page != "history":
@@ -215,7 +215,7 @@ class WeatherDisplay:
             self._show_history_error()
 
     def _create_history_display_directly(self, history_data):
-        """Create history display with transparent backgrounds"""
+        """Create history display with ALL BLACK TEXT - FIXED"""
         try:
             
             times = history_data.get("time", [])
@@ -248,19 +248,16 @@ class WeatherDisplay:
             self._show_history_error()
 
     def _create_day_labels(self, date, max_temp, min_temp, x_pos, y_start, window_width):
-        """Create labels for a single day with transparent backgrounds"""
+        """Create labels for a single day with ALL BLACK TEXT - FIXED"""
         try:
             font_size = int(12 + window_width/100)
-            canvas_bg = self._get_canvas_bg_color()  # Get current canvas background
+            canvas_bg = self._get_canvas_bg_color()
             
             # Handle None values
             if max_temp is None or min_temp is None:
                 max_text = "N/A"
                 min_text = "N/A"
                 avg_text = "N/A"
-                max_color = self.app.text_color
-                min_color = self.app.text_color
-                avg_color = self.app.text_color
             else:
                 # Convert temperatures if needed
                 if self.app.unit == "F":
@@ -277,16 +274,13 @@ class WeatherDisplay:
                 max_text = f"{max_temp}{unit_symbol}"
                 min_text = f"{min_temp}{unit_symbol}"
                 avg_text = f"{avg_temp}{unit_symbol}"
-                max_color = "#FF6B6B" if self.app.text_color == "black" else "#FF8E8E"
-                min_color = "#4ECDC4" if self.app.text_color == "black" else "#6EDDD6"
-                avg_color = self.app.text_color
             
-            # Create all labels with transparent canvas background
+            # Create all labels with BLACK TEXT - FORCE BLACK COLOR
             date_label = self._create_transparent_label(
                 self.app,
                 text=f"📅 {date}",
                 font=("Arial", font_size, "bold"),
-                fg=self.app.text_color,
+                fg="black",  # FORCE BLACK TEXT
                 x=x_pos,
                 y=y_start
             )
@@ -296,7 +290,7 @@ class WeatherDisplay:
                 self.app,
                 text=f"🔺 {max_text}",
                 font=("Arial", font_size),
-                fg=max_color,
+                fg="black",  # FORCE BLACK TEXT - NO MORE COLORS
                 x=x_pos,
                 y=y_start + 40
             )
@@ -306,7 +300,7 @@ class WeatherDisplay:
                 self.app,
                 text=f"🔻 {min_text}",
                 font=("Arial", font_size),
-                fg=min_color,
+                fg="black",  # FORCE BLACK TEXT - NO MORE COLORS
                 x=x_pos,
                 y=y_start + 80
             )
@@ -316,7 +310,7 @@ class WeatherDisplay:
                 self.app,
                 text=f"🌡️ {avg_text}",
                 font=("Arial", font_size),
-                fg=avg_color,
+                fg="black",  # FORCE BLACK TEXT - NO MORE COLORS
                 x=x_pos,
                 y=y_start + 120
             )
@@ -326,7 +320,7 @@ class WeatherDisplay:
             pass
 
     def _show_history_error(self):
-        """Show error message with transparent background"""
+        """Show error message with BLACK TEXT"""
         try:
             window_width = self.app.winfo_width()
             
@@ -334,7 +328,7 @@ class WeatherDisplay:
                 self.app,
                 text="📊 Weather History\n\nNo historical data available for this location.\nTry refreshing or selecting a different city.",
                 font=("Arial", 16),
-                fg=self.app.text_color,
+                fg="black",  # FORCE BLACK TEXT
                 x=window_width/2,
                 y=300,
                 justify="center"
@@ -396,18 +390,11 @@ class WeatherDisplay:
             except (tk.TclError, AttributeError):
                 pass
         
-        # Fix history labels
+        # Fix history labels - FORCE ALL TO BLACK
         for label in self.gui.history_labels:
             try:
-                current_text = label.cget("text")
-                if "🔺" in current_text:  # Max temp
-                    color = "#FF6B6B" if self.app.text_color == "black" else "#FF8E8E"
-                    label.configure(fg=color, bg=canvas_bg)
-                elif "🔻" in current_text:  # Min temp
-                    color = "#4ECDC4" if self.app.text_color == "black" else "#6EDDD6"
-                    label.configure(fg=color, bg=canvas_bg)
-                else:  # Date and average labels
-                    label.configure(fg=self.app.text_color, bg=canvas_bg)
+                # FORCE ALL HISTORY LABELS TO BLACK TEXT
+                label.configure(fg="black", bg=canvas_bg)
             except (tk.TclError, AttributeError):
                 pass
 
