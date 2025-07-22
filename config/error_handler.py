@@ -12,7 +12,7 @@ It handles all types of errors that can occur in the application including:
 - Prediction and calculation errors
 
 Key Features:
-- Centralized error logging
+- Centralized error logging to console only
 - User-friendly error messages
 - Error recovery mechanisms
 - Detailed error reporting for debugging
@@ -23,7 +23,6 @@ import logging
 import traceback
 import tkinter as tk
 from tkinter import messagebox
-import os
 from datetime import datetime
 from typing import Optional, Dict, Any, Callable
 import sys
@@ -33,37 +32,22 @@ import sys
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 class WeatherAppLogger:
-    """Advanced logging system for the weather application"""
+    """Console-only logging system for the weather application"""
     
     def __init__(self):
         self.logger = logging.getLogger('WeatherApp')
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logging.INFO)
         
-        # Create logs directory if it doesn't exist
-        log_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
-        os.makedirs(log_dir, exist_ok=True)
-        
-        # File handler for detailed logging
-        log_file = os.path.join(log_dir, f'weather_app_{datetime.now().strftime("%Y%m%d")}.log')
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setLevel(logging.DEBUG)
-        
-        # Console handler for immediate feedback
+        # Console handler for immediate feedback only
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setLevel(logging.INFO)
         
-        # Formatters
-        detailed_formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s'
-        )
-        simple_formatter = logging.Formatter('%(levelname)s: %(message)s')
+        # Simple formatter for console output
+        formatter = logging.Formatter('%(levelname)s: %(message)s')
+        console_handler.setFormatter(formatter)
         
-        file_handler.setFormatter(detailed_formatter)
-        console_handler.setFormatter(simple_formatter)
-        
-        # Add handlers to logger
+        # Add handler to logger
         if not self.logger.handlers:
-            self.logger.addHandler(file_handler)
             self.logger.addHandler(console_handler)
     
     def get_logger(self):
@@ -125,7 +109,7 @@ def handle_api_errors(func):
             return func(*args, **kwargs)
         except Exception as e:
             error_msg = f"API Error in {func.__name__}: {str(e)}"
-            app_logger.error(error_msg, exc_info=True)
+            app_logger.error(error_msg)
             
             # Return safe fallback data
             return {
@@ -146,7 +130,7 @@ def handle_gui_errors(show_user_message=True):
                 return func(*args, **kwargs)
             except Exception as e:
                 error_msg = f"GUI Error in {func.__name__}: {str(e)}"
-                app_logger.error(error_msg, exc_info=True)
+                app_logger.error(error_msg)
                 
                 if show_user_message:
                     show_error_message(
@@ -166,7 +150,7 @@ def handle_data_errors(func):
             return func(*args, **kwargs)
         except Exception as e:
             error_msg = f"Data Error in {func.__name__}: {str(e)}"
-            app_logger.error(error_msg, exc_info=True)
+            app_logger.error(error_msg)
             
             # Return empty/safe data structure
             return {} if 'dict' in str(type(func())) else []
@@ -179,7 +163,7 @@ def handle_animation_errors(func):
             return func(*args, **kwargs)
         except Exception as e:
             error_msg = f"Animation Error in {func.__name__}: {str(e)}"
-            app_logger.warning(error_msg, exc_info=True)
+            app_logger.warning(error_msg)
             
             # Animations are non-critical, just disable them silently
             return None
@@ -266,7 +250,7 @@ def handle_file_permission_error(filepath: str):
     app_logger.error(f"Permission denied accessing file: {filepath}")
     show_error_message(
         "Permission Error",
-        f"Cannot access file: {os.path.basename(filepath)}. Please check file permissions.",
+        f"Cannot access file. Please check file permissions.",
         "error"
     )
 
@@ -410,7 +394,6 @@ def log_system_info():
     app_logger.info(f"Platform: {platform.platform()}")
     app_logger.info(f"Python Version: {sys.version}")
     app_logger.info(f"Python Executable: {sys.executable}")
-    app_logger.info(f"Working Directory: {os.getcwd()}")
     app_logger.info("==========================")
 
 def create_error_report(error: Exception, context: Dict[str, Any] = None) -> str:
@@ -458,21 +441,10 @@ def handle_critical_error(error: Exception, context: Dict[str, Any] = None):
     error_report = create_error_report(error, context)
     app_logger.critical(error_report)
     
-    # Save error report to file
-    try:
-        error_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
-        os.makedirs(error_dir, exist_ok=True)
-        
-        error_file = os.path.join(error_dir, f'critical_error_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
-        with open(error_file, 'w') as f:
-            f.write(error_report)
-    except:
-        pass  # Don't let error reporting itself crash the app
-    
     # Show user message
     show_error_message(
         "Critical Error",
-        "A serious error occurred. The application will attempt to continue, but you may need to restart it. Error details have been logged.",
+        "A serious error occurred. The application will attempt to continue. Please restart if issues persist.",
         "error"
     )
 
@@ -528,7 +500,7 @@ def initialize_error_handling():
         
         show_error_message(
             "Unexpected Error",
-            "An unexpected error occurred. The application will attempt to continue. Please check the logs for details.",
+            "An unexpected error occurred. The application will attempt to continue. Please restart if issues persist.",
             "error"
         )
     

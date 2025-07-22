@@ -322,15 +322,15 @@ class WeatherGUI:
                 self.app,
                 text=text,
                 command=command,
-                bg="darkblue",
-                fg="black",  # Force black text on all buttons
+                bg="grey",  # Grey background for all buttons
+                fg="black",  # Black text on all buttons
                 font=("Arial", int(10 + window_width/120), "bold"),
                 relief="raised",
                 borderwidth=2,
                 width=15,
                 height=2,
                 activeforeground="black",  # Black text when button is pressed
-                activebackground="lightblue"  # Light blue background when pressed
+                activebackground="lightgrey"  # Light grey background when pressed
             )
             btn.place(x=x, y=y, anchor="center")
             self.widgets.append(btn)
@@ -467,14 +467,35 @@ class WeatherGUI:
         title.place(x=window_width/2, y=100, anchor="center")
         self.widgets.append(title)
         
-        # Create map frame container
+        # Info button next to title
+        info_btn = tk.Button(
+            self.app,
+            text="i",
+            command=self._show_map_info,
+            bg="grey",
+            fg="black",
+            font=("Arial", int(16 + window_width/80), "bold"),
+            relief="raised",
+            borderwidth=2,
+            width=3,
+            height=1,
+            activeforeground="black",
+            activebackground="lightgrey"
+        )
+        info_btn.place(x=window_width/2 + 180, y=100, anchor="center")  # Moved 9 more spaces right
+        self.widgets.append(info_btn)
+        
+        # Move map down 2 rows (approximately 80px) from the title
+        map_y_position = window_height/2 + 40  # Moving down 2 rows from center
+        
+        # Create map frame container - positioned lower
         map_frame = tk.Frame(
             self.app,
             bg=bg_color,
             relief="solid",
             borderwidth=2
         )
-        map_frame.place(x=window_width/2, y=window_height/2, anchor="center", width=600, height=400)
+        map_frame.place(x=window_width/2, y=map_y_position, anchor="center", width=600, height=400)
         self.widgets.append(map_frame)
         
         # Initialize map controller only for this page
@@ -500,19 +521,131 @@ class WeatherGUI:
             )
             map_placeholder.pack(expand=True, fill="both")
 
+    def _show_map_info(self):
+        """Show information about the currently selected map weather overlay"""
+        from tkinter import messagebox
+        
+        # Get current overlay selection from map controller if available
+        current_overlay = "none"
+        if hasattr(self, 'map_controller') and hasattr(self.map_controller, 'layer_var'):
+            current_overlay = self.map_controller.layer_var.get()
+        
+        # Define overlay information
+        overlay_info = {
+            "none": {
+                "title": "Base Map View",
+                "description": "📍 Standard OpenStreetMap view showing geographical features, roads, and city locations without weather overlays."
+            },
+            "temp_new": {
+                "title": "🔵 TEMPERATURE Overlay",
+                "description": """Shows current air temperature across the region:
+
+• Blue: Cold temperatures (below 0°C/32°F)
+• Green: Cool temperatures (0-15°C/32-59°F)
+• Yellow: Mild temperatures (15-25°C/59-77°F)
+• Orange: Warm temperatures (25-35°C/77-95°F)
+• Red: Hot temperatures (above 35°C/95°F)
+
+This overlay helps you see temperature variations across different areas and plan accordingly for weather-sensitive activities."""
+            },
+            "wind_new": {
+                "title": "💨 WIND Overlay",
+                "description": """Displays wind speed and direction patterns:
+
+• Light Blue: Calm winds (0-10 km/h)
+• Blue: Light winds (10-20 km/h)
+• Green: Moderate winds (20-40 km/h)
+• Yellow: Strong winds (40-60 km/h)
+• Red: Very strong winds (60+ km/h)
+
+Useful for outdoor activities, sailing, flying, and understanding weather movement patterns."""
+            },
+            "precipitation_new": {
+                "title": "🌧️ PRECIPITATION Overlay",
+                "description": """Shows current rainfall and snowfall intensity:
+
+• Transparent: No precipitation
+• Light Blue: Light rain/snow (0.1-1 mm/h)
+• Blue: Moderate rain/snow (1-5 mm/h)
+• Dark Blue: Heavy rain/snow (5-10 mm/h)
+• Purple: Very heavy rain/snow (10+ mm/h)
+
+Essential for planning outdoor events and understanding current weather conditions."""
+            },
+            "clouds_new": {
+                "title": "☁️ CLOUDS Overlay",
+                "description": """Displays cloud coverage percentage across the region:
+
+• Clear: No clouds (0-10% coverage)
+• Light Grey: Few clouds (10-25% coverage)
+• Grey: Scattered clouds (25-50% coverage)
+• Dark Grey: Broken clouds (50-75% coverage)
+• Very Dark: Overcast (75-100% coverage)
+
+Helps predict sunshine, photography conditions, and general weather patterns."""
+            },
+            "pressure_new": {
+                "title": "🌡️ PRESSURE Overlay",
+                "description": """Shows atmospheric pressure patterns:
+
+• Blue: Low pressure (below 1000 hPa) - Often brings storms
+• Green: Normal pressure (1000-1020 hPa) - Stable weather
+• Yellow: High pressure (1020-1040 hPa) - Clear, calm weather
+• Red: Very high pressure (above 1040 hPa) - Very stable conditions
+
+Pressure patterns help predict weather changes and storm systems."""
+            },
+            "snow_new": {
+                "title": "❄️ SNOW Overlay",
+                "description": """Displays snow depth and accumulation:
+
+• White: Light snow (0-5 cm depth)
+• Light Blue: Moderate snow (5-15 cm depth)
+• Blue: Heavy snow (15-30 cm depth)
+• Dark Blue: Very heavy snow (30+ cm depth)
+
+Critical for winter travel planning and snow-related activities."""
+            },
+            "dewpoint_new": {
+                "title": "💧 DEW POINT Overlay",
+                "description": """Shows humidity and comfort levels:
+
+• Blue: Very dry (below 0°C/32°F) - Low humidity
+• Green: Comfortable (0-15°C/32-59°F) - Ideal humidity
+• Yellow: Slightly humid (15-20°C/59-68°F) - Noticeable humidity
+• Orange: Humid (20-25°C/68-77°F) - High humidity
+• Red: Very humid (above 25°C/77°F) - Uncomfortable humidity
+
+Dew point indicates how the air will feel and potential for fog formation."""
+            }
+        }
+        
+        # Get info for current overlay
+        if current_overlay in overlay_info:
+            info = overlay_info[current_overlay]
+            title = f"Map Info: {info['title']}"
+            message = info['description']
+        else:
+            title = "Map Information"
+            message = "No overlay information available for the current selection."
+        
+        messagebox.showinfo(title, message)
+
     def _add_back_button(self):
         """Add back button to return to main page"""
         back_btn = tk.Button(
             self.app,
             text="← Back",
             command=lambda: self.show_page("main"),
-            bg="gray",
-            fg="white",
+            bg="grey",  # Grey background for back button
+            fg="black",  # Black text for back button
             font=("Arial", 12, "bold"),
             relief="raised",
             borderwidth=2,
             width=8,
-            height=1
+            height=1,
+            activeforeground="black",  # Black text when pressed
+            activebackground="lightgrey"  # Light grey when pressed
         )
         back_btn.place(x=50, y=50, anchor="center")
         self.widgets.append(back_btn)
