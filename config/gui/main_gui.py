@@ -483,9 +483,9 @@ class WeatherGUI:
             import os
             api_key = os.getenv("weatherdb_api_key")
             
-            # Create map controller with the frame as parent
-            self.map_controller = MapController(map_frame, self.app.city_var.get, api_key)
-            print("✅ Map controller initialized for map page")
+            # Create map controller with the frame as parent and grid visibility enabled
+            self.map_controller = MapController(map_frame, self.app.city_var.get, api_key, show_grid=True)
+            print("✅ Map controller initialized for map page with grid visibility")
         except Exception as e:
             print(f"❌ Map controller error: {e}")
             # Fallback to placeholder
