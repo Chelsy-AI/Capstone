@@ -21,7 +21,7 @@ from config.gui import WeatherGUI
 
 class WeatherApp(tk.Tk):
     """
-    Weather Application Main Logic
+    Weather Application Main Logic with Dynamic Background Updates
 
     This class handles the core business logic and data management
     for the weather application. All GUI components are handled by 
@@ -59,8 +59,48 @@ class WeatherApp(tk.Tk):
 
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
-        # Note: Map controller is now only initialized when the map page is accessed
-        # This prevents the map from appearing on all pages
+    def update_all_label_backgrounds(self, new_bg_color):
+        """Update all label backgrounds to match animation background"""
+        try:
+            # Update all widgets in GUI
+            if hasattr(self, 'gui'):
+                all_widgets = []
+                
+                # Get main widgets
+                if hasattr(self.gui, 'widgets'):
+                    all_widgets.extend(self.gui.widgets)
+                
+                # Get history labels
+                if hasattr(self.gui, 'history_labels'):
+                    all_widgets.extend(self.gui.history_labels)
+                
+                # Get specific weather widgets
+                weather_widgets = [
+                    self.gui.humidity_value, self.gui.wind_value, self.gui.pressure_value,
+                    self.gui.visibility_value, self.gui.uv_value, self.gui.precipitation_value,
+                    self.gui.temp_label, self.gui.desc_label, self.gui.icon_label,
+                    self.gui.temp_prediction, self.gui.accuracy_prediction, self.gui.confidence_prediction
+                ]
+                
+                for widget in weather_widgets:
+                    if widget:
+                        all_widgets.append(widget)
+                
+                # Update all label backgrounds
+                for widget in all_widgets:
+                    if widget and hasattr(widget, 'configure'):
+                        try:
+                            widget_class = widget.winfo_class()
+                            if widget_class == 'Label':
+                                widget.configure(bg=new_bg_color)
+                        except Exception as e:
+                            # Widget might be destroyed, skip
+                            pass
+                            
+            print(f"[WeatherApp] Updated all label backgrounds to: {new_bg_color}")
+            
+        except Exception as e:
+            print(f"[WeatherApp] Error updating label backgrounds: {e}")
 
     def fetch_and_display(self):
         """Fetch and display weather data"""

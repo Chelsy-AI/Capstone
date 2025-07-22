@@ -4,7 +4,7 @@ from config.animations import WeatherAnimation
 
 class AnimationController:
     """
-    Animation Controller
+    Animation Controller with Dynamic Background Support
     
     Manages background weather animations including initialization,
     weather type mapping, and animation lifecycle management.
@@ -26,14 +26,17 @@ class AnimationController:
         }
 
     def setup_animation(self, canvas):
-        """Initialize the animation system"""
+        """Initialize the animation system with app reference"""
         try:
             print("[Animation] Setting up animation system...")
             self.smart_bg = WeatherAnimation(canvas)
             
+            # IMPORTANT: Give animation access to app for background updates
+            self.smart_bg.app = self.app
+            
             # Start with default animation after a short delay
             self.app.after(500, lambda: self.smart_bg.start_animation("clear"))
-            print("🎬 Animation system ready")
+            print("🎬 Animation system ready with dynamic background updates")
             
         except Exception as e:
             print(f"❌ Animation setup failed: {e}")
@@ -205,4 +208,3 @@ class AnimationController:
                 
             except Exception as e:
                 print(f"❌ Weather preview error: {e}")
-                

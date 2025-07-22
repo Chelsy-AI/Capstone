@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Fixed Weather Animation System
+Fixed Weather Animation System with Dynamic Background Updates
 This version addresses all previous issues and provides working animations
 """
 
@@ -183,7 +183,7 @@ class CloudParticle(AnimationParticle):
 
 
 class WeatherAnimation:
-    """Fixed weather animation controller"""
+    """Fixed weather animation controller with dynamic background updates"""
     
     def __init__(self, canvas):
         self.canvas = canvas
@@ -195,6 +195,7 @@ class WeatherAnimation:
         self.current_weather = "clear"
         self.frame_count = 0
         self.lightning_timer = 0
+        self.app = None  # Will be set by animation controller
         
         # Performance settings
         self.fps = 30
@@ -292,7 +293,7 @@ class WeatherAnimation:
             self.canvas.delete("particle")
             self.canvas.delete("background")
             
-            # Draw background
+            # Draw background and update GUI
             self._draw_background()
             
             # Update and draw particles
@@ -454,7 +455,7 @@ class WeatherAnimation:
             self.particles.append(CloudParticle(x, y, self.width, self.height))
 
     def _draw_background(self):
-        """Draw weather-appropriate background"""
+        """Draw weather-appropriate background and notify GUI of color changes"""
         colors = {
             "rain": "#4A6741",      # Dark green-grey
             "snow": "#F0F8FF",      # Alice blue  
@@ -473,6 +474,13 @@ class WeatherAnimation:
                 0, 0, self.width, self.height,
                 fill=bg_color, outline="", tags="background"
             )
+            
+            # UPDATE CANVAS BACKGROUND COLOR
+            self.canvas.configure(bg=bg_color)
+            
+            # NOTIFY GUI TO UPDATE ALL LABEL BACKGROUNDS
+            if self.app and hasattr(self.app, 'update_all_label_backgrounds'):
+                self.app.update_all_label_backgrounds(bg_color)
             
             # Draw sun for sunny weather
             if self.current_weather in ["sunny", "clear"]:
@@ -579,4 +587,3 @@ class WeatherAnimation:
     def get_current_weather(self):
         """Get current weather type"""
         return self.current_weather
-    
