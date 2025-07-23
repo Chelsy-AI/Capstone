@@ -1,252 +1,313 @@
 """
-Weather Quiz Generator - Creates smart, fun questions based on real weather data
+Enhanced Weather Quiz Generator - Creates smart questions based on combined CSV data
 """
 
 import pandas as pd
 import random
 import os
-from datetime import datetime, timedelta
-from config.storage import load_weather_history
+import numpy as np
+from datetime import datetime
+from pathlib import Path
 
 
 class WeatherQuizGenerator:
     """
-    Generates intelligent weather quiz questions based on real data analysis
+    Generates intelligent weather quiz questions based on real CSV data analysis
     """
     
     def __init__(self):
         self.weather_data = None
-        self.ahmedabad_data = None
-        self._load_data()
+        self.cities = []
+        self.data_loaded = False
+        self._load_combined_data()
     
-    def _load_data(self):
-        """Load weather data from CSV files"""
+    def _load_combined_data(self):
+        """Load weather data from the combined CSV file"""
         try:
-            # Load search history data
-            self.weather_data = load_weather_history()
+            # Look for combined.csv in the data directory
+            project_root = Path(__file__).parent.parent.parent
+            csv_path = project_root / 'data' / 'combined.csv'
             
-            # Load Ahmedabad data if available
-            ahmedabad_path = os.path.join(os.path.dirname(__file__), '../../data/Ahmedabad.csv')
-            if os.path.exists(ahmedabad_path):
-                self.ahmedabad_data = pd.read_csv(ahmedabad_path)
+            if csv_path.exists():
+                print(f"Loading weather data from {csv_path}")
+                self.weather_data = pd.read_csv(csv_path)
+                
+                # Clean and prepare the data
+                self._prepare_data()
+                self.data_loaded = True
+                print(f"✓ Loaded {len(self.weather_data)} weather records from {len(self.cities)} cities")
+            else:
+                print(f"❌ CSV file not found at {csv_path}")
+                self.data_loaded = False
+                
+        except Exception as e:
+            print(f"Error loading CSV data: {e}")
+            self.data_loaded = False
+    
+    def _prepare_data(self):
+        """Clean and prepare the weather data for analysis"""
+        if self.weather_data is None:
+            return
+        
+        try:
+            # Get unique cities
+            self.cities = self.weather_data['city'].unique().tolist()
+            
+            # Convert date column
+            self.weather_data['date'] = pd.to_datetime(self.weather_data['time'])
+            self.weather_data['month'] = self.weather_data['date'].dt.month
+            self.weather_data['season'] = self.weather_data['month'].apply(self._get_season)
+            
+            # Convert temperature columns (they're in Fahrenheit)
+            temp_cols = ['temperature_2m_max (°F)', 'temperature_2m_min (°F)', 'temperature_2m_mean (°F)']
+            for col in temp_cols:
+                if col in self.weather_data.columns:
+                    self.weather_data[col] = pd.to_numeric(self.weather_data[col], errors='coerce')
+            
+            # Calculate temperature range
+            if 'temperature_2m_max (°F)' in self.weather_data.columns and 'temperature_2m_min (°F)' in self.weather_data.columns:
+                self.weather_data['temp_range'] = (
+                    self.weather_data['temperature_2m_max (°F)'] - 
+                    self.weather_data['temperature_2m_min (°F)']
+                )
+            
+            # Convert other numeric columns
+            numeric_cols = [
+                'rain_sum (inch)', 'snowfall_sum (inch)', 'wind_speed_10m_max (mp/h)',
+                'sunshine_duration (s)', 'surface_pressure_mean (hPa)', 
+                'relative_humidity_2m_mean (%)', 'cloud_cover_mean (%)'
+            ]
+            
+            for col in numeric_cols:
+                if col in self.weather_data.columns:
+                    self.weather_data[col] = pd.to_numeric(self.weather_data[col], errors='coerce')
+            
+            print(f"Data prepared successfully. Cities: {', '.join(self.cities)}")
             
         except Exception as e:
-            # Use fallback data if loading fails
-            self.weather_data = []
-            self.ahmedabad_data = None
+            print(f"Error preparing data: {e}")
+    
+    def _get_season(self, month):
+        """Convert month number to season"""
+        if month in [12, 1, 2]:
+            return 'Winter'
+        elif month in [3, 4, 5]:
+            return 'Spring'
+        elif month in [6, 7, 8]:
+            return 'Summer'
+        else:
+            return 'Fall'
     
     def generate_quiz(self):
-        """Generate 5 smart quiz questions"""
+        """Generate 5 smart quiz questions based on real data"""
+        if not self.data_loaded or self.weather_data is None:
+            return self._generate_fallback_quiz()
+        
         questions = []
         
-        # Ensure we have a good mix of question types
+        # Define question generators with their weights
         question_generators = [
-            self._generate_temperature_comparison_question,
-            self._generate_seasonal_pattern_question,
-            self._generate_weather_condition_frequency_question,
-            self._generate_temperature_range_question,
-            self._generate_weather_trend_question
+            (self._generate_temperature_comparison_question, 1),
+            (self._generate_rainfall_analysis_question, 1),
+            (self._generate_seasonal_pattern_question, 1),
+            (self._generate_extreme_weather_question, 1),
+            (self._generate_city_climate_question, 1),
+            (self._generate_humidity_wind_question, 1),
+            (self._generate_weather_trend_question, 1)
         ]
         
-        # Shuffle to ensure variety
-        random.shuffle(question_generators)
+        # Generate questions ensuring variety
+        attempts = 0
+        max_attempts = 20
         
-        for generator in question_generators:
+        while len(questions) < 5 and attempts < max_attempts:
+            generator, weight = random.choice(question_generators)
             try:
                 question = generator()
-                if question:
+                if question and not self._is_duplicate_question(question, questions):
                     questions.append(question)
             except Exception as e:
-                # If a question fails, generate a fallback
-                fallback = self._generate_fallback_question()
-                if fallback:
-                    questions.append(fallback)
+                print(f"Error generating question: {e}")
+            attempts += 1
         
-        # Ensure we have exactly 5 questions
+        # Fill remaining slots with fallback questions if needed
         while len(questions) < 5:
             fallback = self._generate_fallback_question()
-            if fallback:
+            if fallback and not self._is_duplicate_question(fallback, questions):
                 questions.append(fallback)
         
         return questions[:5]
     
+    def _is_duplicate_question(self, new_question, existing_questions):
+        """Check if question is too similar to existing ones"""
+        if not existing_questions:
+            return False
+        
+        new_q = new_question['question'].lower()
+        for existing in existing_questions:
+            existing_q = existing['question'].lower()
+            # Simple similarity check
+            common_words = set(new_q.split()) & set(existing_q.split())
+            if len(common_words) > 3:  # If more than 3 words in common
+                return True
+        
+        return False
+    
     def _generate_temperature_comparison_question(self):
-        """Generate a question comparing temperatures across different periods"""
+        """Generate questions comparing temperatures between cities"""
         try:
-            if self.ahmedabad_data is not None and len(self.ahmedabad_data) > 50:
-                # Use Ahmedabad data for temperature analysis
-                data = self.ahmedabad_data
-                
-                # Convert temperature columns to numeric, handle errors
-                data['temp_max_c'] = pd.to_numeric(data['temperature_2m_max (°F)'], errors='coerce')
-                data['temp_max_c'] = (data['temp_max_c'] - 32) * 5/9  # Convert F to C
-                
-                # Get data for different months
-                data['month'] = pd.to_datetime(data['time']).dt.month
-                
-                # Compare summer (May-July) vs winter (December-February)
-                summer_temps = data[data['month'].isin([5, 6, 7])]['temp_max_c'].dropna()
-                winter_temps = data[data['month'].isin([12, 1, 2])]['temp_max_c'].dropna()
-                
-                if len(summer_temps) > 5 and len(winter_temps) > 5:
-                    summer_avg = round(summer_temps.mean(), 1)
-                    winter_avg = round(winter_temps.mean(), 1)
-                    temp_diff = round(summer_avg - winter_avg, 1)
-                    
-                    question = f"Based on Ahmedabad's weather data, what's the approximate difference between average summer and winter maximum temperatures?"
-                    
-                    correct_answer = f"{temp_diff}°C"
-                    wrong_answers = [
-                        f"{temp_diff + 5}°C",
-                        f"{temp_diff - 3}°C", 
-                        f"{temp_diff + 8}°C"
-                    ]
-                    
-                    choices = [correct_answer] + wrong_answers
-                    random.shuffle(choices)
-                    
-                    return {
-                        "question": question,
-                        "choices": choices,
-                        "correct_answer": correct_answer,
-                        "explanation": f"Analysis of the data shows summer temperatures average {summer_avg}°C while winter averages {winter_avg}°C, giving a difference of {temp_diff}°C."
-                    }
+            # Get two random cities
+            if len(self.cities) < 2:
+                return None
             
-            # Fallback to search history data
-            if len(self.weather_data) > 10:
-                temps = []
-                for record in self.weather_data:
-                    try:
-                        temp = float(record.get('temperature', 0))
-                        temps.append(temp)
-                    except (ValueError, TypeError):
-                        continue
-                
-                if len(temps) > 5:
-                    avg_temp = round(sum(temps) / len(temps), 1)
-                    max_temp = round(max(temps), 1)
-                    
-                    question = f"Based on your weather search history, what's the average temperature you've looked up?"
-                    
-                    correct_answer = f"{avg_temp}°C"
-                    wrong_answers = [f"{avg_temp + 3}°C", f"{avg_temp - 2}°C", f"{avg_temp + 7}°C"]
-                    
-                    choices = [correct_answer] + wrong_answers
-                    random.shuffle(choices)
-                    
-                    return {
-                        "question": question,
-                        "choices": choices,
-                        "correct_answer": correct_answer,
-                        "explanation": f"Your search history shows an average temperature of {avg_temp}°C across all locations you've checked."
-                    }
+            city1, city2 = random.sample(self.cities, 2)
             
+            # Calculate average temperatures for each city
+            city1_data = self.weather_data[self.weather_data['city'] == city1]
+            city2_data = self.weather_data[self.weather_data['city'] == city2]
+            
+            city1_avg = city1_data['temperature_2m_mean (°F)'].mean()
+            city2_avg = city2_data['temperature_2m_mean (°F)'].mean()
+            
+            if pd.isna(city1_avg) or pd.isna(city2_avg):
+                return None
+            
+            # Convert to Celsius for the question
+            city1_avg_c = round((city1_avg - 32) * 5/9, 1)
+            city2_avg_c = round((city2_avg - 32) * 5/9, 1)
+            
+            if city1_avg_c > city2_avg_c:
+                warmer_city = city1
+                cooler_city = city2
+                temp_diff = round(city1_avg_c - city2_avg_c, 1)
+            else:
+                warmer_city = city2
+                cooler_city = city1
+                temp_diff = round(city2_avg_c - city1_avg_c, 1)
+            
+            question = f"Based on the weather data, which city has a higher average temperature: {city1} or {city2}?"
+            
+            correct_answer = warmer_city
+            wrong_answers = [cooler_city, "They're about the same", "Cannot be determined"]
+            
+            choices = [correct_answer] + wrong_answers[:3]
+            random.shuffle(choices)
+            
+            return {
+                "question": question,
+                "choices": choices,
+                "correct_answer": correct_answer,
+                "explanation": f"{warmer_city} has an average temperature of {city1_avg_c if warmer_city == city1 else city2_avg_c}°C, which is {temp_diff}°C warmer than {cooler_city}."
+            }
+            
+        except Exception as e:
             return None
+    
+    def _generate_rainfall_analysis_question(self):
+        """Generate questions about rainfall patterns"""
+        try:
+            # Find the city with most rainfall
+            city_rainfall = self.weather_data.groupby('city')['rain_sum (inch)'].sum().sort_values(ascending=False)
+            
+            if len(city_rainfall) < 2:
+                return None
+            
+            rainiest_city = city_rainfall.index[0]
+            rainiest_amount = round(city_rainfall.iloc[0], 1)
+            
+            # Get month with most rain for that city
+            city_data = self.weather_data[self.weather_data['city'] == rainiest_city]
+            monthly_rain = city_data.groupby('month')['rain_sum (inch)'].sum()
+            rainiest_month = monthly_rain.idxmax()
+            
+            month_names = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                          'July', 'August', 'September', 'October', 'November', 'December']
+            
+            question = f"Which city received the most total rainfall in the dataset?"
+            
+            correct_answer = rainiest_city
+            wrong_answers = [city for city in self.cities if city != rainiest_city][:3]
+            
+            choices = [correct_answer] + wrong_answers
+            random.shuffle(choices)
+            
+            return {
+                "question": question,
+                "choices": choices,
+                "correct_answer": correct_answer,
+                "explanation": f"{rainiest_city} received {rainiest_amount} inches of total rainfall, with the heaviest rains typically in {month_names[rainiest_month]}."
+            }
             
         except Exception as e:
             return None
     
     def _generate_seasonal_pattern_question(self):
-        """Generate a question about seasonal weather patterns"""
+        """Generate questions about seasonal weather patterns"""
         try:
-            if self.ahmedabad_data is not None and len(self.ahmedabad_data) > 100:
-                data = self.ahmedabad_data
-                
-                # Analyze precipitation patterns
-                data['month'] = pd.to_datetime(data['time']).dt.month
-                monthly_rain = data.groupby('month')['rain_sum (inch)'].mean()
-                
-                # Find rainiest month
-                rainiest_month = monthly_rain.idxmax()
-                month_names = {1: 'January', 2: 'February', 3: 'March', 4: 'April', 
-                             5: 'May', 6: 'June', 7: 'July', 8: 'August',
-                             9: 'September', 10: 'October', 11: 'November', 12: 'December'}
-                
-                rainiest_name = month_names[rainiest_month]
-                
-                question = "Based on Ahmedabad's weather data, which month typically receives the most rainfall?"
-                
-                correct_answer = rainiest_name
-                wrong_options = ['April', 'November', 'February', 'May']
-                wrong_answers = [month for month in wrong_options if month != rainiest_name][:3]
-                
-                choices = [correct_answer] + wrong_answers
-                random.shuffle(choices)
-                
-                return {
-                    "question": question,
-                    "choices": choices,
-                    "correct_answer": correct_answer,
-                    "explanation": f"Data analysis shows {rainiest_name} receives the highest average rainfall, which aligns with monsoon patterns in this region."
-                }
+            # Pick a random city
+            city = random.choice(self.cities)
+            city_data = self.weather_data[self.weather_data['city'] == city]
             
-            # Fallback question about general seasonal patterns
-            question = "In most temperate climates, which season typically has the highest temperature variability (difference between day and night)?"
+            # Analyze seasonal temperatures
+            seasonal_temps = city_data.groupby('season')['temperature_2m_mean (°F)'].mean()
             
-            correct_answer = "Spring"
-            wrong_answers = ["Summer", "Winter", "Autumn"]
+            if len(seasonal_temps) < 4:
+                return None
             
-            choices = [correct_answer] + wrong_answers
+            # Convert to Celsius
+            seasonal_temps_c = ((seasonal_temps - 32) * 5/9).round(1)
+            
+            hottest_season = seasonal_temps_c.idxmax()
+            coldest_season = seasonal_temps_c.idxmin()
+            
+            question = f"In {city}, which season has the highest average temperature according to the data?"
+            
+            correct_answer = hottest_season
+            wrong_answers = [season for season in ['Spring', 'Summer', 'Fall', 'Winter'] if season != hottest_season]
+            
+            choices = [correct_answer] + wrong_answers[:3]
             random.shuffle(choices)
             
             return {
                 "question": question,
                 "choices": choices,
                 "correct_answer": correct_answer,
-                "explanation": "Spring often has the highest temperature variability due to transitional weather patterns and varying day lengths."
+                "explanation": f"In {city}, {hottest_season} has the highest average temperature at {seasonal_temps_c[hottest_season]}°C, while {coldest_season} is the coldest at {seasonal_temps_c[coldest_season]}°C."
             }
             
         except Exception as e:
             return None
     
-    def _generate_weather_condition_frequency_question(self):
-        """Generate a question about weather condition frequencies"""
+    def _generate_extreme_weather_question(self):
+        """Generate questions about extreme weather events"""
         try:
-            if len(self.weather_data) > 15:
-                # Analyze weather conditions from search history
-                conditions = {}
-                for record in self.weather_data:
-                    condition = record.get('description', '').lower()
-                    if condition:
-                        conditions[condition] = conditions.get(condition, 0) + 1
-                
-                if len(conditions) > 2:
-                    most_common = max(conditions.items(), key=lambda x: x[1])
-                    condition_name = most_common[0].title()
-                    frequency = most_common[1]
-                    
-                    question = f"Based on your weather search history, which condition appeared most frequently?"
-                    
-                    correct_answer = condition_name
-                    
-                    # Generate wrong answers from other conditions or common weather types
-                    other_conditions = [cond for cond in conditions.keys() if cond != most_common[0]]
-                    wrong_answers = [cond.title() for cond in other_conditions[:3]]
-                    
-                    # Fill with common weather types if needed
-                    common_weather = ['Sunny', 'Cloudy', 'Rainy', 'Partly Cloudy']
-                    while len(wrong_answers) < 3:
-                        for weather in common_weather:
-                            if weather not in wrong_answers and weather != correct_answer:
-                                wrong_answers.append(weather)
-                                break
-                        break
-                    
-                    choices = [correct_answer] + wrong_answers[:3]
-                    random.shuffle(choices)
-                    
-                    return {
-                        "question": question,
-                        "choices": choices,
-                        "correct_answer": correct_answer,
-                        "explanation": f"'{condition_name}' appeared {frequency} times in your search history, making it the most common condition you've looked up."
-                    }
+            # Find extremes across all data
+            max_temp_record = self.weather_data.loc[self.weather_data['temperature_2m_max (°F)'].idxmax()]
+            min_temp_record = self.weather_data.loc[self.weather_data['temperature_2m_min (°F)'].idxmin()]
+            max_wind_record = self.weather_data.loc[self.weather_data['wind_speed_10m_max (mp/h)'].idxmax()]
             
-            # Fallback question about weather condition patterns
-            question = "Globally, what percentage of days are typically classified as 'clear sky' or 'sunny'?"
+            # Convert temperatures to Celsius
+            max_temp_c = round((max_temp_record['temperature_2m_max (°F)'] - 32) * 5/9, 1)
+            min_temp_c = round((min_temp_record['temperature_2m_min (°F)'] - 32) * 5/9, 1)
+            max_wind_mph = round(max_wind_record['wind_speed_10m_max (mp/h)'], 1)
             
-            correct_answer = "About 25-30%"
-            wrong_answers = ["About 50-60%", "About 10-15%", "About 70-80%"]
+            # Choose which extreme to ask about
+            extreme_type = random.choice(['hottest', 'coldest', 'windiest'])
+            
+            if extreme_type == 'hottest':
+                question = f"Which city recorded the highest temperature in the dataset?"
+                correct_answer = max_temp_record['city']
+                explanation = f"{correct_answer} recorded the highest temperature of {max_temp_c}°C ({max_temp_record['temperature_2m_max (°F)']}°F)."
+            elif extreme_type == 'coldest':
+                question = f"Which city recorded the lowest temperature in the dataset?"
+                correct_answer = min_temp_record['city']
+                explanation = f"{correct_answer} recorded the lowest temperature of {min_temp_c}°C ({min_temp_record['temperature_2m_min (°F)']}°F)."
+            else:  # windiest
+                question = f"Which city recorded the highest wind speed in the dataset?"
+                correct_answer = max_wind_record['city']
+                explanation = f"{correct_answer} recorded the highest wind speed of {max_wind_mph} mph."
+            
+            wrong_answers = [city for city in self.cities if city != correct_answer][:3]
             
             choices = [correct_answer] + wrong_answers
             random.shuffle(choices)
@@ -255,54 +316,28 @@ class WeatherQuizGenerator:
                 "question": question,
                 "choices": choices,
                 "correct_answer": correct_answer,
-                "explanation": "Most locations experience a mix of weather conditions, with truly clear days making up roughly 25-30% of the year on average."
+                "explanation": explanation
             }
             
         except Exception as e:
             return None
     
-    def _generate_temperature_range_question(self):
-        """Generate a question about temperature ranges and variability"""
+    def _generate_city_climate_question(self):
+        """Generate questions about city climate characteristics"""
         try:
-            if self.ahmedabad_data is not None and len(self.ahmedabad_data) > 50:
-                data = self.ahmedabad_data
-                
-                # Calculate temperature ranges
-                data['temp_max_c'] = pd.to_numeric(data['temperature_2m_max (°F)'], errors='coerce')
-                data['temp_min_c'] = pd.to_numeric(data['temperature_2m_min (°F)'], errors='coerce')
-                data['temp_max_c'] = (data['temp_max_c'] - 32) * 5/9  # Convert F to C
-                data['temp_min_c'] = (data['temp_min_c'] - 32) * 5/9  # Convert F to C
-                
-                data['temp_range'] = data['temp_max_c'] - data['temp_min_c']
-                avg_range = data['temp_range'].mean()
-                
-                if not pd.isna(avg_range):
-                    avg_range = round(avg_range, 1)
-                    
-                    question = f"In Ahmedabad, what's the typical daily temperature range (difference between max and min)?"
-                    
-                    correct_answer = f"{avg_range}°C"
-                    wrong_answers = [
-                        f"{avg_range + 3}°C",
-                        f"{avg_range - 2}°C",
-                        f"{avg_range + 6}°C"
-                    ]
-                    
-                    choices = [correct_answer] + wrong_answers
-                    random.shuffle(choices)
-                    
-                    return {
-                        "question": question,
-                        "choices": choices,
-                        "correct_answer": correct_answer,
-                        "explanation": f"Analysis shows the average daily temperature range in Ahmedabad is {avg_range}°C, which is typical for continental climates."
-                    }
+            # Analyze humidity patterns
+            city_humidity = self.weather_data.groupby('city')['relative_humidity_2m_mean (%)'].mean().sort_values(ascending=False)
             
-            # Fallback question about temperature ranges
-            question = "Which type of climate typically has the largest daily temperature range?"
+            if len(city_humidity) < 2:
+                return None
             
-            correct_answer = "Desert climate"
-            wrong_answers = ["Coastal climate", "Tropical rainforest", "Arctic climate"]
+            most_humid_city = city_humidity.index[0]
+            humidity_value = round(city_humidity.iloc[0], 1)
+            
+            question = f"Which city has the highest average humidity according to the data?"
+            
+            correct_answer = most_humid_city
+            wrong_answers = [city for city in self.cities if city != most_humid_city][:3]
             
             choices = [correct_answer] + wrong_answers
             random.shuffle(choices)
@@ -311,58 +346,70 @@ class WeatherQuizGenerator:
                 "question": question,
                 "choices": choices,
                 "correct_answer": correct_answer,
-                "explanation": "Desert climates have the largest daily temperature ranges due to low humidity and clear skies, allowing rapid heating during the day and cooling at night."
+                "explanation": f"{most_humid_city} has the highest average humidity at {humidity_value}%, indicating a more moisture-rich climate."
+            }
+            
+        except Exception as e:
+            return None
+    
+    def _generate_humidity_wind_question(self):
+        """Generate questions about humidity and wind patterns"""
+        try:
+            # Find city with lowest humidity or highest wind
+            city_humidity = self.weather_data.groupby('city')['relative_humidity_2m_mean (%)'].mean()
+            city_wind = self.weather_data.groupby('city')['wind_speed_10m_max (mp/h)'].mean()
+            
+            question_type = random.choice(['humidity', 'wind'])
+            
+            if question_type == 'humidity':
+                driest_city = city_humidity.idxmin()
+                humidity_value = round(city_humidity.min(), 1)
+                
+                question = f"Which city has the lowest average humidity, indicating a drier climate?"
+                correct_answer = driest_city
+                explanation = f"{driest_city} has the lowest average humidity at {humidity_value}%, making it the driest location in the dataset."
+            else:
+                windiest_city = city_wind.idxmax()
+                wind_value = round(city_wind.max(), 1)
+                
+                question = f"Which city experiences the highest average wind speeds?"
+                correct_answer = windiest_city
+                explanation = f"{windiest_city} has the highest average wind speeds at {wind_value} mph, indicating more dynamic weather patterns."
+            
+            wrong_answers = [city for city in self.cities if city != correct_answer][:3]
+            
+            choices = [correct_answer] + wrong_answers
+            random.shuffle(choices)
+            
+            return {
+                "question": question,
+                "choices": choices,
+                "correct_answer": correct_answer,
+                "explanation": explanation
             }
             
         except Exception as e:
             return None
     
     def _generate_weather_trend_question(self):
-        """Generate a question about weather trends over time"""
+        """Generate questions about weather trends and patterns"""
         try:
-            if self.ahmedabad_data is not None and len(self.ahmedabad_data) > 200:
-                data = self.ahmedabad_data
-                
-                # Analyze sunshine duration trends
-                data['date'] = pd.to_datetime(data['time'])
-                data['month'] = data['date'].dt.month
-                
-                # Compare sunshine in different seasons
-                summer_sunshine = data[data['month'].isin([4, 5, 6])]['sunshine_duration (s)'].mean()
-                winter_sunshine = data[data['month'].isin([11, 12, 1])]['sunshine_duration (s)'].mean()
-                
-                if not (pd.isna(summer_sunshine) or pd.isna(winter_sunshine)):
-                    if summer_sunshine > winter_sunshine:
-                        longer_season = "summer"
-                        shorter_season = "winter"
-                    else:
-                        longer_season = "winter" 
-                        shorter_season = "summer"
-                    
-                    question = f"Based on Ahmedabad's data, which season typically has longer sunshine duration?"
-                    
-                    correct_answer = longer_season.title()
-                    wrong_answers = ["Spring", "Autumn", shorter_season.title()]
-                    
-                    choices = [correct_answer] + [ans for ans in wrong_answers if ans != correct_answer][:3]
-                    random.shuffle(choices)
-                    
-                    return {
-                        "question": question,
-                        "choices": choices,
-                        "correct_answer": correct_answer,
-                        "explanation": f"{longer_season.title()} has longer sunshine duration due to clearer skies and longer daylight hours during that period."
-                    }
+            # Analyze temperature ranges
+            city_temp_ranges = self.weather_data.groupby('city')['temp_range'].mean().sort_values(ascending=False)
             
-            # Fallback question about weather trends
-            question = "What weather pattern is most associated with the El Niño phenomenon?"
+            if len(city_temp_ranges) < 2:
+                return None
             
-            correct_answer = "Warmer ocean temperatures in the Pacific"
-            wrong_answers = [
-                "Increased hurricane activity in the Atlantic",
-                "Colder winters in Europe", 
-                "More rainfall in the Arctic"
-            ]
+            highest_range_city = city_temp_ranges.index[0]
+            range_value = round(city_temp_ranges.iloc[0], 1)
+            
+            # Convert to Celsius
+            range_value_c = round(range_value * 5/9, 1)
+            
+            question = f"Which city shows the greatest daily temperature variation (difference between max and min temperatures)?"
+            
+            correct_answer = highest_range_city
+            wrong_answers = [city for city in self.cities if city != highest_range_city][:3]
             
             choices = [correct_answer] + wrong_answers
             random.shuffle(choices)
@@ -371,174 +418,136 @@ class WeatherQuizGenerator:
                 "question": question,
                 "choices": choices,
                 "correct_answer": correct_answer,
-                "explanation": "El Niño is characterized by unusually warm ocean temperatures in the eastern Pacific, which affects global weather patterns."
+                "explanation": f"{highest_range_city} shows the greatest daily temperature variation with an average range of {range_value_c}°C ({range_value}°F), indicating more continental climate characteristics."
             }
             
         except Exception as e:
             return None
     
     def _generate_fallback_question(self):
-        """Generate a general weather knowledge question as fallback"""
+        """Generate general weather knowledge questions as fallback"""
         fallback_questions = [
             {
-                "question": "What is the most accurate way to measure wind speed?",
-                "choices": ["Anemometer", "Barometer", "Hygrometer", "Thermometer"],
-                "correct_answer": "Anemometer",
-                "explanation": "An anemometer is specifically designed to measure wind speed and is the standard instrument used in weather stations."
+                "question": "What weather instrument measures atmospheric pressure?",
+                "choices": ["Barometer", "Anemometer", "Hygrometer", "Thermometer"],
+                "correct_answer": "Barometer",
+                "explanation": "A barometer measures atmospheric pressure, which helps predict weather changes."
             },
             {
-                "question": "Which cloud type is most associated with thunderstorms?",
-                "choices": ["Cumulonimbus", "Cirrus", "Stratus", "Altocumulus"],
+                "question": "Which cloud type typically produces thunderstorms?",
+                "choices": ["Cumulonimbus", "Cirrus", "Stratus", "Altostratus"],
                 "correct_answer": "Cumulonimbus",
-                "explanation": "Cumulonimbus clouds are towering clouds that can reach extreme heights and are responsible for thunderstorms, heavy rain, and severe weather."
+                "explanation": "Cumulonimbus clouds are towering clouds that can reach extreme heights and produce thunderstorms, heavy rain, and severe weather."
             },
             {
-                "question": "What does humidity measure in the atmosphere?",
-                "choices": ["Water vapor content", "Air pressure", "Wind direction", "Temperature variation"],
-                "correct_answer": "Water vapor content",
-                "explanation": "Humidity measures the amount of water vapor present in the air, typically expressed as relative humidity percentage."
+                "question": "What causes the Coriolis effect that influences weather patterns?",
+                "choices": ["Earth's rotation", "Solar radiation", "Ocean currents", "Mountain ranges"],
+                "correct_answer": "Earth's rotation",
+                "explanation": "The Coriolis effect is caused by Earth's rotation and influences the direction of wind patterns and storm systems."
             },
             {
-                "question": "At what temperature does water freeze at sea level?",
-                "choices": ["0°C (32°F)", "-1°C (30°F)", "1°C (34°F)", "-2°C (28°F)"],
-                "correct_answer": "0°C (32°F)",
-                "explanation": "Water freezes at 0°C (32°F) at standard atmospheric pressure at sea level."
+                "question": "At what relative humidity level does air become saturated?",
+                "choices": ["100%", "90%", "80%", "75%"],
+                "correct_answer": "100%",
+                "explanation": "Air becomes saturated at 100% relative humidity, meaning it can hold no more water vapor at that temperature."
             },
             {
-                "question": "Which weather phenomenon is measured by the Saffir-Simpson scale?",
-                "choices": ["Hurricanes", "Tornadoes", "Blizzards", "Thunderstorms"],
-                "correct_answer": "Hurricanes",
-                "explanation": "The Saffir-Simpson scale categorizes hurricanes from Category 1 to 5 based on sustained wind speeds and potential damage."
+                "question": "What is the primary greenhouse gas in Earth's atmosphere?",
+                "choices": ["Water vapor", "Carbon dioxide", "Methane", "Ozone"],
+                "correct_answer": "Water vapor",
+                "explanation": "Water vapor is the most abundant greenhouse gas in the atmosphere, though CO2 is the most significant human-influenced one."
             },
             {
-                "question": "What causes the greenhouse effect in Earth's atmosphere?",
-                "choices": ["Certain gases trap heat", "Solar radiation increases", "Ocean currents change", "Wind patterns shift"],
-                "correct_answer": "Certain gases trap heat",
-                "explanation": "Greenhouse gases like CO2, methane, and water vapor trap heat in the atmosphere by absorbing and re-emitting infrared radiation."
+                "question": "Which scale is used to classify tornado intensity?",
+                "choices": ["Enhanced Fujita Scale", "Saffir-Simpson Scale", "Beaufort Scale", "Richter Scale"],
+                "correct_answer": "Enhanced Fujita Scale",
+                "explanation": "The Enhanced Fujita Scale (EF Scale) classifies tornadoes from EF0 to EF5 based on damage and estimated wind speeds."
             },
             {
-                "question": "Which direction do hurricanes rotate in the Northern Hemisphere?",
-                "choices": ["Counterclockwise", "Clockwise", "Varies by location", "Straight line"],
-                "correct_answer": "Counterclockwise",
-                "explanation": "Due to the Coriolis effect, hurricanes rotate counterclockwise in the Northern Hemisphere and clockwise in the Southern Hemisphere."
+                "question": "What causes a temperature inversion in the atmosphere?",
+                "choices": ["Warm air above cold air", "Cold air above warm air", "Equal temperatures", "High pressure systems"],
+                "correct_answer": "Warm air above cold air",
+                "explanation": "A temperature inversion occurs when warm air sits above cooler air, which is opposite to the normal atmospheric temperature profile."
             },
             {
-                "question": "What is the primary cause of wind?",
-                "choices": ["Pressure differences", "Earth's rotation", "Ocean currents", "Mountain ranges"],
-                "correct_answer": "Pressure differences",
-                "explanation": "Wind is primarily caused by differences in atmospheric pressure, as air moves from high-pressure areas to low-pressure areas."
+                "question": "Which type of precipitation forms when raindrops freeze before hitting the ground?",
+                "choices": ["Sleet", "Snow", "Hail", "Freezing rain"],
+                "correct_answer": "Sleet",
+                "explanation": "Sleet forms when raindrops freeze completely before reaching the ground, creating small ice pellets."
             }
         ]
         
         return random.choice(fallback_questions)
     
-    def _analyze_data_patterns(self):
-        """Analyze patterns in the loaded data for smarter question generation"""
-        try:
-            patterns = {
-                "temperature_trends": [],
-                "weather_conditions": {},
-                "seasonal_patterns": {},
-                "data_quality": "low"
+    def _generate_fallback_quiz(self):
+        """Generate entire quiz using fallback questions when data is unavailable"""
+        questions = []
+        available_questions = [
+            self._generate_fallback_question() for _ in range(10)
+        ]
+        
+        # Remove duplicates and select 5
+        unique_questions = []
+        used_questions = set()
+        
+        for q in available_questions:
+            if q['question'] not in used_questions:
+                unique_questions.append(q)
+                used_questions.add(q['question'])
+                if len(unique_questions) >= 5:
+                    break
+        
+        return unique_questions
+    
+    def get_data_stats(self):
+        """Get statistics about the loaded data"""
+        if not self.data_loaded or self.weather_data is None:
+            return {
+                "data_available": False,
+                "message": "No weather data available"
             }
-            
-            if len(self.weather_data) > 10:
-                patterns["data_quality"] = "medium"
-                
-                # Analyze weather conditions
-                for record in self.weather_data:
-                    condition = record.get('description', '')
-                    if condition:
-                        patterns["weather_conditions"][condition] = patterns["weather_conditions"].get(condition, 0) + 1
-                
-                # Analyze temperatures
-                temps = []
-                for record in self.weather_data:
-                    try:
-                        temp = float(record.get('temperature', 0))
-                        temps.append(temp)
-                    except (ValueError, TypeError):
-                        continue
-                
-                if len(temps) > 5:
-                    patterns["temperature_trends"] = {
-                        "avg": sum(temps) / len(temps),
-                        "min": min(temps),
-                        "max": max(temps),
-                        "range": max(temps) - min(temps)
-                    }
-            
-            if len(self.weather_data) > 20:
-                patterns["data_quality"] = "high"
-            
-            return patterns
-            
-        except Exception as e:
-            return {"data_quality": "low"}
-    
-    def get_quiz_difficulty(self):
-        """Determine quiz difficulty based on available data"""
-        patterns = self._analyze_data_patterns()
         
-        if patterns["data_quality"] == "high":
-            return "advanced"
-        elif patterns["data_quality"] == "medium":
-            return "intermediate"
-        else:
-            return "beginner"
-    
-    def generate_adaptive_quiz(self, user_level="intermediate"):
-        """Generate quiz adapted to user level and available data"""
-        difficulty = self.get_quiz_difficulty()
-        
-        if difficulty == "advanced" and user_level in ["intermediate", "advanced"]:
-            # Use complex data analysis questions
-            return self.generate_quiz()
-        else:
-            # Use more general knowledge questions with some data analysis
-            questions = []
-            
-            # Mix of data-based and general questions
-            data_questions = 2 if difficulty == "medium" else 1
-            general_questions = 5 - data_questions
-            
-            # Generate data-based questions
-            for _ in range(data_questions):
-                question = self._generate_temperature_comparison_question()
-                if question:
-                    questions.append(question)
-            
-            # Fill with general knowledge questions
-            for _ in range(general_questions):
-                questions.append(self._generate_fallback_question())
-            
-            # Ensure we have exactly 5 questions
-            while len(questions) < 5:
-                questions.append(self._generate_fallback_question())
-            
-            return questions[:5]
-    
-    def get_data_summary(self):
-        """Get summary of available data for quiz generation"""
-        summary = {
-            "search_history_entries": len(self.weather_data) if self.weather_data else 0,
-            "ahmedabad_data_available": self.ahmedabad_data is not None,
-            "ahmedabad_entries": len(self.ahmedabad_data) if self.ahmedabad_data is not None else 0,
-            "quiz_difficulty": self.get_quiz_difficulty()
+        stats = {
+            "data_available": True,
+            "total_records": len(self.weather_data),
+            "cities": self.cities,
+            "date_range": {
+                "start": self.weather_data['date'].min().strftime('%Y-%m-%d'),
+                "end": self.weather_data['date'].max().strftime('%Y-%m-%d')
+            },
+            "temperature_range": {
+                "max_f": round(self.weather_data['temperature_2m_max (°F)'].max(), 1),
+                "min_f": round(self.weather_data['temperature_2m_min (°F)'].min(), 1)
+            },
+            "quiz_capability": "advanced"
         }
         
-        if self.weather_data:
-            cities = set()
-            conditions = set()
-            for record in self.weather_data:
-                city = record.get('city', '')
-                condition = record.get('description', '')
-                if city:
-                    cities.add(city)
-                if condition:
-                    conditions.add(condition)
-            
-            summary["unique_cities"] = len(cities)
-            summary["unique_conditions"] = len(conditions)
+        return stats
+    
+    def validate_data_quality(self):
+        """Validate the quality of loaded data for quiz generation"""
+        if not self.data_loaded:
+            return {"quality": "none", "issues": ["No data loaded"]}
         
-        return summary
+        issues = []
+        quality = "good"
+        
+        # Check for missing values in key columns
+        key_columns = ['temperature_2m_max (°F)', 'temperature_2m_min (°F)', 'rain_sum (inch)']
+        for col in key_columns:
+            if col in self.weather_data.columns:
+                missing_pct = (self.weather_data[col].isna().sum() / len(self.weather_data)) * 100
+                if missing_pct > 20:
+                    issues.append(f"High missing data in {col}: {missing_pct:.1f}%")
+                    quality = "fair"
+        
+        # Check data completeness
+        if len(self.weather_data) < 100:
+            issues.append(f"Limited data: only {len(self.weather_data)} records")
+            quality = "fair"
+        
+        if len(self.cities) < 2:
+            issues.append("Need at least 2 cities for comparative questions")
+            quality = "poor"
+        
+        return {"quality": quality, "issues": issues}
