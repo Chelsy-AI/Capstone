@@ -79,18 +79,56 @@ class WeatherQuizController:
             highlightthickness=0
         )
         back_btn.place(x=50, y=30, anchor="center")
+        self.gui.widgets.append(back_btn)
+    
+    def _build_header(self, window_width):
+        """Build quiz header with title only"""
+        # Main title - simplified
+        title_main = self._create_black_label(
+            self.app,
+            text="🌤️ Weather Quiz",
+            font=("Arial", int(32 + window_width/40), "bold"),
+            x=window_width/2,
+            y=70
+        )
+        self.gui.widgets.append(title_main)
+    
+    def _build_data_info_section(self, window_width):
+        """Build section showing data information - REMOVED"""
+        # Remove all data info sections to clean up the interface
+        pass
+    
+    def _build_quiz_area(self, window_width, window_height):
+        """Build the main quiz display area with proper centering"""
+        quiz_y = 120  # Start higher since we removed subheadings
+        quiz_height = window_height - 160  # More space
+        quiz_width = min(window_width - 60, 800)  # Limit max width
+        quiz_x = (window_width - quiz_width) // 2  # Center horizontally
+        
+        # Create frame for quiz content
+        canvas_bg = self._get_canvas_bg_color()
+        self.quiz_frame = tk.Frame(
+            self.app,
+            bg=canvas_bg,
+            relief="solid",
+            borderwidth=2,
+            highlightthickness=0
+        )
+        self.quiz_frame.place(
+            x=quiz_x,
+            y=quiz_y,
+            width=quiz_width,
+            height=quiz_height
+        )
         self.gui.widgets.append(self.quiz_frame)
         
-        # Loading message
-        quiz_width = 800
-        quiz_height = 600
-        
+        # Loading message - centered in frame
         loading_label = self._create_black_label(
             self.quiz_frame,
-            text="🧠 Analyzing weather data...\nGenerating intelligent questions based on real patterns!",
+            text="🧠 Loading Quiz...\nGenerating questions!",
             font=("Arial", 16),
-            x=quiz_width/2,
-            y=quiz_height/2
+            x=quiz_width//2,
+            y=quiz_height//2
         )
     
     def _generate_quiz_async(self):
@@ -118,68 +156,41 @@ class WeatherQuizController:
         threading.Thread(target=generate, daemon=True).start()
     
     def _display_quiz_start(self):
-        """Display enhanced quiz start screen"""
+        """Display enhanced quiz start screen with proper centering"""
         try:
             # Clear quiz frame
             for widget in self.quiz_frame.winfo_children():
                 widget.destroy()
             
-            frame_width = self.quiz_frame.winfo_reqwidth() or 600
-            frame_height = self.quiz_frame.winfo_reqheight() or 400
+            frame_width = self.quiz_frame.winfo_width() or 600
+            frame_height = self.quiz_frame.winfo_height() or 400
             
-            # Welcome message
+            # Welcome message - centered
             welcome_label = self._create_black_label(
                 self.quiz_frame,
-                text="🌤️ Weather Data Quiz Ready!",
-                font=("Arial", 24, "bold"),
-                x=frame_width/2,
-                y=80
+                text="🌤️ Quiz Ready!",
+                font=("Arial", 28, "bold"),
+                x=frame_width//2,
+                y=frame_height//2 - 80
             )
             
-            # Enhanced instructions
+            # Simplified instructions - centered
             if self.data_stats and self.data_stats.get('data_available', False):
-                instructions_text = f"🎯 You'll answer {len(self.current_questions)} questions based on real weather data!\n\n"
-                instructions_text += f"📍 Data includes: {', '.join(self.data_stats['cities'])}\n"
-                instructions_text += f"📅 Time period: {self.data_stats['date_range']['start']} to {self.data_stats['date_range']['end']}\n"
-                instructions_text += f"🌡️ Temperature range: {self.data_stats['temperature_range']['min_f']}°F to {self.data_stats['temperature_range']['max_f']}°F\n\n"
-                instructions_text += "Ready to discover patterns in real weather data?"
+                city_count = len(self.data_stats['cities'])
+                instructions_text = f"Answer {len(self.current_questions)} questions based on weather data.\n\nReady to test your knowledge?"
             else:
-                instructions_text = f"You'll answer {len(self.current_questions)} weather knowledge questions.\n"
-                instructions_text += "Questions cover meteorology, climate patterns, and weather science.\n\n"
-                instructions_text += "Ready to test your weather expertise?"
+                instructions_text = f"Answer {len(self.current_questions)} weather questions.\n\nReady to test your knowledge?"
             
             instructions = self._create_black_label(
                 self.quiz_frame,
                 text=instructions_text,
-                font=("Arial", 12),
-                x=frame_width/2,
-                y=200,
+                font=("Arial", 14),
+                x=frame_width//2,
+                y=frame_height//2 - 20,
                 justify="center"
             )
             
-            # Buttons row
-            button_y = 340
-            
-            # Data info button (if data available)
-            if self.data_stats and self.data_stats.get('data_available', False):
-                data_btn = tk.Button(
-                    self.quiz_frame,
-                    text="📊 Data Info",
-                    command=self._show_data_details,
-                    bg="lightblue",
-                    fg="black",
-                    font=("Arial", 12, "bold"),
-                    relief="raised",
-                    borderwidth=2,
-                    width=12,
-                    height=2,
-                    activeforeground="black",
-                    activebackground="lightcyan",
-                    highlightthickness=0
-                )
-                data_btn.place(x=frame_width/2 - 100, y=button_y, anchor="center")
-            
-            # Start quiz button
+            # Start quiz button - centered
             start_btn = tk.Button(
                 self.quiz_frame,
                 text="🚀 Start Quiz",
@@ -195,7 +206,7 @@ class WeatherQuizController:
                 activebackground="lightblue",
                 highlightthickness=0
             )
-            start_btn.place(x=frame_width/2 + (50 if self.data_stats and self.data_stats.get('data_available', False) else 0), y=button_y, anchor="center")
+            start_btn.place(x=frame_width//2, y=frame_height//2 + 60, anchor="center")
             
         except Exception as e:
             self._show_error(str(e))
@@ -285,7 +296,7 @@ class WeatherQuizController:
             self._show_error(str(e))
     
     def _display_current_question(self):
-        """Display the current question with enhanced formatting"""
+        """Display the current question with enhanced formatting and proper centering"""
         try:
             # Clear quiz frame
             for widget in self.quiz_frame.winfo_children():
@@ -296,38 +307,40 @@ class WeatherQuizController:
                 return
             
             question = self.current_questions[self.current_question_index]
-            frame_width = self.quiz_frame.winfo_reqwidth() or 600
+            frame_width = self.quiz_frame.winfo_width() or 600
+            frame_height = self.quiz_frame.winfo_height() or 400
             
             # Progress indicator with score
             progress_text = f"Question {self.current_question_index + 1} of {len(self.current_questions)}"
             if self.current_question_index > 0:
                 current_score_pct = round((self.score / self.current_question_index) * 100)
-                progress_text += f" | Current Score: {self.score}/{self.current_question_index} ({current_score_pct}%)"
+                progress_text += f" | Score: {self.score}/{self.current_question_index} ({current_score_pct}%)"
             
             progress_label = self._create_black_label(
                 self.quiz_frame,
                 text=progress_text,
-                font=("Arial", 11, "bold"),
-                x=frame_width/2,
-                y=25
+                font=("Arial", 12, "bold"),
+                x=frame_width//2,
+                y=20
             )
             
-            # Question text with better formatting
+            # Question text with better formatting and wrapping
             question_text = question["question"]
             question_label = self._create_black_label(
                 self.quiz_frame,
                 text=question_text,
-                font=("Arial", 15, "bold"),
-                x=frame_width/2,
-                y=80,
-                justify="center"
+                font=("Arial", 14, "bold"),
+                x=frame_width//2,
+                y=60,
+                justify="center",
+                wraplength=frame_width - 40
             )
             
-            # Answer choices with better spacing
+            # Answer choices with better spacing and centering
             self.selected_answer = tk.StringVar()
             
-            choice_start_y = 130
-            choice_spacing = 35
+            choice_start_y = 120
+            choice_spacing = 40
             
             for i, choice in enumerate(question["choices"]):
                 radio_btn = tk.Radiobutton(
@@ -335,7 +348,7 @@ class WeatherQuizController:
                     text=f"{chr(65 + i)}. {choice}",  # A. B. C. D.
                     variable=self.selected_answer,
                     value=choice,
-                    font=("Arial", 13),
+                    font=("Arial", 12),
                     fg="black",
                     bg=self._get_canvas_bg_color(),
                     selectcolor="lightblue",
@@ -344,13 +357,14 @@ class WeatherQuizController:
                     relief="flat",
                     borderwidth=0,
                     highlightthickness=0,
-                    wraplength=500,
-                    justify="left"
+                    wraplength=frame_width - 80,
+                    justify="left",
+                    anchor="w"
                 )
-                radio_btn.place(x=50, y=choice_start_y + i * choice_spacing, anchor="w")
+                radio_btn.place(x=40, y=choice_start_y + i * choice_spacing, anchor="w")
             
-            # Navigation buttons
-            button_y = choice_start_y + len(question["choices"]) * choice_spacing + 40
+            # Navigation buttons - centered at bottom
+            button_y = frame_height - 60
             
             # Next/Submit button
             if self.current_question_index == len(self.current_questions) - 1:
@@ -375,7 +389,7 @@ class WeatherQuizController:
                 activebackground="lightgreen",
                 highlightthickness=0
             )
-            next_btn.place(x=frame_width/2, y=button_y, anchor="center")
+            next_btn.place(x=frame_width//2, y=button_y, anchor="center")
             
             # Back button (if not first question)
             if self.current_question_index > 0:
@@ -394,7 +408,7 @@ class WeatherQuizController:
                     activebackground="lightgrey",
                     highlightthickness=0
                 )
-                back_btn.place(x=frame_width/2 - 120, y=button_y, anchor="center")
+                back_btn.place(x=frame_width//2 - 120, y=button_y, anchor="center")
             
         except Exception as e:
             self._show_error(str(e))
@@ -459,14 +473,15 @@ class WeatherQuizController:
             self._show_error(str(e))
     
     def _display_quiz_results(self):
-        """Display enhanced quiz results and score"""
+        """Display enhanced quiz results and score with centered layout"""
         try:
             # Clear quiz frame
             for widget in self.quiz_frame.winfo_children():
                 widget.destroy()
             
             self.quiz_completed = True
-            frame_width = self.quiz_frame.winfo_reqwidth() or 600
+            frame_width = self.quiz_frame.winfo_width() or 600
+            frame_height = self.quiz_frame.winfo_height() or 400
             
             # Calculate percentage
             percentage = round((self.score / len(self.current_questions)) * 100)
@@ -474,68 +489,59 @@ class WeatherQuizController:
             # Results header with emoji and message
             if percentage >= 90:
                 emoji = "🏆"
-                message = "Outstanding! You're a weather data expert!"
+                message = "Outstanding! Weather expert!"
                 color = "gold"
             elif percentage >= 80:
                 emoji = "🌟"
-                message = "Excellent! You understand weather patterns well!"
+                message = "Excellent! Great knowledge!"
                 color = "green"
             elif percentage >= 70:
                 emoji = "☀️"
-                message = "Great job! You have solid weather knowledge!"
+                message = "Great job! Solid understanding!"
                 color = "blue"
             elif percentage >= 60:
                 emoji = "⛅"
-                message = "Good work! Keep learning about weather!"
+                message = "Good work! Keep learning!"
                 color = "orange"
             elif percentage >= 40:
                 emoji = "🌧️"
-                message = "Not bad! Weather science has many layers!"
+                message = "Not bad! Keep studying!"
                 color = "purple"
             else:
                 emoji = "❄️"
-                message = "Keep studying! Weather is fascinating to explore!"
+                message = "Keep exploring weather science!"
                 color = "red"
             
+            # Centered results display
             results_header = self._create_colored_label(
                 self.quiz_frame,
                 text=f"{emoji} Quiz Complete! {emoji}",
-                font=("Arial", 22, "bold"),
-                x=frame_width/2,
-                y=50,
+                font=("Arial", 24, "bold"),
+                x=frame_width//2,
+                y=frame_height//2 - 120,
                 color=color
             )
             
             score_label = self._create_black_label(
                 self.quiz_frame,
                 text=f"Final Score: {self.score}/{len(self.current_questions)} ({percentage}%)",
-                font=("Arial", 18, "bold"),
-                x=frame_width/2,
-                y=90
+                font=("Arial", 20, "bold"),
+                x=frame_width//2,
+                y=frame_height//2 - 80
             )
             
             message_label = self._create_colored_label(
                 self.quiz_frame,
                 text=message,
-                font=("Arial", 14),
-                x=frame_width/2,
-                y=120,
+                font=("Arial", 16),
+                x=frame_width//2,
+                y=frame_height//2 - 40,
                 color=color
             )
             
-            # Data source acknowledgment
-            if self.data_stats and self.data_stats.get('data_available', False):
-                data_note = self._create_black_label(
-                    self.quiz_frame,
-                    text=f"📊 Based on real weather data from {len(self.data_stats['cities'])} cities",
-                    font=("Arial", 10),
-                    x=frame_width/2,
-                    y=150
-                )
-            
-            # Action buttons
-            button_y = 200
-            button_spacing = 130
+            # Action buttons - centered horizontally
+            button_y = frame_height//2 + 20
+            button_spacing = 140
             
             review_btn = tk.Button(
                 self.quiz_frame,
@@ -552,7 +558,7 @@ class WeatherQuizController:
                 activebackground="lightcyan",
                 highlightthickness=0
             )
-            review_btn.place(x=frame_width/2 - button_spacing, y=button_y, anchor="center")
+            review_btn.place(x=frame_width//2 - button_spacing//2, y=button_y, anchor="center")
             
             retry_btn = tk.Button(
                 self.quiz_frame,
@@ -569,8 +575,9 @@ class WeatherQuizController:
                 activebackground="lightblue",
                 highlightthickness=0
             )
-            retry_btn.place(x=frame_width/2, y=button_y, anchor="center")
+            retry_btn.place(x=frame_width//2 + button_spacing//2, y=button_y, anchor="center")
             
+            # Share button centered below
             share_btn = tk.Button(
                 self.quiz_frame,
                 text="📤 Share Score",
@@ -586,13 +593,13 @@ class WeatherQuizController:
                 activebackground="lightgoldenrod",
                 highlightthickness=0
             )
-            share_btn.place(x=frame_width/2 + button_spacing, y=button_y, anchor="center")
+            share_btn.place(x=frame_width//2, y=button_y + 60, anchor="center")
             
         except Exception as e:
             self._show_error(str(e))
     
     def _show_detailed_results(self):
-        """Show comprehensive answer review"""
+        """Show comprehensive answer review with correct answers displayed"""
         try:
             results_text = "🌤️ Weather Quiz - Detailed Results\n"
             results_text += "=" * 60 + "\n\n"
@@ -603,13 +610,13 @@ class WeatherQuizController:
                 results_text += f"❓ Question {i+1}:\n"
                 results_text += f"{answer_data['question']}\n\n"
                 
-                results_text += f"Your Answer: {answer_data['user_answer']}\n"
-                results_text += f"Correct Answer: {answer_data['correct_answer']}\n"
+                results_text += f"✅ Correct Answer: {answer_data['correct_answer']}\n"
+                results_text += f"👤 Your Answer: {answer_data['user_answer']}\n"
                 
                 if answer_data['is_correct']:
-                    results_text += "✅ CORRECT!\n"
+                    results_text += "🎉 CORRECT! Well done!\n"
                 else:
-                    results_text += "❌ Incorrect\n"
+                    results_text += "❌ Incorrect - See explanation below\n"
                 
                 results_text += f"💡 Explanation: {answer_data['explanation']}\n"
                 results_text += "-" * 50 + "\n\n"
@@ -618,7 +625,11 @@ class WeatherQuizController:
             correct_count = sum(1 for ans in self.user_answers if ans['is_correct'])
             percentage = (correct_count / len(self.user_answers)) * 100
             
-            results_text += "📈 Performance Analysis:\n"
+            results_text += "📈 Performance Summary:\n"
+            results_text += f"✅ Correct: {correct_count}/{len(self.user_answers)}\n"
+            results_text += f"❌ Incorrect: {len(self.user_answers) - correct_count}/{len(self.user_answers)}\n"
+            results_text += f"📊 Accuracy: {percentage:.1f}%\n\n"
+            
             if percentage >= 80:
                 results_text += "🏆 Excellent understanding of weather patterns!\n"
             elif percentage >= 60:
@@ -802,95 +813,4 @@ class WeatherQuizController:
                 for widget in self.quiz_frame.winfo_children():
                     widget.destroy()
         except Exception as e:
-            passd(back_btn)
-    
-    def _build_header(self, window_width):
-        """Build quiz header with title and info"""
-        # Main title
-        title_main = self._create_black_label(
-            self.app,
-            text="🌍 Real Weather Data Quiz",
-            font=("Arial", int(28 + window_width/40), "bold"),
-            x=window_width/2,
-            y=60
-        )
-        self.gui.widgets.append(title_main)
-        
-        # Subtitle
-        subtitle = self._create_black_label(
-            self.app,
-            text="Test your knowledge with actual weather patterns from around the world!",
-            font=("Arial", int(14 + window_width/80)),
-            x=window_width/2,
-            y=90
-        )
-        self.gui.widgets.append(subtitle)
-    
-    def _build_data_info_section(self, window_width):
-        """Build section showing data information"""
-        if not self.data_stats or not self.data_stats.get('data_available', False):
-            info_text = "⚠️ Using general weather knowledge questions"
-            color = "orange"
-        else:
-            cities_text = ", ".join(self.data_stats['cities'][:3])
-            if len(self.data_stats['cities']) > 3:
-                cities_text += f" and {len(self.data_stats['cities']) - 3} more"
-            
-            info_text = f"📊 Data: {self.data_stats['total_records']} records from {cities_text}"
-            color = "darkgreen"
-        
-        info_label = self._create_colored_label(
-            self.app,
-            text=info_text,
-            font=("Arial", int(12 + window_width/100)),
-            x=window_width/2,
-            y=120,
-            color=color
-        )
-        self.gui.widgets.append(info_label)
-        
-        # Data quality indicator
-        if self.data_stats and 'quality' in self.data_stats:
-            quality = self.data_stats['quality']
-            if quality == 'good':
-                quality_text = "✅ High quality data - Advanced questions available"
-                quality_color = "darkgreen"
-            elif quality == 'fair':
-                quality_text = "⚠️ Moderate quality data - Mixed question types"
-                quality_color = "orange"
-            else:
-                quality_text = "❌ Limited data - Using general knowledge questions"
-                quality_color = "red"
-            
-            quality_label = self._create_colored_label(
-                self.app,
-                text=quality_text,
-                font=("Arial", int(10 + window_width/120)),
-                x=window_width/2,
-                y=140,
-                color=quality_color
-            )
-            self.gui.widgets.append(quality_label)
-    
-    def _build_quiz_area(self, window_width, window_height):
-        """Build the main quiz display area"""
-        quiz_y = 180
-        quiz_height = window_height - 230
-        quiz_width = window_width - 100
-        
-        # Create frame for quiz content
-        canvas_bg = self._get_canvas_bg_color()
-        self.quiz_frame = tk.Frame(
-            self.app,
-            bg=canvas_bg,
-            relief="solid",
-            borderwidth=2,
-            highlightthickness=0
-        )
-        self.quiz_frame.place(
-            x=50,
-            y=quiz_y,
-            width=quiz_width,
-            height=quiz_height
-        )
-        self.gui.widgets.appen
+            pass
