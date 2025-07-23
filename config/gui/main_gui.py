@@ -5,6 +5,7 @@ from .weather_display import WeatherDisplay
 from .animation_controller import AnimationController
 from features.sun_moon_phases.controller import SunMoonController
 from features.graphs.controller import GraphsController
+from features.weather_quiz.controller import WeatherQuizController
 
 
 class WeatherGUI:
@@ -20,6 +21,7 @@ class WeatherGUI:
         self.weather_display = WeatherDisplay(self.app, self)
         self.animation_controller = AnimationController(self.app, self)
         self.sun_moon_controller = SunMoonController(self.app, self)
+        self.weather_quiz_controller = WeatherQuizController(self.app, self)
         
         # Page management
         self.current_page = "main"
@@ -102,6 +104,8 @@ class WeatherGUI:
             self._build_sun_moon_page()
         elif page_name == "graphs":
             self._build_graphs_page()
+        elif page_name == "quiz":
+            self._build_quiz_page()
         
         self._restore_current_data()
 
@@ -300,7 +304,7 @@ class WeatherGUI:
         self.set_widget_references(widget_refs)
 
     def _build_navigation_buttons(self, window_width, y_start):
-        """Build navigation buttons including Weather Graphs"""
+        """Build navigation buttons including Weather Quiz"""
         button_width = 150
         button_height = 40
         button_spacing = 60
@@ -315,9 +319,10 @@ class WeatherGUI:
             ("Toggle Theme", lambda: self.app.toggle_theme(), left_x, y_start),
             ("Tomorrow's Prediction", lambda: self.show_page("prediction"), right_x, y_start),
             ("Weather History", lambda: self.show_page("history"), left_x, y_start + button_height + 30),
-            ("Weather Graphs", lambda: self.show_page("graphs"), right_x, y_start + button_height + 30),
-            ("Map View", lambda: self.show_page("map"), left_x, y_start + (button_height + 30) * 2),
-            ("Sun & Moon", lambda: self.show_page("sun_moon"), right_x, y_start + (button_height + 30) * 2)
+            ("Weather Quiz", lambda: self.show_page("quiz"), right_x, y_start + button_height + 30),
+            ("Weather Graphs", lambda: self.show_page("graphs"), left_x, y_start + (button_height + 30) * 2),
+            ("Map View", lambda: self.show_page("map"), right_x, y_start + (button_height + 30) * 2),
+            ("Sun & Moon", lambda: self.show_page("sun_moon"), left_x, y_start + (button_height + 30) * 3)
         ]
         
         for text, command, x, y in buttons:
@@ -543,6 +548,14 @@ class WeatherGUI:
         # Build the graphs page
         self.graphs_controller.build_page(window_width, window_height)
 
+    def _build_quiz_page(self):
+        """Build weather quiz page"""
+        window_width = self.app.winfo_width()
+        window_height = self.app.winfo_height()
+        
+        # Build the quiz page
+        self.weather_quiz_controller.build_page(window_width, window_height)
+
     def _show_map_info(self):
         """Show map overlay information"""
         from tkinter import messagebox
@@ -632,6 +645,10 @@ class WeatherGUI:
         # Clean up graphs controller
         if hasattr(self, 'graphs_controller'):
             self.graphs_controller.cleanup()
+        
+        # Clean up quiz controller
+        if hasattr(self, 'weather_quiz_controller'):
+            self.weather_quiz_controller.cleanup()
 
     def get_widgets(self):
         """Get the widgets list"""
