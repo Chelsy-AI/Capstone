@@ -1,6 +1,6 @@
 """
-Sun and Moon Phases Display Module - CLEAN ORGANIZED LAYOUT
-Clear, readable visualization with proper spacing and organization
+Sun and Moon Phases Display Module - COMPLETELY FIXED
+NO MORE LONG DATE/TIME LINE - ONLY HEADING AND DAY/NIGHT
 """
 
 import tkinter as tk
@@ -11,7 +11,7 @@ from .api import get_moon_phase_emoji, format_time_for_display, calculate_golden
 
 class SunMoonDisplay:
     """
-    Clean and organized Sun and Moon Display - NO OVERLAPPING LABELS
+    FIXED Sun and Moon Display - NO LONG DATE/TIME LINES
     """
     
     def __init__(self, app, gui_controller):
@@ -32,13 +32,13 @@ class SunMoonDisplay:
         self.star_particles = []
         
     def build_sun_moon_page(self, window_width, window_height):
-        """Build CLEAN organized sun/moon page"""
+        """Build CLEAN sun/moon page - NO LONG DATE/TIME LINES"""
         
         # Back button
         self._add_back_button()
         
-        # Clean header
-        self._build_clean_header(window_width)
+        # Clean header - ONLY title and day/night
+        self._build_clean_header_fixed(window_width)
         
         # ORGANIZED celestial display - NO OVERLAPS
         self._build_clean_celestial_display(window_width, window_height)
@@ -46,27 +46,27 @@ class SunMoonDisplay:
         # Well-spaced information sections
         self._build_organized_text_sections(window_width, window_height)
             
-    def _build_clean_header(self, window_width):
-        """Build clean header with proper spacing"""
-        # Main title - Clean and simple
+    def _build_clean_header_fixed(self, window_width):
+        """Build FIXED header - NO LONG DATE/TIME LINES"""
+        # Main title - "Sun and Moon Phases"
         title_main = self._create_black_label(
             self.app,
-            text="Sun & Moon",
+            text="Sun and Moon Phases",
             font=("Arial", int(28 + window_width/40), "bold"),
             x=window_width/2,
             y=80
         )
         self.gui.widgets.append(title_main)
         
-        # Subtitle with current time - well spaced
-        self.time_label = self._create_black_label(
+        # ONLY simple day/night indicator - NO CITY, NO DATE, NO TIME
+        self.day_night_label = self._create_black_label(
             self.app,
-            text="Loading celestial information...",
-            font=("Arial", int(14 + window_width/80)),
+            text="🌤️ Loading...",
+            font=("Arial", int(16 + window_width/80), "bold"),
             x=window_width/2,
             y=120
         )
-        self.gui.widgets.append(self.time_label)
+        self.gui.widgets.append(self.day_night_label)
     
     def _build_clean_celestial_display(self, window_width, window_height):
         """Build CLEAN celestial visualization - NO OVERLAPPING"""
@@ -282,16 +282,20 @@ class SunMoonDisplay:
         return label
     
     def update_sun_moon_display(self, sun_moon_data):
-        """Update the display with new data"""
+        """Update display - ONLY SET DAY/NIGHT, NO LONG DATE/TIME LINES"""
         try:
             if sun_moon_data.get("error"):
                 self._show_error_display(sun_moon_data["error"])
                 return
             
-            # Update header
-            self._update_header_time(sun_moon_data)
+            # UPDATE ONLY THE DAY/NIGHT LABEL - NO CITY, NO DATE, NO TIME
+            if hasattr(self, 'day_night_label'):
+                if sun_moon_data.get("is_daytime", True):
+                    self.day_night_label.configure(text="☀️ Daytime")
+                else:
+                    self.day_night_label.configure(text="🌙 Nighttime")
             
-            # Update celestial positions - CLEAN positioning
+            # Update celestial positions
             self._update_celestial_positions_clean(sun_moon_data)
             
             # Update text sections
@@ -299,27 +303,6 @@ class SunMoonDisplay:
                         
         except Exception as e:
             self._show_error_display(str(e))
-    
-    def _update_header_time(self, data):
-        """Update the header time information"""
-        try:
-            if hasattr(self, 'time_label'):
-                current_time = data.get("current_time", "")
-                city = data.get("city", "Unknown")
-                
-                try:
-                    import datetime
-                    dt = datetime.datetime.fromisoformat(current_time.replace('Z', '+00:00'))
-                    time_str = dt.strftime("%A, %B %d, %Y • %I:%M %p")
-                    
-                    # Add day/night indicator
-                    day_night = "🌞 Daytime" if data.get("is_daytime", True) else "🌙 Nighttime"
-                    
-                    self.time_label.configure(text=f"{city} • {time_str} • {day_night}")
-                except:
-                    self.time_label.configure(text=f"{city} • Current Astronomical Data")
-        except Exception as e:
-            pass
     
     def _update_text_sections_clean(self, data):
         """Update text sections with clean formatting"""
@@ -429,8 +412,8 @@ Evening:
     def _show_error_display(self, error_msg):
         """Show error message"""
         try:
-            if hasattr(self, 'time_label'):
-                self.time_label.configure(text=f"❌ Error: {error_msg}")
+            if hasattr(self, 'day_night_label'):
+                self.day_night_label.configure(text="❌ Error loading data")
             
             # Update all sections to show error
             for section_id, section_data in self.info_sections.items():
@@ -452,9 +435,9 @@ Evening:
                 if 'content' in section_data:
                     section_data['content'].configure(fg="black", bg=canvas_bg)
             
-            # Update time label
-            if hasattr(self, 'time_label'):
-                self.time_label.configure(fg="black", bg=canvas_bg)
+            # Update day/night label
+            if hasattr(self, 'day_night_label'):
+                self.day_night_label.configure(fg="black", bg=canvas_bg)
                         
         except Exception as e:
             pass

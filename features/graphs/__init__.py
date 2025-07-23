@@ -7,20 +7,18 @@ This module provides comprehensive weather data visualization including:
 - Weather metrics tracking
 - Prediction accuracy graphs
 - Multi-city comparisons
-- Interactive charts with hover tooltips
+- Interactive charts with working hover tooltips
 
 """
 
 from .controller import GraphsController
 from .graph_generator import WeatherGraphGenerator
-from .hover_tooltip import HoverTooltip
 
 __all__ = [
     'GraphsController',
-    'WeatherGraphGenerator', 
-    'HoverTooltip'
+    'WeatherGraphGenerator'
 ]
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __author__ = "Weather App Team"
-__description__ = "Interactive weather data visualization and analysis"
+__description__ = "Interactive weather data visualization with working hover tooltips"

@@ -103,8 +103,8 @@ class GraphsController:
         self.gui.widgets.append(back_btn)
     
     def _build_header(self, window_width):
-        """Build clean header - ONLY the main title"""
-        # Main title ONLY
+        """Build clean header with info button"""
+        # Main title
         title_main = self._create_black_label(
             self.app,
             text="Weather Graphs",
@@ -113,14 +113,33 @@ class GraphsController:
             y=80
         )
         self.gui.widgets.append(title_main)
+        
+        # Info button - moved 2 more spaces right
+        info_btn = tk.Button(
+            self.app,
+            text="i",
+            command=self._show_graph_info,
+            bg="lightblue",
+            fg="black",
+            font=("Arial", int(16 + window_width/80), "bold"),
+            relief="raised",
+            borderwidth=2,
+            width=3,
+            height=1,
+            activeforeground="black",
+            activebackground="lightcyan",
+            highlightthickness=0
+        )
+        info_btn.place(x=window_width/2 + 240, y=80, anchor="center")
+        self.gui.widgets.append(info_btn)
     
     def _build_dropdown_selector(self, window_width):
-        """Build dropdown selector for graph types with larger font"""
-        # Dropdown label - INCREASED FONT SIZE BY 2
+        """Build dropdown selector for graph types"""
+        # Dropdown label
         dropdown_label = self._create_black_label(
             self.app,
             text="Select Graph Type:",
-            font=("Arial", 16, "bold"),  # Changed from 14 to 16
+            font=("Arial", 16, "bold"),
             x=window_width/2 - 150,
             y=130
         )
@@ -138,33 +157,14 @@ class GraphsController:
         self.dropdown.place(x=window_width/2 + 20, y=130, anchor="w")
         self.dropdown.bind("<<ComboboxSelected>>", self._on_graph_selection_changed)
         self.gui.widgets.append(self.dropdown)
-        
-        # Refresh button
-        refresh_btn = tk.Button(
-            self.app,
-            text="🔄 Refresh",
-            command=self._load_selected_graph,
-            bg="lightblue",
-            fg="black",
-            font=("Arial", 10, "bold"),
-            relief="raised",
-            borderwidth=2,
-            width=10,
-            height=1,
-            activeforeground="black",
-            activebackground="lightcyan",
-            highlightthickness=0
-        )
-        refresh_btn.place(x=window_width/2 + 320, y=130, anchor="w")
-        self.gui.widgets.append(refresh_btn)
     
     def _build_graph_display_area(self, window_width, window_height):
-        """Build the main graph display area - MORE PADDING to prevent cutoff"""
-        graph_y = 170  # Moved up since we removed subtitle
-        graph_height = window_height - 220  # More bottom margin to prevent cutoff
-        graph_width = window_width - 100  # More side margins to prevent cutoff
+        """Build the main graph display area"""
+        graph_y = 170
+        graph_height = window_height - 220
+        graph_width = window_width - 100
         
-        # Create frame for graph with more padding
+        # Create frame for graph with padding
         canvas_bg = self._get_canvas_bg_color()
         self.graph_frame = tk.Frame(
             self.app,
@@ -174,7 +174,7 @@ class GraphsController:
             highlightthickness=0
         )
         self.graph_frame.place(
-            x=50,  # More left margin
+            x=50,
             y=graph_y, 
             width=graph_width, 
             height=graph_height
@@ -229,7 +229,7 @@ class GraphsController:
             self.app.after(0, lambda: self._display_graph_result(None, False, error_msg, graph_name))
     
     def _display_graph_result(self, fig, success, error_msg, graph_name):
-        """Display the graph result on main thread - NO TOOLBAR with proper padding"""
+        """Display the graph result"""
         try:
             # Clear existing content
             for widget in self.graph_frame.winfo_children():
@@ -239,11 +239,11 @@ class GraphsController:
                 # Import matplotlib components
                 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
                 
-                # Create canvas - NO TOOLBAR for full graph visibility
+                # Create canvas
                 canvas = FigureCanvasTkAgg(fig, self.graph_frame)
                 canvas.draw()
                 
-                # Pack widget with padding to prevent cutoff
+                # Pack widget with padding
                 canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
                 
             else:
@@ -284,6 +284,119 @@ class GraphsController:
             
         except Exception as e:
             pass
+    
+    def _show_graph_info(self):
+        """Show information about the currently selected graph"""
+        from tkinter import messagebox
+        
+        selected_graph = self.selected_graph.get()
+        city = self.app.city_var.get().strip() or "New York"
+        
+        # Get info based on currently selected graph
+        if selected_graph == "7-Day Temperature Trend":
+            info_text = f"""7-Day Temperature Trend - {city}
+
+📊 What This Shows:
+• Red line: Daily maximum temperatures
+• Blue line: Daily minimum temperatures  
+• Green line: Daily average temperatures
+
+📋 Data Sources:
+• Primary: Open-Meteo historical weather API
+• Secondary: Local weather search history
+• Fallback: Realistic sample data based on season and location
+
+📈 Understanding the Graph:
+• Shows temperature patterns over the last 7 days
+• Temperatures displayed in Celsius (°C)
+• Each point represents one day's temperature reading"""
+
+        elif selected_graph == "Temperature Range Chart":
+            info_text = f"""Temperature Range Chart - {city}
+
+📊 What This Shows:
+• Each bar represents the daily temperature variation
+• Bar height = Maximum temperature - Minimum temperature
+• Shows how much temperatures fluctuate each day
+
+📋 Data Sources:
+• Calculated from daily max and min temperatures
+• Uses the same data sources as Temperature Trend
+• Range values typically between 5-20°C for most locations
+
+📈 Understanding the Graph:
+• Higher bars = more temperature variation that day
+• Lower bars = more stable temperatures
+• Values show the difference in degrees Celsius"""
+
+        elif selected_graph == "Humidity Trends":
+            info_text = f"""Humidity Trends - {city}
+
+📊 What This Shows:
+• Green line tracks humidity percentage over time
+• Shows how moisture levels change day by day
+• Values range from 0% (very dry) to 100% (very humid)
+
+📋 Data Sources:
+• Your local weather search history when available
+• Realistic humidity patterns based on location and season
+• Updated each time you search for weather in this city
+
+📈 Understanding the Graph:
+• Higher values = more humid conditions
+• Lower values = drier air
+• Typical comfortable range is 30-60%"""
+
+        elif selected_graph == "Weather Conditions Distribution":
+            info_text = f"""Weather Conditions Distribution - {city}
+
+📊 What This Shows:
+• Pie chart showing percentage of different weather types
+• Based on your weather search history for this city
+• Each slice represents how often that condition occurred
+
+📋 Data Sources:
+• Your local weather search history
+• Weather descriptions from your past searches
+• Shows patterns in the weather you've experienced
+
+📈 Understanding the Graph:
+• Larger slices = more common weather conditions
+• Percentages add up to 100%
+• Reflects the weather patterns during your searches"""
+
+        elif selected_graph == "Prediction Accuracy Chart":
+            info_text = f"""Prediction Accuracy Chart - {city}
+
+📊 What This Shows:
+• Purple line tracks how accurate our weather predictions have been
+• Shows prediction performance over the last 2 weeks
+• Values represent accuracy percentage (higher = better predictions)
+
+📋 Data Sources:
+• Calculated from our prediction algorithm performance
+• Based on how well predictions matched actual weather
+• Updated as we make new predictions and verify results
+
+📈 Understanding the Graph:
+• 90%+ = Excellent prediction accuracy
+• 75%+ = Good prediction accuracy  
+• Below 60% = Fair prediction accuracy
+• Reference lines show performance thresholds"""
+
+        else:
+            info_text = f"""Weather Graph Information - {city}
+
+📊 Current Selection: {selected_graph}
+
+📋 Data Sources:
+• Real weather data from APIs when available
+• Local weather search history
+• Realistic sample data as fallback
+
+Select a specific graph type to see detailed information about that visualization."""
+
+        messagebox.showinfo("Graph Information", info_text)
     
     def _create_black_label(self, parent, text, font, x, y, anchor="center", **kwargs):
         """Create a label with black text and transparent background"""
