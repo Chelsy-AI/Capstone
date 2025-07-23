@@ -1,5 +1,5 @@
 """
-Enhanced Weather Quiz Generator - Creates smart questions based on combined CSV data
+Enhanced Weather Quiz Generator - Creates smart questions ONLY based on combined CSV data
 """
 
 import pandas as pd
@@ -12,7 +12,7 @@ from pathlib import Path
 
 class WeatherQuizGenerator:
     """
-    Generates intelligent weather quiz questions based on real CSV data analysis
+    Generates intelligent weather quiz questions based EXCLUSIVELY on real CSV data analysis
     """
     
     def __init__(self):
@@ -99,44 +99,172 @@ class WeatherQuizGenerator:
             return 'Fall'
     
     def generate_quiz(self):
-        """Generate 5 smart quiz questions based on real data"""
-        if not self.data_loaded or self.weather_data is None:
-            return self._generate_fallback_quiz()
+        """Generate exactly 5 smart quiz questions based ONLY on real CSV data"""
+        if not self.data_loaded or self.weather_data is None or len(self.cities) < 2:
+            return []  # Return empty list if no data - NO FALLBACK QUESTIONS
         
         questions = []
         
-        # Define question generators with their weights
-        question_generators = [
-            (self._generate_temperature_comparison_question, 1),
-            (self._generate_rainfall_analysis_question, 1),
-            (self._generate_seasonal_pattern_question, 1),
-            (self._generate_extreme_weather_question, 1),
-            (self._generate_city_climate_question, 1),
-            (self._generate_humidity_wind_question, 1),
-            (self._generate_weather_trend_question, 1)
+        # Priority question generators - most likely to work with any dataset
+        priority_generators = [
+            self._generate_temperature_comparison_question,
+            self._generate_rainfall_analysis_question,
+            self._generate_extreme_weather_question,
+            self._generate_city_climate_question,
+            self._generate_humidity_wind_question
         ]
         
-        # Generate questions ensuring variety
+        # Secondary generators - might require more specific data
+        secondary_generators = [
+            self._generate_seasonal_pattern_question,
+            self._generate_weather_trend_question,
+            self._generate_pressure_analysis_question,
+            self._generate_snowfall_comparison_question,
+            self._generate_sunshine_duration_question,
+            self._generate_cloud_cover_question,
+            self._generate_temperature_range_question,
+            self._generate_monthly_pattern_question,
+            self._generate_wettest_driest_question,
+            self._generate_wind_direction_question
+        ]
+        
+        # First, try priority generators
+        print(f"Generating quiz from {len(self.cities)} cities with {len(self.weather_data)} records")
+        
+        for generator in priority_generators:
+            if len(questions) >= 5:
+                break
+            
+            for attempt in range(5):  # Try each priority generator multiple times
+                try:
+                    question = generator()
+                    if question and not self._is_duplicate_question(question, questions):
+                        questions.append(question)
+                        print(f"✓ Generated question {len(questions)}: {question['question'][:50]}...")
+                        break
+                except Exception as e:
+                    print(f"✗ Error with {generator.__name__}: {e}")
+        
+        # Then try secondary generators to fill remaining slots
+        all_generators = priority_generators + secondary_generators
         attempts = 0
-        max_attempts = 20
+        max_attempts = 200
         
         while len(questions) < 5 and attempts < max_attempts:
-            generator, weight = random.choice(question_generators)
+            generator = random.choice(all_generators)
+            attempts += 1
+            
             try:
                 question = generator()
                 if question and not self._is_duplicate_question(question, questions):
                     questions.append(question)
+                    print(f"✓ Generated question {len(questions)}: {question['question'][:50]}...")
             except Exception as e:
-                print(f"Error generating question: {e}")
-            attempts += 1
+                print(f"✗ Attempt {attempts}, Error with {generator.__name__}: {e}")
+                continue
         
-        # Fill remaining slots with fallback questions if needed
-        while len(questions) < 5:
-            fallback = self._generate_fallback_question()
-            if fallback and not self._is_duplicate_question(fallback, questions):
-                questions.append(fallback)
+        print(f"Final quiz: {len(questions)} questions generated")
         
-        return questions[:5]
+        # If we still don't have 5, create simpler versions
+        if len(questions) < 5:
+            questions.extend(self._generate_simple_questions(5 - len(questions)))
+        
+    def _create_simple_backup_question(self, question_index):
+        """Create a simple backup question for a specific slot"""
+        try:
+            if question_index == 0:  # Temperature question
+                cities_sample = random.sample(self.cities, min(4, len(self.cities)))
+                city_temps = {}
+                for city in cities_sample:
+                    city_data = self.weather_data[self.weather_data['city'] == city]
+                    avg_temp = city_data['temperature_2m_mean (°F)'].mean()
+                    if not pd.isna(avg_temp):
+                        city_temps[city] = avg_temp
+                
+                if len(city_temps) >= 2:
+                    warmest_city = max(city_temps, key=city_temps.get)
+                    choices = list(city_temps.keys())
+                    random.shuffle(choices)
+                    
+                    return {
+                        "question": "Which city has the highest average temperature?",
+                        "choices": choices,
+                        "correct_answer": warmest_city,
+                        "explanation": f"{warmest_city} has the highest average temperature among these cities."
+                    }
+            
+            elif question_index == 1:  # Rainfall question
+                cities_sample = random.sample(self.cities, min(4, len(self.cities)))
+                city_rain = {}
+                for city in cities_sample:
+                    city_data = self.weather_data[self.weather_data['city'] == city]
+                    total_rain = city_data['rain_sum (inch)'].sum()
+                    if not pd.isna(total_rain):
+                        city_rain[city] = total_rain
+                
+                if len(city_rain) >= 2:
+                    rainiest_city = max(city_rain, key=city_rain.get)
+                    choices = list(city_rain.keys())
+                    random.shuffle(choices)
+                    
+                    return {
+                        "question": "Which city received the most total rainfall?",
+                        "choices": choices,
+                        "correct_answer": rainiest_city,
+                        "explanation": f"{rainiest_city} received the most total rainfall among these cities."
+                    }
+            
+            elif question_index == 2:  # Extreme temperature
+                max_temp_record = self.weather_data.loc[self.weather_data['temperature_2m_max (°F)'].idxmax()]
+                hottest_city = max_temp_record['city']
+                other_cities = [c for c in self.cities if c != hottest_city]
+                choices = [hottest_city] + random.sample(other_cities, min(3, len(other_cities)))
+                random.shuffle(choices)
+                
+                return {
+                    "question": "Which city recorded the highest temperature?",
+                    "choices": choices,
+                    "correct_answer": hottest_city,
+                    "explanation": f"{hottest_city} recorded the highest temperature in the dataset."
+                }
+            
+            elif question_index == 3:  # City climate (humidity if available)
+                if 'relative_humidity_2m_mean (%)' in self.weather_data.columns:
+                    city_humidity = self.weather_data.groupby('city')['relative_humidity_2m_mean (%)'].mean().dropna()
+                    if len(city_humidity) >= 2:
+                        most_humid_city = city_humidity.idxmax()
+                        available_cities = list(city_humidity.index)
+                        choices = [most_humid_city] + random.sample([c for c in available_cities if c != most_humid_city], min(3, len(available_cities)-1))
+                        random.shuffle(choices)
+                        
+                        return {
+                            "question": "Which city has the highest average humidity?",
+                            "choices": choices,
+                            "correct_answer": most_humid_city,
+                            "explanation": f"{most_humid_city} has the highest average humidity."
+                        }
+            
+            elif question_index == 4:  # Wind question
+                if 'wind_speed_10m_max (mp/h)' in self.weather_data.columns:
+                    city_wind = self.weather_data.groupby('city')['wind_speed_10m_max (mp/h)'].mean().dropna()
+                    if len(city_wind) >= 2:
+                        windiest_city = city_wind.idxmax()
+                        available_cities = list(city_wind.index)
+                        choices = [windiest_city] + random.sample([c for c in available_cities if c != windiest_city], min(3, len(available_cities)-1))
+                        random.shuffle(choices)
+                        
+                        return {
+                            "question": "Which city has the highest average wind speed?",
+                            "choices": choices,
+                            "correct_answer": windiest_city,
+                            "explanation": f"{windiest_city} has the highest average wind speed."
+                        }
+            
+            return None
+            
+        except Exception as e:
+            print(f"Error creating backup question {question_index}: {e}")
+            return None
     
     def _is_duplicate_question(self, new_question, existing_questions):
         """Check if question is too similar to existing ones"""
@@ -156,7 +284,6 @@ class WeatherQuizGenerator:
     def _generate_temperature_comparison_question(self):
         """Generate questions comparing temperatures between cities"""
         try:
-            # Get two random cities
             if len(self.cities) < 2:
                 return None
             
@@ -188,7 +315,10 @@ class WeatherQuizGenerator:
             question = f"Based on the weather data, which city has a higher average temperature: {city1} or {city2}?"
             
             correct_answer = warmer_city
-            wrong_answers = [cooler_city, "They're about the same", "Cannot be determined"]
+            wrong_answers = [cooler_city]
+            # Add other cities as wrong answers
+            other_cities = [c for c in self.cities if c not in [city1, city2]]
+            wrong_answers.extend(random.sample(other_cities, min(2, len(other_cities))))
             
             choices = [correct_answer] + wrong_answers[:3]
             random.shuffle(choices)
@@ -197,16 +327,15 @@ class WeatherQuizGenerator:
                 "question": question,
                 "choices": choices,
                 "correct_answer": correct_answer,
-                "explanation": f"{warmer_city} has an average temperature of {city1_avg_c if warmer_city == city1 else city2_avg_c}°C, which is {temp_diff}°C warmer than {cooler_city}."
+                "explanation": f"{warmer_city} has an average temperature of {city1_avg_c if warmer_city == city1 else city2_avg_c}°C, which is {temp_diff}°C warmer than {cooler_city} according to the dataset."
             }
             
         except Exception as e:
             return None
     
     def _generate_rainfall_analysis_question(self):
-        """Generate questions about rainfall patterns"""
+        """Generate questions about rainfall patterns from CSV data"""
         try:
-            # Find the city with most rainfall
             city_rainfall = self.weather_data.groupby('city')['rain_sum (inch)'].sum().sort_values(ascending=False)
             
             if len(city_rainfall) < 2:
@@ -214,19 +343,67 @@ class WeatherQuizGenerator:
             
             rainiest_city = city_rainfall.index[0]
             rainiest_amount = round(city_rainfall.iloc[0], 1)
+            driest_city = city_rainfall.index[-1]
+            driest_amount = round(city_rainfall.iloc[-1], 1)
             
-            # Get month with most rain for that city
-            city_data = self.weather_data[self.weather_data['city'] == rainiest_city]
-            monthly_rain = city_data.groupby('month')['rain_sum (inch)'].sum()
-            rainiest_month = monthly_rain.idxmax()
+            question_type = random.choice(['most_rain', 'least_rain'])
             
-            month_names = ['', 'January', 'February', 'March', 'April', 'May', 'June',
-                          'July', 'August', 'September', 'October', 'November', 'December']
+            if question_type == 'most_rain':
+                question = f"According to the dataset, which city received the most total rainfall?"
+                correct_answer = rainiest_city
+                explanation = f"{rainiest_city} received {rainiest_amount} inches of total rainfall in the dataset, the highest amount recorded."
+            else:
+                question = f"According to the dataset, which city received the least total rainfall?"
+                correct_answer = driest_city
+                explanation = f"{driest_city} received only {driest_amount} inches of total rainfall in the dataset, the lowest amount recorded."
             
-            question = f"Which city received the most total rainfall in the dataset?"
+            # Use only cities from the dataset as choices
+            wrong_answers = [city for city in self.cities if city != correct_answer]
+            choices = [correct_answer] + random.sample(wrong_answers, min(3, len(wrong_answers)))
+            random.shuffle(choices)
             
-            correct_answer = rainiest_city
-            wrong_answers = [city for city in self.cities if city != rainiest_city][:3]
+            return {
+                "question": question,
+                "choices": choices,
+                "correct_answer": correct_answer,
+                "explanation": explanation
+            }
+            
+        except Exception as e:
+            return None
+    
+    def _generate_seasonal_pattern_question(self):
+        """Generate questions about seasonal weather patterns from CSV data"""
+        try:
+            city = random.choice(self.cities)
+            city_data = self.weather_data[self.weather_data['city'] == city]
+            
+            # Analyze seasonal temperatures
+            seasonal_temps = city_data.groupby('season')['temperature_2m_mean (°F)'].mean()
+            
+            # Remove NaN values and check if we have enough data
+            seasonal_temps = seasonal_temps.dropna()
+            if len(seasonal_temps) < 2:
+                return None
+            
+            # Convert to Celsius
+            seasonal_temps_c = ((seasonal_temps - 32) * 5/9).round(1)
+            
+            question_type = random.choice(['hottest', 'coldest'])
+            
+            if question_type == 'hottest':
+                target_season = seasonal_temps_c.idxmax()
+                question = f"In {city}, which season has the highest average temperature according to the dataset?"
+                explanation = f"In {city}, {target_season} has the highest average temperature at {seasonal_temps_c[target_season]}°C according to the weather data."
+            else:
+                target_season = seasonal_temps_c.idxmin()
+                question = f"In {city}, which season has the lowest average temperature according to the dataset?"
+                explanation = f"In {city}, {target_season} has the lowest average temperature at {seasonal_temps_c[target_season]}°C according to the weather data."
+            
+            correct_answer = target_season
+            # Use all seasons as logical choices
+            all_seasons = ['Spring', 'Summer', 'Fall', 'Winter']
+            wrong_answers = [season for season in all_seasons if season != target_season]
             
             choices = [correct_answer] + wrong_answers
             random.shuffle(choices)
@@ -235,53 +412,16 @@ class WeatherQuizGenerator:
                 "question": question,
                 "choices": choices,
                 "correct_answer": correct_answer,
-                "explanation": f"{rainiest_city} received {rainiest_amount} inches of total rainfall, with the heaviest rains typically in {month_names[rainiest_month]}."
+                "explanation": explanation
             }
             
         except Exception as e:
-            return None
-    
-    def _generate_seasonal_pattern_question(self):
-        """Generate questions about seasonal weather patterns"""
-        try:
-            # Pick a random city
-            city = random.choice(self.cities)
-            city_data = self.weather_data[self.weather_data['city'] == city]
-            
-            # Analyze seasonal temperatures
-            seasonal_temps = city_data.groupby('season')['temperature_2m_mean (°F)'].mean()
-            
-            if len(seasonal_temps) < 4:
-                return None
-            
-            # Convert to Celsius
-            seasonal_temps_c = ((seasonal_temps - 32) * 5/9).round(1)
-            
-            hottest_season = seasonal_temps_c.idxmax()
-            coldest_season = seasonal_temps_c.idxmin()
-            
-            question = f"In {city}, which season has the highest average temperature according to the data?"
-            
-            correct_answer = hottest_season
-            wrong_answers = [season for season in ['Spring', 'Summer', 'Fall', 'Winter'] if season != hottest_season]
-            
-            choices = [correct_answer] + wrong_answers[:3]
-            random.shuffle(choices)
-            
-            return {
-                "question": question,
-                "choices": choices,
-                "correct_answer": correct_answer,
-                "explanation": f"In {city}, {hottest_season} has the highest average temperature at {seasonal_temps_c[hottest_season]}°C, while {coldest_season} is the coldest at {seasonal_temps_c[coldest_season]}°C."
-            }
-            
-        except Exception as e:
+            print(f"Error in seasonal pattern question: {e}")
             return None
     
     def _generate_extreme_weather_question(self):
-        """Generate questions about extreme weather events"""
+        """Generate questions about extreme weather events from CSV data"""
         try:
-            # Find extremes across all data
             max_temp_record = self.weather_data.loc[self.weather_data['temperature_2m_max (°F)'].idxmax()]
             min_temp_record = self.weather_data.loc[self.weather_data['temperature_2m_min (°F)'].idxmin()]
             max_wind_record = self.weather_data.loc[self.weather_data['wind_speed_10m_max (mp/h)'].idxmax()]
@@ -291,25 +431,24 @@ class WeatherQuizGenerator:
             min_temp_c = round((min_temp_record['temperature_2m_min (°F)'] - 32) * 5/9, 1)
             max_wind_mph = round(max_wind_record['wind_speed_10m_max (mp/h)'], 1)
             
-            # Choose which extreme to ask about
             extreme_type = random.choice(['hottest', 'coldest', 'windiest'])
             
             if extreme_type == 'hottest':
-                question = f"Which city recorded the highest temperature in the dataset?"
+                question = f"According to the dataset, which city recorded the highest temperature?"
                 correct_answer = max_temp_record['city']
-                explanation = f"{correct_answer} recorded the highest temperature of {max_temp_c}°C ({max_temp_record['temperature_2m_max (°F)']}°F)."
+                explanation = f"{correct_answer} recorded the highest temperature of {max_temp_c}°C ({max_temp_record['temperature_2m_max (°F)']}°F) in the dataset."
             elif extreme_type == 'coldest':
-                question = f"Which city recorded the lowest temperature in the dataset?"
+                question = f"According to the dataset, which city recorded the lowest temperature?"
                 correct_answer = min_temp_record['city']
-                explanation = f"{correct_answer} recorded the lowest temperature of {min_temp_c}°C ({min_temp_record['temperature_2m_min (°F)']}°F)."
-            else:  # windiest
-                question = f"Which city recorded the highest wind speed in the dataset?"
+                explanation = f"{correct_answer} recorded the lowest temperature of {min_temp_c}°C ({min_temp_record['temperature_2m_min (°F)']}°F) in the dataset."
+            else:
+                question = f"According to the dataset, which city recorded the highest wind speed?"
                 correct_answer = max_wind_record['city']
-                explanation = f"{correct_answer} recorded the highest wind speed of {max_wind_mph} mph."
+                explanation = f"{correct_answer} recorded the highest wind speed of {max_wind_mph} mph in the dataset."
             
-            wrong_answers = [city for city in self.cities if city != correct_answer][:3]
-            
-            choices = [correct_answer] + wrong_answers
+            # Use only cities from the dataset as choices
+            wrong_answers = [city for city in self.cities if city != correct_answer]
+            choices = [correct_answer] + random.sample(wrong_answers, min(3, len(wrong_answers)))
             random.shuffle(choices)
             
             return {
@@ -323,21 +462,152 @@ class WeatherQuizGenerator:
             return None
     
     def _generate_city_climate_question(self):
-        """Generate questions about city climate characteristics"""
+        """Generate questions about city climate characteristics from CSV data"""
         try:
-            # Analyze humidity patterns
-            city_humidity = self.weather_data.groupby('city')['relative_humidity_2m_mean (%)'].mean().sort_values(ascending=False)
+            # Choose metric based on what's available in the data
+            available_metrics = []
             
-            if len(city_humidity) < 2:
+            if 'relative_humidity_2m_mean (%)' in self.weather_data.columns:
+                available_metrics.append('humidity')
+            if 'surface_pressure_mean (hPa)' in self.weather_data.columns:
+                available_metrics.append('pressure')
+            if 'cloud_cover_mean (%)' in self.weather_data.columns:
+                available_metrics.append('cloud_cover')
+            
+            if not available_metrics:
+                return None
+                
+            metric = random.choice(available_metrics)
+            
+            if metric == 'humidity':
+                city_values = self.weather_data.groupby('city')['relative_humidity_2m_mean (%)'].mean()
+                question = f"According to the dataset, which city has the highest average humidity?"
+                unit = "%"
+            elif metric == 'pressure':
+                city_values = self.weather_data.groupby('city')['surface_pressure_mean (hPa)'].mean()
+                question = f"According to the dataset, which city has the highest average atmospheric pressure?"
+                unit = "hPa"
+            else:
+                city_values = self.weather_data.groupby('city')['cloud_cover_mean (%)'].mean()
+                question = f"According to the dataset, which city has the highest average cloud cover?"
+                unit = "%"
+            
+            # Remove NaN values
+            city_values = city_values.dropna()
+            
+            if len(city_values) < 2:
                 return None
             
-            most_humid_city = city_humidity.index[0]
-            humidity_value = round(city_humidity.iloc[0], 1)
+            city_values_sorted = city_values.sort_values(ascending=False)
+            top_city = city_values_sorted.index[0]
+            top_value = round(city_values_sorted.iloc[0], 1)
             
-            question = f"Which city has the highest average humidity according to the data?"
+            correct_answer = top_city
+            available_cities = list(city_values.index)
+            wrong_answers = [city for city in available_cities if city != top_city]
             
-            correct_answer = most_humid_city
-            wrong_answers = [city for city in self.cities if city != most_humid_city][:3]
+            choices = [correct_answer] + random.sample(wrong_answers, min(3, len(wrong_answers)))
+            random.shuffle(choices)
+            
+            return {
+                "question": question,
+                "choices": choices,
+                "correct_answer": correct_answer,
+                "explanation": f"{top_city} has the highest average {metric.replace('_', ' ')} at {top_value}{unit} according to the dataset."
+            }
+            
+        except Exception as e:
+            print(f"Error in city climate question: {e}")
+            return None
+    
+    def _generate_humidity_wind_question(self):
+        """Generate questions about humidity and wind patterns from CSV data"""
+        try:
+            question_type = None
+            
+            # Check what data is available
+            has_humidity = 'relative_humidity_2m_mean (%)' in self.weather_data.columns
+            has_wind = 'wind_speed_10m_max (mp/h)' in self.weather_data.columns
+            
+            if has_humidity and has_wind:
+                question_type = random.choice(['lowest_humidity', 'highest_wind'])
+            elif has_humidity:
+                question_type = 'lowest_humidity'
+            elif has_wind:
+                question_type = 'highest_wind'
+            else:
+                return None
+            
+            if question_type == 'lowest_humidity':
+                city_humidity = self.weather_data.groupby('city')['relative_humidity_2m_mean (%)'].mean()
+                city_humidity = city_humidity.dropna()
+                
+                if len(city_humidity) < 2:
+                    return None
+                    
+                driest_city = city_humidity.idxmin()
+                humidity_value = round(city_humidity.min(), 1)
+                
+                question = f"According to the dataset, which city has the lowest average humidity?"
+                correct_answer = driest_city
+                explanation = f"{driest_city} has the lowest average humidity at {humidity_value}% in the dataset, indicating the driest climate."
+                
+                available_cities = list(city_humidity.index)
+                
+            else:  # highest_wind
+                city_wind = self.weather_data.groupby('city')['wind_speed_10m_max (mp/h)'].mean()
+                city_wind = city_wind.dropna()
+                
+                if len(city_wind) < 2:
+                    return None
+                    
+                windiest_city = city_wind.idxmax()
+                wind_value = round(city_wind.max(), 1)
+                
+                question = f"According to the dataset, which city experiences the highest average wind speeds?"
+                correct_answer = windiest_city
+                explanation = f"{windiest_city} has the highest average wind speeds at {wind_value} mph according to the dataset."
+                
+                available_cities = list(city_wind.index)
+            
+            wrong_answers = [city for city in available_cities if city != correct_answer]
+            choices = [correct_answer] + random.sample(wrong_answers, min(3, len(wrong_answers)))
+            random.shuffle(choices)
+            
+            return {
+                "question": question,
+                "choices": choices,
+                "correct_answer": correct_answer,
+                "explanation": explanation
+            }
+            
+        except Exception as e:
+            print(f"Error in humidity/wind question: {e}")
+            return None
+    
+    def _generate_weather_trend_question(self):
+        """Generate questions about weather trends from CSV data"""
+        try:
+            city_temp_ranges = self.weather_data.groupby('city')['temp_range'].mean().sort_values(ascending=False)
+            
+            if len(city_temp_ranges) < 2:
+                return None
+            
+            question_type = random.choice(['highest_range', 'lowest_range'])
+            
+            if question_type == 'highest_range':
+                target_city = city_temp_ranges.index[0]
+                range_value = round(city_temp_ranges.iloc[0], 1)
+                question = f"According to the dataset, which city shows the greatest daily temperature variation?"
+            else:
+                target_city = city_temp_ranges.index[-1]
+                range_value = round(city_temp_ranges.iloc[-1], 1)
+                question = f"According to the dataset, which city shows the smallest daily temperature variation?"
+            
+            range_value_c = round(range_value * 5/9, 1)
+            
+            correct_answer = target_city
+            wrong_answers = [city for city in self.cities if city != target_city][:3]
             
             choices = [correct_answer] + wrong_answers
             random.shuffle(choices)
@@ -346,35 +616,165 @@ class WeatherQuizGenerator:
                 "question": question,
                 "choices": choices,
                 "correct_answer": correct_answer,
-                "explanation": f"{most_humid_city} has the highest average humidity at {humidity_value}%, indicating a more moisture-rich climate."
+                "explanation": f"{target_city} shows a daily temperature variation of {range_value_c}°C ({range_value}°F) on average according to the dataset."
             }
             
         except Exception as e:
             return None
     
-    def _generate_humidity_wind_question(self):
-        """Generate questions about humidity and wind patterns"""
+    def _generate_pressure_analysis_question(self):
+        """Generate questions about atmospheric pressure from CSV data"""
         try:
-            # Find city with lowest humidity or highest wind
-            city_humidity = self.weather_data.groupby('city')['relative_humidity_2m_mean (%)'].mean()
-            city_wind = self.weather_data.groupby('city')['wind_speed_10m_max (mp/h)'].mean()
+            city_pressure = self.weather_data.groupby('city')['surface_pressure_mean (hPa)'].mean().sort_values(ascending=False)
             
-            question_type = random.choice(['humidity', 'wind'])
+            if len(city_pressure) < 2:
+                return None
             
-            if question_type == 'humidity':
-                driest_city = city_humidity.idxmin()
-                humidity_value = round(city_humidity.min(), 1)
-                
-                question = f"Which city has the lowest average humidity, indicating a drier climate?"
-                correct_answer = driest_city
-                explanation = f"{driest_city} has the lowest average humidity at {humidity_value}%, making it the driest location in the dataset."
+            question_type = random.choice(['highest_pressure', 'lowest_pressure'])
+            
+            if question_type == 'highest_pressure':
+                target_city = city_pressure.index[0]
+                pressure_value = round(city_pressure.iloc[0], 1)
+                question = f"According to the dataset, which city has the highest average atmospheric pressure?"
             else:
-                windiest_city = city_wind.idxmax()
-                wind_value = round(city_wind.max(), 1)
-                
-                question = f"Which city experiences the highest average wind speeds?"
-                correct_answer = windiest_city
-                explanation = f"{windiest_city} has the highest average wind speeds at {wind_value} mph, indicating more dynamic weather patterns."
+                target_city = city_pressure.index[-1]
+                pressure_value = round(city_pressure.iloc[-1], 1)
+                question = f"According to the dataset, which city has the lowest average atmospheric pressure?"
+            
+            correct_answer = target_city
+            wrong_answers = [city for city in self.cities if city != target_city][:3]
+            
+            choices = [correct_answer] + wrong_answers
+            random.shuffle(choices)
+            
+            return {
+                "question": question,
+                "choices": choices,
+                "correct_answer": correct_answer,
+                "explanation": f"{target_city} has an average atmospheric pressure of {pressure_value} hPa according to the dataset."
+            }
+            
+        except Exception as e:
+            return None
+    
+    def _generate_snowfall_comparison_question(self):
+        """Generate questions about snowfall from CSV data"""
+        try:
+            city_snowfall = self.weather_data.groupby('city')['snowfall_sum (inch)'].sum().sort_values(ascending=False)
+            
+            if len(city_snowfall) < 2 or city_snowfall.iloc[0] == 0:
+                return None
+            
+            snowiest_city = city_snowfall.index[0]
+            snowfall_amount = round(city_snowfall.iloc[0], 1)
+            
+            question = f"According to the dataset, which city received the most total snowfall?"
+            
+            correct_answer = snowiest_city
+            wrong_answers = [city for city in self.cities if city != snowiest_city][:3]
+            
+            choices = [correct_answer] + wrong_answers
+            random.shuffle(choices)
+            
+            return {
+                "question": question,
+                "choices": choices,
+                "correct_answer": correct_answer,
+                "explanation": f"{snowiest_city} received {snowfall_amount} inches of total snowfall according to the dataset."
+            }
+            
+        except Exception as e:
+            return None
+    
+    def _generate_sunshine_duration_question(self):
+        """Generate questions about sunshine duration from CSV data"""
+        try:
+            city_sunshine = self.weather_data.groupby('city')['sunshine_duration (s)'].mean().sort_values(ascending=False)
+            
+            if len(city_sunshine) < 2:
+                return None
+            
+            question_type = random.choice(['most_sunshine', 'least_sunshine'])
+            
+            if question_type == 'most_sunshine':
+                target_city = city_sunshine.index[0]
+                sunshine_hours = round(city_sunshine.iloc[0] / 3600, 1)
+                question = f"According to the dataset, which city has the most average daily sunshine?"
+            else:
+                target_city = city_sunshine.index[-1]
+                sunshine_hours = round(city_sunshine.iloc[-1] / 3600, 1)
+                question = f"According to the dataset, which city has the least average daily sunshine?"
+            
+            correct_answer = target_city
+            wrong_answers = [city for city in self.cities if city != target_city][:3]
+            
+            choices = [correct_answer] + wrong_answers
+            random.shuffle(choices)
+            
+            return {
+                "question": question,
+                "choices": choices,
+                "correct_answer": correct_answer,
+                "explanation": f"{target_city} averages {sunshine_hours} hours of sunshine per day according to the dataset."
+            }
+            
+        except Exception as e:
+            return None
+    
+    def _generate_cloud_cover_question(self):
+        """Generate questions about cloud cover from CSV data"""
+        try:
+            city_clouds = self.weather_data.groupby('city')['cloud_cover_mean (%)'].mean().sort_values(ascending=False)
+            
+            if len(city_clouds) < 2:
+                return None
+            
+            question_type = random.choice(['most_cloudy', 'least_cloudy'])
+            
+            if question_type == 'most_cloudy':
+                target_city = city_clouds.index[0]
+                cloud_value = round(city_clouds.iloc[0], 1)
+                question = f"According to the dataset, which city has the highest average cloud cover?"
+            else:
+                target_city = city_clouds.index[-1]
+                cloud_value = round(city_clouds.iloc[-1], 1)
+                question = f"According to the dataset, which city has the lowest average cloud cover?"
+            
+            correct_answer = target_city
+            wrong_answers = [city for city in self.cities if city != target_city][:3]
+            
+            choices = [correct_answer] + wrong_answers
+            random.shuffle(choices)
+            
+            return {
+                "question": question,
+                "choices": choices,
+                "correct_answer": correct_answer,
+                "explanation": f"{target_city} has {cloud_value}% average cloud cover according to the dataset."
+            }
+            
+        except Exception as e:
+            return None
+    
+    def _generate_temperature_range_question(self):
+        """Generate questions about temperature extremes from CSV data"""
+        try:
+            # Find city with highest max temperature vs city with lowest min temperature
+            max_temp_city = self.weather_data.loc[self.weather_data['temperature_2m_max (°F)'].idxmax(), 'city']
+            min_temp_city = self.weather_data.loc[self.weather_data['temperature_2m_min (°F)'].idxmin(), 'city']
+            max_temp_value = round((self.weather_data['temperature_2m_max (°F)'].max() - 32) * 5/9, 1)
+            min_temp_value = round((self.weather_data['temperature_2m_min (°F)'].min() - 32) * 5/9, 1)
+            
+            question_type = random.choice(['hottest_day', 'coldest_day'])
+            
+            if question_type == 'hottest_day':
+                question = f"According to the dataset, which city experienced the single hottest day?"
+                correct_answer = max_temp_city
+                explanation = f"{max_temp_city} recorded the highest single-day temperature of {max_temp_value}°C in the dataset."
+            else:
+                question = f"According to the dataset, which city experienced the single coldest day?"
+                correct_answer = min_temp_city
+                explanation = f"{min_temp_city} recorded the lowest single-day temperature of {min_temp_value}°C in the dataset."
             
             wrong_answers = [city for city in self.cities if city != correct_answer][:3]
             
@@ -391,25 +791,103 @@ class WeatherQuizGenerator:
         except Exception as e:
             return None
     
-    def _generate_weather_trend_question(self):
-        """Generate questions about weather trends and patterns"""
+    def _generate_monthly_pattern_question(self):
+        """Generate questions about monthly weather patterns from CSV data"""
         try:
-            # Analyze temperature ranges
-            city_temp_ranges = self.weather_data.groupby('city')['temp_range'].mean().sort_values(ascending=False)
+            city = random.choice(self.cities)
+            city_data = self.weather_data[self.weather_data['city'] == city]
             
-            if len(city_temp_ranges) < 2:
+            metric = random.choice(['temperature', 'rainfall'])
+            
+            if metric == 'temperature':
+                monthly_values = city_data.groupby('month')['temperature_2m_mean (°F)'].mean()
+                monthly_values = monthly_values.dropna()  # Remove NaN values
+                
+                if len(monthly_values) < 2:
+                    return None
+                
+                question_type = random.choice(['hottest_month', 'coldest_month'])
+                month_names = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                              'July', 'August', 'September', 'October', 'November', 'December']
+                
+                if question_type == 'hottest_month':
+                    target_month = monthly_values.idxmax()
+                    question = f"In {city}, which month has the highest average temperature according to the dataset?"
+                else:
+                    target_month = monthly_values.idxmin()
+                    question = f"In {city}, which month has the lowest average temperature according to the dataset?"
+                
+                correct_answer = month_names[target_month]
+                # Use logical months as choices - focus on seasons
+                if question_type == 'hottest_month':
+                    logical_choices = ['June', 'July', 'August', 'September']
+                else:
+                    logical_choices = ['December', 'January', 'February', 'March']
+                
+                wrong_answers = [month for month in logical_choices if month != correct_answer]
+                
+            else:  # rainfall
+                monthly_values = city_data.groupby('month')['rain_sum (inch)'].sum()
+                monthly_values = monthly_values.dropna()  # Remove NaN values
+                
+                if len(monthly_values) < 2:
+                    return None
+                
+                wettest_month = monthly_values.idxmax()
+                month_names = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                              'July', 'August', 'September', 'October', 'November', 'December']
+                
+                question = f"In {city}, which month received the most rainfall according to the dataset?"
+                correct_answer = month_names[wettest_month]
+                
+                # Use logical wet season months
+                logical_choices = ['April', 'May', 'June', 'July', 'August', 'September', 'October']
+                wrong_answers = [month for month in logical_choices if month != correct_answer][:3]
+            
+            choices = [correct_answer] + wrong_answers[:3]
+            random.shuffle(choices)
+            
+            return {
+                "question": question,
+                "choices": choices,
+                "correct_answer": correct_answer,
+                "explanation": f"According to the dataset, {correct_answer} shows the pattern described for {city}."
+            }
+            
+        except Exception as e:
+            print(f"Error in monthly pattern question: {e}")
+            return None
+    
+    def _generate_wettest_driest_question(self):
+        """Generate questions comparing wet vs dry periods from CSV data"""
+        try:
+            # Find the wettest and driest days across all data
+            wettest_record = self.weather_data.loc[self.weather_data['rain_sum (inch)'].idxmax()]
+            driest_records = self.weather_data[self.weather_data['rain_sum (inch)'] == 0]
+            
+            if driest_records.empty:
                 return None
             
-            highest_range_city = city_temp_ranges.index[0]
-            range_value = round(city_temp_ranges.iloc[0], 1)
+            wettest_city = wettest_record['city']
+            wettest_amount = round(wettest_record['rain_sum (inch)'], 2)
             
-            # Convert to Celsius
-            range_value_c = round(range_value * 5/9, 1)
+            # Count dry days per city
+            dry_days_per_city = driest_records.groupby('city').size().sort_values(ascending=False)
+            driest_city = dry_days_per_city.index[0]
+            dry_days_count = dry_days_per_city.iloc[0]
             
-            question = f"Which city shows the greatest daily temperature variation (difference between max and min temperatures)?"
+            question_type = random.choice(['wettest_day', 'most_dry_days'])
             
-            correct_answer = highest_range_city
-            wrong_answers = [city for city in self.cities if city != highest_range_city][:3]
+            if question_type == 'wettest_day':
+                question = f"According to the dataset, which city recorded the highest single-day rainfall?"
+                correct_answer = wettest_city
+                explanation = f"{wettest_city} recorded the highest single-day rainfall of {wettest_amount} inches in the dataset."
+            else:
+                question = f"According to the dataset, which city had the most days with no rainfall?"
+                correct_answer = driest_city
+                explanation = f"{driest_city} had {dry_days_count} days with no rainfall according to the dataset."
+            
+            wrong_answers = [city for city in self.cities if city != correct_answer][:3]
             
             choices = [correct_answer] + wrong_answers
             random.shuffle(choices)
@@ -418,93 +896,57 @@ class WeatherQuizGenerator:
                 "question": question,
                 "choices": choices,
                 "correct_answer": correct_answer,
-                "explanation": f"{highest_range_city} shows the greatest daily temperature variation with an average range of {range_value_c}°C ({range_value}°F), indicating more continental climate characteristics."
+                "explanation": explanation
             }
             
         except Exception as e:
             return None
     
-    def _generate_fallback_question(self):
-        """Generate general weather knowledge questions as fallback"""
-        fallback_questions = [
-            {
-                "question": "What weather instrument measures atmospheric pressure?",
-                "choices": ["Barometer", "Anemometer", "Hygrometer", "Thermometer"],
-                "correct_answer": "Barometer",
-                "explanation": "A barometer measures atmospheric pressure, which helps predict weather changes."
-            },
-            {
-                "question": "Which cloud type typically produces thunderstorms?",
-                "choices": ["Cumulonimbus", "Cirrus", "Stratus", "Altostratus"],
-                "correct_answer": "Cumulonimbus",
-                "explanation": "Cumulonimbus clouds are towering clouds that can reach extreme heights and produce thunderstorms, heavy rain, and severe weather."
-            },
-            {
-                "question": "What causes the Coriolis effect that influences weather patterns?",
-                "choices": ["Earth's rotation", "Solar radiation", "Ocean currents", "Mountain ranges"],
-                "correct_answer": "Earth's rotation",
-                "explanation": "The Coriolis effect is caused by Earth's rotation and influences the direction of wind patterns and storm systems."
-            },
-            {
-                "question": "At what relative humidity level does air become saturated?",
-                "choices": ["100%", "90%", "80%", "75%"],
-                "correct_answer": "100%",
-                "explanation": "Air becomes saturated at 100% relative humidity, meaning it can hold no more water vapor at that temperature."
-            },
-            {
-                "question": "What is the primary greenhouse gas in Earth's atmosphere?",
-                "choices": ["Water vapor", "Carbon dioxide", "Methane", "Ozone"],
-                "correct_answer": "Water vapor",
-                "explanation": "Water vapor is the most abundant greenhouse gas in the atmosphere, though CO2 is the most significant human-influenced one."
-            },
-            {
-                "question": "Which scale is used to classify tornado intensity?",
-                "choices": ["Enhanced Fujita Scale", "Saffir-Simpson Scale", "Beaufort Scale", "Richter Scale"],
-                "correct_answer": "Enhanced Fujita Scale",
-                "explanation": "The Enhanced Fujita Scale (EF Scale) classifies tornadoes from EF0 to EF5 based on damage and estimated wind speeds."
-            },
-            {
-                "question": "What causes a temperature inversion in the atmosphere?",
-                "choices": ["Warm air above cold air", "Cold air above warm air", "Equal temperatures", "High pressure systems"],
-                "correct_answer": "Warm air above cold air",
-                "explanation": "A temperature inversion occurs when warm air sits above cooler air, which is opposite to the normal atmospheric temperature profile."
-            },
-            {
-                "question": "Which type of precipitation forms when raindrops freeze before hitting the ground?",
-                "choices": ["Sleet", "Snow", "Hail", "Freezing rain"],
-                "correct_answer": "Sleet",
-                "explanation": "Sleet forms when raindrops freeze completely before reaching the ground, creating small ice pellets."
+    def _generate_wind_direction_question(self):
+        """Generate questions about wind patterns from CSV data"""
+        try:
+            # Analyze wind speeds by city and season
+            city_wind_by_season = self.weather_data.groupby(['city', 'season'])['wind_speed_10m_max (mp/h)'].mean().unstack(fill_value=0)
+            
+            if city_wind_by_season.empty:
+                return None
+            
+            # Find which city has windiest season
+            windiest_overall = city_wind_by_season.stack().idxmax()
+            windiest_city = windiest_overall[0]
+            windiest_season = windiest_overall[1]
+            wind_speed = round(city_wind_by_season.loc[windiest_city, windiest_season], 1)
+            
+            question = f"According to the dataset, which city experiences its windiest conditions during {windiest_season}?"
+            
+            # Find cities that actually have data for that season
+            cities_in_season = city_wind_by_season[city_wind_by_season[windiest_season] > 0].index.tolist()
+            
+            if len(cities_in_season) < 2:
+                return None
+            
+            correct_answer = windiest_city
+            wrong_answers = [city for city in cities_in_season if city != correct_answer][:3]
+            
+            choices = [correct_answer] + wrong_answers
+            random.shuffle(choices)
+            
+            return {
+                "question": question,
+                "choices": choices,
+                "correct_answer": correct_answer,
+                "explanation": f"{windiest_city} experiences its windiest conditions during {windiest_season} with average winds of {wind_speed} mph according to the dataset."
             }
-        ]
-        
-        return random.choice(fallback_questions)
-    
-    def _generate_fallback_quiz(self):
-        """Generate entire quiz using fallback questions when data is unavailable"""
-        questions = []
-        available_questions = [
-            self._generate_fallback_question() for _ in range(10)
-        ]
-        
-        # Remove duplicates and select 5
-        unique_questions = []
-        used_questions = set()
-        
-        for q in available_questions:
-            if q['question'] not in used_questions:
-                unique_questions.append(q)
-                used_questions.add(q['question'])
-                if len(unique_questions) >= 5:
-                    break
-        
-        return unique_questions
+            
+        except Exception as e:
+            return None
     
     def get_data_stats(self):
         """Get statistics about the loaded data"""
         if not self.data_loaded or self.weather_data is None:
             return {
                 "data_available": False,
-                "message": "No weather data available"
+                "message": "No weather data available - quiz cannot be generated"
             }
         
         stats = {
@@ -519,7 +961,7 @@ class WeatherQuizGenerator:
                 "max_f": round(self.weather_data['temperature_2m_max (°F)'].max(), 1),
                 "min_f": round(self.weather_data['temperature_2m_min (°F)'].min(), 1)
             },
-            "quiz_capability": "advanced"
+            "quiz_capability": "csv_data_only"
         }
         
         return stats
@@ -527,7 +969,7 @@ class WeatherQuizGenerator:
     def validate_data_quality(self):
         """Validate the quality of loaded data for quiz generation"""
         if not self.data_loaded:
-            return {"quality": "none", "issues": ["No data loaded"]}
+            return {"quality": "none", "issues": ["No CSV data loaded - quiz cannot be generated"]}
         
         issues = []
         quality = "good"
@@ -551,3 +993,73 @@ class WeatherQuizGenerator:
             quality = "poor"
         
         return {"quality": quality, "issues": issues}
+    
+    def get_all_possible_questions(self):
+        """Generate and return all possible question types that can be created from the CSV data"""
+        if not self.data_loaded or self.weather_data is None:
+            return []
+        
+        all_questions = []
+        question_generators = [
+            ("Temperature Comparison", self._generate_temperature_comparison_question),
+            ("Rainfall Analysis", self._generate_rainfall_analysis_question),
+            ("Seasonal Patterns", self._generate_seasonal_pattern_question),
+            ("Extreme Weather", self._generate_extreme_weather_question),
+            ("City Climate", self._generate_city_climate_question),
+            ("Humidity & Wind", self._generate_humidity_wind_question),
+            ("Weather Trends", self._generate_weather_trend_question),
+            ("Pressure Analysis", self._generate_pressure_analysis_question),
+            ("Snowfall Comparison", self._generate_snowfall_comparison_question),
+            ("Sunshine Duration", self._generate_sunshine_duration_question),
+            ("Cloud Cover", self._generate_cloud_cover_question),
+            ("Temperature Extremes", self._generate_temperature_range_question),
+            ("Monthly Patterns", self._generate_monthly_pattern_question),
+            ("Wet vs Dry", self._generate_wettest_driest_question),
+            ("Wind Patterns", self._generate_wind_direction_question)
+        ]
+        
+        print(f"\nGenerating all possible questions from CSV data for {len(self.cities)} cities:")
+        print(f"Cities in dataset: {', '.join(self.cities)}")
+        print(f"Total records: {len(self.weather_data)}")
+        print("=" * 60)
+        
+        for category_name, generator in question_generators:
+            print(f"\n{category_name} Questions:")
+            print("-" * 30)
+            
+            # Generate multiple variations of each question type
+            for attempt in range(10):  # Try to generate 10 variations per type
+                try:
+                    question = generator()
+                    if question:
+                        # Check if this exact question already exists
+                        if not any(q['question'] == question['question'] for q in all_questions):
+                            all_questions.append({
+                                'category': category_name,
+                                'question': question['question'],
+                                'choices': question['choices'],
+                                'correct_answer': question['correct_answer'],
+                                'explanation': question['explanation']
+                            })
+                            print(f"✓ {question['question']}")
+                        else:
+                            print(f"⚠ Duplicate question skipped")
+                except Exception as e:
+                    print(f"✗ Error generating question: {e}")
+        
+        print(f"\n" + "=" * 60)
+        print(f"Total unique questions generated: {len(all_questions)}")
+        
+        # Group by category
+        by_category = {}
+        for q in all_questions:
+            category = q['category']
+            if category not in by_category:
+                by_category[category] = []
+            by_category[category].append(q)
+        
+        print(f"\nQuestions by category:")
+        for category, questions in by_category.items():
+            print(f"  {category}: {len(questions)} questions")
+        
+        return all_questions

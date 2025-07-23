@@ -1,5 +1,5 @@
 """
-Enhanced Weather Quiz Controller - Manages quiz logic and GUI interactions
+Enhanced Weather Quiz Controller - Manages quiz logic ONLY for CSV data
 """
 
 import tkinter as tk
@@ -12,7 +12,7 @@ from .quiz_generator import WeatherQuizGenerator
 
 class WeatherQuizController:
     """
-    Enhanced Controller for the Weather Quiz feature
+    Enhanced Controller for the Weather Quiz feature - CSV DATA ONLY
     Manages quiz generation, display, scoring, and user interactions
     """
     
@@ -48,11 +48,16 @@ class WeatherQuizController:
             self.data_stats = {"data_available": False, "message": "Error loading data"}
     
     def build_page(self, window_width, window_height):
-        """Build the enhanced quiz page"""
+        """Build the CSV-only quiz page"""
         try:
             self._add_back_button()
             self._build_header(window_width)
-            self._build_data_info_section(window_width)
+            
+            # Check if CSV data is available
+            if not self.data_stats.get('data_available', False):
+                self._build_no_data_message(window_width, window_height)
+                return
+            
             self._build_quiz_area(window_width, window_height)
             
             # Start generating quiz in background
@@ -83,7 +88,6 @@ class WeatherQuizController:
     
     def _build_header(self, window_width):
         """Build quiz header with title only"""
-        # Main title - simplified
         title_main = self._create_black_label(
             self.app,
             text="🌤️ Weather Quiz",
@@ -93,17 +97,49 @@ class WeatherQuizController:
         )
         self.gui.widgets.append(title_main)
     
-    def _build_data_info_section(self, window_width):
-        """Build section showing data information - REMOVED"""
-        # Remove all data info sections to clean up the interface
-        pass
+    def _build_no_data_message(self, window_width, window_height):
+        """Build message when no CSV data is available"""
+        message_y = window_height // 2
+        
+        # Error icon and message
+        error_label = self._create_colored_label(
+            self.app,
+            text="📊 No Weather Data Available",
+            font=("Arial", 24, "bold"),
+            x=window_width/2,
+            y=message_y - 80,
+            color="red"
+        )
+        self.gui.widgets.append(error_label)
+        
+        # Explanation
+        explanation = self._create_black_label(
+            self.app,
+            text="The weather quiz requires CSV data to generate questions.\n\nPlease ensure the 'combined.csv' file is present in the 'data' directory\nwith weather records from multiple cities.",
+            font=("Arial", 14),
+            x=window_width/2,
+            y=message_y,
+            justify="center"
+        )
+        self.gui.widgets.append(explanation)
+        
+        # Data requirements
+        requirements = self._create_black_label(
+            self.app,
+            text="Required CSV columns:\n• city\n• temperature_2m_max (°F)\n• temperature_2m_min (°F)\n• rain_sum (inch)\n• wind_speed_10m_max (mp/h)\n• relative_humidity_2m_mean (%)",
+            font=("Arial", 12),
+            x=window_width/2,
+            y=message_y + 80,
+            justify="center"
+        )
+        self.gui.widgets.append(requirements)
     
     def _build_quiz_area(self, window_width, window_height):
         """Build the main quiz display area with proper centering"""
-        quiz_y = 120  # Start higher since we removed subheadings
-        quiz_height = window_height - 160  # More space
-        quiz_width = min(window_width - 60, 800)  # Limit max width
-        quiz_x = (window_width - quiz_width) // 2  # Center horizontally
+        quiz_y = 100  # Start higher since we removed subtitle
+        quiz_height = window_height - 180
+        quiz_width = min(window_width - 60, 800)
+        quiz_x = (window_width - quiz_width) // 2
         
         # Create frame for quiz content
         canvas_bg = self._get_canvas_bg_color()
@@ -122,33 +158,38 @@ class WeatherQuizController:
         )
         self.gui.widgets.append(self.quiz_frame)
         
-        # Loading message - centered in frame
+        # Loading message
         loading_label = self._create_black_label(
             self.quiz_frame,
-            text="🧠 Loading Quiz...\nGenerating questions!",
+            text="🧠 Analyzing CSV Data...\nGenerating questions from real weather patterns!",
             font=("Arial", 16),
             x=quiz_width//2,
             y=quiz_height//2
         )
     
     def _generate_quiz_async(self):
-        """Generate quiz questions in background thread"""
+        """Generate quiz questions in background thread - CSV ONLY"""
         def generate():
             try:
-                # Show data validation results
+                # Validate data quality first
                 if self.data_stats and 'issues' in self.data_stats and self.data_stats['issues']:
                     print("Data quality issues found:")
                     for issue in self.data_stats['issues']:
                         print(f"  - {issue}")
                 
-                # Generate questions
+                # Generate questions from CSV data ONLY
                 self.current_questions = self.quiz_generator.generate_quiz()
+                
+                if not self.current_questions:
+                    error_msg = "Unable to generate questions from CSV data.\nPlease check that the data file contains sufficient records from multiple cities."
+                    self.app.after(0, lambda: self._show_error(error_msg))
+                    return
                 
                 # Update UI on main thread
                 self.app.after(0, self._display_quiz_start)
                 
             except Exception as e:
-                error_msg = f"Error generating quiz: {str(e)}"
+                error_msg = f"Error generating quiz from CSV data: {str(e)}"
                 print(f"Quiz generation error: {e}")
                 traceback.print_exc()
                 self.app.after(0, lambda: self._show_error(error_msg))
@@ -156,7 +197,7 @@ class WeatherQuizController:
         threading.Thread(target=generate, daemon=True).start()
     
     def _display_quiz_start(self):
-        """Display enhanced quiz start screen with proper centering"""
+        """Display quiz start screen with CSV data info"""
         try:
             # Clear quiz frame
             for widget in self.quiz_frame.winfo_children():
@@ -165,35 +206,48 @@ class WeatherQuizController:
             frame_width = self.quiz_frame.winfo_width() or 600
             frame_height = self.quiz_frame.winfo_height() or 400
             
-            # Welcome message - centered
+            # Welcome message
             welcome_label = self._create_black_label(
                 self.quiz_frame,
-                text="🌤️ Quiz Ready!",
+                text="📊 CSV Data Quiz Ready!",
                 font=("Arial", 28, "bold"),
                 x=frame_width//2,
-                y=frame_height//2 - 80
+                y=frame_height//2 - 100
             )
             
-            # Simplified instructions - centered
+            # Data info
             if self.data_stats and self.data_stats.get('data_available', False):
                 city_count = len(self.data_stats['cities'])
-                instructions_text = f"Answer {len(self.current_questions)} questions based on weather data.\n\nReady to test your knowledge?"
+                record_count = self.data_stats['total_records']
+                data_info = f"Analyzing {record_count:,} weather records from {city_count} cities:\n{', '.join(self.data_stats['cities'][:5])}{'...' if city_count > 5 else ''}"
             else:
-                instructions_text = f"Answer {len(self.current_questions)} weather questions.\n\nReady to test your knowledge?"
+                data_info = "Processing weather data..."
+            
+            info_label = self._create_black_label(
+                self.quiz_frame,
+                text=data_info,
+                font=("Arial", 12),
+                x=frame_width//2,
+                y=frame_height//2 - 50,
+                justify="center"
+            )
+            
+            # Instructions
+            instructions_text = f"Answer {len(self.current_questions)} questions based entirely on patterns\nfound in the real weather data.\n\nReady to test your data analysis skills?"
             
             instructions = self._create_black_label(
                 self.quiz_frame,
                 text=instructions_text,
                 font=("Arial", 14),
                 x=frame_width//2,
-                y=frame_height//2 - 20,
+                y=frame_height//2,
                 justify="center"
             )
             
-            # Start quiz button - centered
+            # Buttons
             start_btn = tk.Button(
                 self.quiz_frame,
-                text="🚀 Start Quiz",
+                text="🚀 Start CSV Quiz",
                 command=self._start_quiz,
                 bg="lightgreen",
                 fg="black",
@@ -206,83 +260,63 @@ class WeatherQuizController:
                 activebackground="lightblue",
                 highlightthickness=0
             )
-            start_btn.place(x=frame_width//2, y=frame_height//2 + 60, anchor="center")
+            start_btn.place(x=frame_width//2 - 80, y=frame_height//2 + 60, anchor="center")
+            
+            # Show all questions button
+            show_all_btn = tk.Button(
+                self.quiz_frame,
+                text="📋 All Questions",
+                command=self._show_all_questions,
+                bg="lightblue",
+                fg="black",
+                font=("Arial", 12, "bold"),
+                relief="raised",
+                borderwidth=2,
+                width=15,
+                height=2,
+                activeforeground="black",
+                activebackground="lightcyan",
+                highlightthickness=0
+            )
+            show_all_btn.place(x=frame_width//2 + 80, y=frame_height//2 + 60, anchor="center")
             
         except Exception as e:
             self._show_error(str(e))
     
-    def _show_data_details(self):
-        """Show detailed information about the data being used"""
-        if not self.data_stats or not self.data_stats.get('data_available', False):
-            messagebox.showinfo("Data Info", "No detailed weather data available.\nUsing general weather knowledge questions.")
-            return
-        
-        # Create detailed info text
-        info_text = "🌍 Weather Data Details\n"
-        info_text += "=" * 50 + "\n\n"
-        
-        info_text += f"📊 Dataset Overview:\n"
-        info_text += f"  • Total Records: {self.data_stats['total_records']:,}\n"
-        info_text += f"  • Cities Included: {len(self.data_stats['cities'])}\n"
-        info_text += f"  • Date Range: {self.data_stats['date_range']['start']} to {self.data_stats['date_range']['end']}\n\n"
-        
-        info_text += f"🌡️ Temperature Extremes:\n"
-        info_text += f"  • Highest: {self.data_stats['temperature_range']['max_f']}°F\n"
-        info_text += f"  • Lowest: {self.data_stats['temperature_range']['min_f']}°F\n\n"
-        
-        info_text += f"🏙️ Cities in Dataset:\n"
-        for i, city in enumerate(self.data_stats['cities'], 1):
-            info_text += f"  {i}. {city}\n"
-        
-        info_text += f"\n📈 Data Quality: {self.data_stats.get('quality', 'Unknown').title()}\n"
-        
-        if 'issues' in self.data_stats and self.data_stats['issues']:
-            info_text += f"\n⚠️ Data Notes:\n"
-            for issue in self.data_stats['issues']:
-                info_text += f"  • {issue}\n"
-        
-        info_text += f"\n🎯 Quiz questions will analyze real patterns from this data!"
-        
-        # Show in a popup window
-        self._show_info_popup("Weather Data Details", info_text)
-    
-    def _show_info_popup(self, title, text):
-        """Show information in a popup window with scrollable text"""
-        popup = tk.Toplevel(self.app)
-        popup.title(title)
-        popup.geometry("600x500")
-        popup.resizable(True, True)
-        
-        # Create scrolled text widget
-        text_widget = scrolledtext.ScrolledText(
-            popup,
-            wrap=tk.WORD,
-            font=("Courier", 10),
-            bg="white",
-            fg="black"
-        )
-        text_widget.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        
-        # Insert text
-        text_widget.insert(tk.END, text)
-        text_widget.config(state=tk.DISABLED)
-        
-        # Close button
-        close_btn = tk.Button(
-            popup,
-            text="Close",
-            command=popup.destroy,
-            bg="lightgrey",
-            font=("Arial", 12)
-        )
-        close_btn.pack(pady=5)
-        
-        # Center the popup
-        popup.transient(self.app)
-        popup.grab_set()
+    def _show_all_questions(self):
+        """Show all possible questions that can be generated from the CSV data"""
+        try:
+            all_questions = self.quiz_generator.get_all_possible_questions()
+            
+            if not all_questions:
+                messagebox.showinfo("No Questions", "No questions could be generated from the current CSV data.")
+                return
+            
+            # Create detailed questions text
+            questions_text = f"All Possible Questions from CSV Data\n"
+            questions_text += f"Generated from {len(self.data_stats.get('cities', []))} cities\n"
+            questions_text += "=" * 70 + "\n\n"
+            
+            current_category = ""
+            for i, q in enumerate(all_questions, 1):
+                if q['category'] != current_category:
+                    current_category = q['category']
+                    questions_text += f"\n{current_category} Questions:\n"
+                    questions_text += "-" * 40 + "\n"
+                
+                questions_text += f"Q{i}: {q['question']}\n"
+                questions_text += f"Choices: {', '.join(q['choices'])}\n"
+                questions_text += f"Answer: {q['correct_answer']}\n"
+                questions_text += f"Explanation: {q['explanation']}\n\n"
+            
+            # Show in popup
+            self._show_info_popup(f"All CSV Questions ({len(all_questions)} total)", questions_text)
+            
+        except Exception as e:
+            self._show_error(f"Error generating questions list: {str(e)}")
     
     def _start_quiz(self):
-        """Start the quiz"""
+        """Start the CSV data quiz"""
         try:
             self.quiz_started = True
             self.current_question_index = 0
@@ -296,7 +330,7 @@ class WeatherQuizController:
             self._show_error(str(e))
     
     def _display_current_question(self):
-        """Display the current question with enhanced formatting and proper centering"""
+        """Display the current question with enhanced formatting"""
         try:
             # Clear quiz frame
             for widget in self.quiz_frame.winfo_children():
@@ -324,7 +358,7 @@ class WeatherQuizController:
                 y=20
             )
             
-            # Question text with better formatting and wrapping
+            # Question text
             question_text = question["question"]
             question_label = self._create_black_label(
                 self.quiz_frame,
@@ -336,7 +370,7 @@ class WeatherQuizController:
                 wraplength=frame_width - 40
             )
             
-            # Answer choices with better spacing and centering
+            # Answer choices
             self.selected_answer = tk.StringVar()
             
             choice_start_y = 120
@@ -345,7 +379,7 @@ class WeatherQuizController:
             for i, choice in enumerate(question["choices"]):
                 radio_btn = tk.Radiobutton(
                     self.quiz_frame,
-                    text=f"{chr(65 + i)}. {choice}",  # A. B. C. D.
+                    text=f"{chr(65 + i)}. {choice}",
                     variable=self.selected_answer,
                     value=choice,
                     font=("Arial", 12),
@@ -363,7 +397,7 @@ class WeatherQuizController:
                 )
                 radio_btn.place(x=40, y=choice_start_y + i * choice_spacing, anchor="w")
             
-            # Navigation buttons - centered at bottom
+            # Navigation buttons
             button_y = frame_height - 60
             
             # Next/Submit button
@@ -473,7 +507,7 @@ class WeatherQuizController:
             self._show_error(str(e))
     
     def _display_quiz_results(self):
-        """Display enhanced quiz results and score with centered layout"""
+        """Display quiz results"""
         try:
             # Clear quiz frame
             for widget in self.quiz_frame.winfo_children():
@@ -486,36 +520,32 @@ class WeatherQuizController:
             # Calculate percentage
             percentage = round((self.score / len(self.current_questions)) * 100)
             
-            # Results header with emoji and message
+            # Results with CSV data emphasis
             if percentage >= 90:
                 emoji = "🏆"
-                message = "Outstanding! Weather expert!"
+                message = "Outstanding data analysis!"
                 color = "gold"
             elif percentage >= 80:
                 emoji = "🌟"
-                message = "Excellent! Great knowledge!"
+                message = "Excellent CSV interpretation!"
                 color = "green"
             elif percentage >= 70:
                 emoji = "☀️"
-                message = "Great job! Solid understanding!"
+                message = "Great pattern recognition!"
                 color = "blue"
             elif percentage >= 60:
                 emoji = "⛅"
-                message = "Good work! Keep learning!"
+                message = "Good data understanding!"
                 color = "orange"
-            elif percentage >= 40:
-                emoji = "🌧️"
-                message = "Not bad! Keep studying!"
-                color = "purple"
             else:
-                emoji = "❄️"
-                message = "Keep exploring weather science!"
-                color = "red"
+                emoji = "🌧️"
+                message = "Keep practicing data analysis!"
+                color = "purple"
             
             # Centered results display
             results_header = self._create_colored_label(
                 self.quiz_frame,
-                text=f"{emoji} Quiz Complete! {emoji}",
+                text=f"{emoji} CSV Quiz Complete! {emoji}",
                 font=("Arial", 24, "bold"),
                 x=frame_width//2,
                 y=frame_height//2 - 120,
@@ -539,7 +569,16 @@ class WeatherQuizController:
                 color=color
             )
             
-            # Action buttons - centered horizontally
+            # Data source reminder
+            data_label = self._create_black_label(
+                self.quiz_frame,
+                text=f"Based on real weather data from {len(self.data_stats.get('cities', []))} cities",
+                font=("Arial", 12),
+                x=frame_width//2,
+                y=frame_height//2 - 10
+            )
+            
+            # Action buttons
             button_y = frame_height//2 + 20
             button_spacing = 140
             
@@ -599,12 +638,13 @@ class WeatherQuizController:
             self._show_error(str(e))
     
     def _show_detailed_results(self):
-        """Show comprehensive answer review with correct answers displayed"""
+        """Show comprehensive answer review with CSV data insights"""
         try:
-            results_text = "🌤️ Weather Quiz - Detailed Results\n"
+            results_text = "🌤️ CSV Weather Quiz - Detailed Results\n"
             results_text += "=" * 60 + "\n\n"
             
-            results_text += f"📊 Overall Performance: {self.score}/{len(self.current_questions)} ({round((self.score/len(self.current_questions))*100)}%)\n\n"
+            results_text += f"📊 Overall Performance: {self.score}/{len(self.current_questions)} ({round((self.score/len(self.current_questions))*100)}%)\n"
+            results_text += f"📈 Data Source: {len(self.data_stats.get('cities', []))} cities, {self.data_stats.get('total_records', 0):,} records\n\n"
             
             for i, answer_data in enumerate(self.user_answers):
                 results_text += f"❓ Question {i+1}:\n"
@@ -614,57 +654,56 @@ class WeatherQuizController:
                 results_text += f"👤 Your Answer: {answer_data['user_answer']}\n"
                 
                 if answer_data['is_correct']:
-                    results_text += "🎉 CORRECT! Well done!\n"
+                    results_text += "🎉 CORRECT! Excellent data analysis!\n"
                 else:
-                    results_text += "❌ Incorrect - See explanation below\n"
+                    results_text += "❌ Incorrect - See CSV data explanation below\n"
                 
-                results_text += f"💡 Explanation: {answer_data['explanation']}\n"
+                results_text += f"💡 Data Explanation: {answer_data['explanation']}\n"
                 results_text += "-" * 50 + "\n\n"
             
             # Performance analysis
             correct_count = sum(1 for ans in self.user_answers if ans['is_correct'])
             percentage = (correct_count / len(self.user_answers)) * 100
             
-            results_text += "📈 Performance Summary:\n"
+            results_text += "📈 CSV Data Analysis Performance:\n"
             results_text += f"✅ Correct: {correct_count}/{len(self.user_answers)}\n"
             results_text += f"❌ Incorrect: {len(self.user_answers) - correct_count}/{len(self.user_answers)}\n"
             results_text += f"📊 Accuracy: {percentage:.1f}%\n\n"
             
             if percentage >= 80:
-                results_text += "🏆 Excellent understanding of weather patterns!\n"
+                results_text += "🏆 Excellent understanding of weather data patterns!\n"
             elif percentage >= 60:
-                results_text += "👍 Good grasp of meteorological concepts!\n"
+                results_text += "👍 Good grasp of meteorological data analysis!\n"
             elif percentage >= 40:
-                results_text += "📚 Room for improvement - keep learning!\n"
+                results_text += "📚 Room for improvement in data interpretation!\n"
             else:
-                results_text += "🎯 Focus on weather fundamentals for better results!\n"
+                results_text += "🎯 Focus on understanding weather data relationships!\n"
             
-            if self.data_stats and self.data_stats.get('data_available', False):
-                results_text += f"\n📊 Quiz based on real data from: {', '.join(self.data_stats['cities'])}"
+            results_text += f"\n📊 All questions based on real CSV data from: {', '.join(self.data_stats.get('cities', []))}"
             
             # Show in popup
-            self._show_info_popup("Detailed Quiz Results", results_text)
+            self._show_info_popup("Detailed CSV Quiz Results", results_text)
             
         except Exception as e:
             self._show_error(str(e))
     
     def _share_results(self):
-        """Share quiz results"""
+        """Share CSV quiz results"""
         try:
             percentage = round((self.score / len(self.current_questions)) * 100)
             
-            share_text = f"🌤️ Weather Quiz Results\n\n"
+            share_text = f"🌤️ CSV Weather Data Quiz Results\n\n"
             share_text += f"Score: {self.score}/{len(self.current_questions)} ({percentage}%)\n"
             
             if percentage >= 80:
-                share_text += f"🏆 Excellent weather knowledge!"
+                share_text += f"🏆 Excellent weather data analysis skills!"
             elif percentage >= 60:
-                share_text += f"☀️ Good understanding of weather patterns!"
+                share_text += f"☀️ Good understanding of meteorological patterns!"
             else:
-                share_text += f"🌧️ Keep learning about meteorology!"
+                share_text += f"🌧️ Keep practicing weather data interpretation!"
             
-            if self.data_stats and self.data_stats.get('data_available', False):
-                share_text += f"\n\nBased on real weather data from {len(self.data_stats['cities'])} cities worldwide!"
+            share_text += f"\n\nBased on real CSV weather data from {len(self.data_stats.get('cities', []))} cities worldwide!"
+            share_text += f"\nAnalyzed {self.data_stats.get('total_records', 0):,} weather records"
             
             # Copy to clipboard (if available)
             try:
@@ -678,7 +717,7 @@ class WeatherQuizController:
             self._show_error(str(e))
     
     def _restart_quiz(self):
-        """Restart the quiz with new questions"""
+        """Restart the quiz with new CSV-based questions"""
         try:
             self.quiz_started = False
             self.quiz_completed = False
@@ -695,20 +734,20 @@ class WeatherQuizController:
             
             loading_label = self._create_black_label(
                 self.quiz_frame,
-                text="🔄 Generating fresh questions...\nAnalyzing different weather patterns!",
+                text="🔄 Analyzing CSV data again...\nGenerating fresh questions from weather patterns!",
                 font=("Arial", 16),
                 x=frame_width/2,
                 y=frame_height/2
             )
             
-            # Generate new quiz
+            # Generate new quiz from CSV data
             self._generate_quiz_async()
             
         except Exception as e:
             self._show_error(str(e))
     
     def _show_error(self, error_msg):
-        """Show error message with better formatting"""
+        """Show error message with CSV data context"""
         try:
             # Clear quiz frame
             for widget in self.quiz_frame.winfo_children():
@@ -719,7 +758,7 @@ class WeatherQuizController:
             
             error_label = self._create_colored_label(
                 self.quiz_frame,
-                text=f"❌ Quiz Error\n\n{error_msg}\n\nPlease try again or return to the main page.",
+                text=f"❌ CSV Quiz Error\n\n{error_msg}\n\nPlease ensure the CSV data file is available\nand contains weather records from multiple cities.",
                 font=("Arial", 14),
                 x=frame_width/2,
                 y=frame_height/2,
@@ -747,6 +786,41 @@ class WeatherQuizController:
             
         except Exception as e:
             print(f"Error showing error: {e}")
+    
+    def _show_info_popup(self, title, text):
+        """Show information in a popup window with scrollable text"""
+        popup = tk.Toplevel(self.app)
+        popup.title(title)
+        popup.geometry("700x600")
+        popup.resizable(True, True)
+        
+        # Create scrolled text widget
+        text_widget = scrolledtext.ScrolledText(
+            popup,
+            wrap=tk.WORD,
+            font=("Courier", 10),
+            bg="white",
+            fg="black"
+        )
+        text_widget.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        # Insert text
+        text_widget.insert(tk.END, text)
+        text_widget.config(state=tk.DISABLED)
+        
+        # Close button
+        close_btn = tk.Button(
+            popup,
+            text="Close",
+            command=popup.destroy,
+            bg="lightgrey",
+            font=("Arial", 12)
+        )
+        close_btn.pack(pady=5)
+        
+        # Center the popup
+        popup.transient(self.app)
+        popup.grab_set()
     
     def _create_black_label(self, parent, text, font, x, y, anchor="center", **kwargs):
         """Create a label with black text and transparent background"""
