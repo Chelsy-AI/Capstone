@@ -4,6 +4,7 @@ from tkinter import ttk
 from .weather_display import WeatherDisplay
 from .animation_controller import AnimationController
 from features.sun_moon_phases.controller import SunMoonController
+from features.graphs.controller import GraphsController
 
 
 class WeatherGUI:
@@ -99,6 +100,8 @@ class WeatherGUI:
             self._build_map_page()
         elif page_name == "sun_moon":
             self._build_sun_moon_page()
+        elif page_name == "graphs":
+            self._build_graphs_page()
         
         self._restore_current_data()
 
@@ -297,7 +300,7 @@ class WeatherGUI:
         self.set_widget_references(widget_refs)
 
     def _build_navigation_buttons(self, window_width, y_start):
-        """Build navigation buttons including Sun & Moon WITHOUT EMOJIS"""
+        """Build navigation buttons including Weather Graphs"""
         button_width = 150
         button_height = 40
         button_spacing = 60
@@ -312,8 +315,9 @@ class WeatherGUI:
             ("Toggle Theme", lambda: self.app.toggle_theme(), left_x, y_start),
             ("Tomorrow's Prediction", lambda: self.show_page("prediction"), right_x, y_start),
             ("Weather History", lambda: self.show_page("history"), left_x, y_start + button_height + 30),
-            ("Map View", lambda: self.show_page("map"), right_x, y_start + button_height + 30),
-            ("Sun & Moon", lambda: self.show_page("sun_moon"), center_x, y_start + (button_height + 30) * 2)  # REMOVED EMOJIS
+            ("Weather Graphs", lambda: self.show_page("graphs"), right_x, y_start + button_height + 30),
+            ("Map View", lambda: self.show_page("map"), left_x, y_start + (button_height + 30) * 2),
+            ("Sun & Moon", lambda: self.show_page("sun_moon"), right_x, y_start + (button_height + 30) * 2)
         ]
         
         for text, command, x, y in buttons:
@@ -527,6 +531,18 @@ class WeatherGUI:
         city = self.app.city_var.get().strip() or "New York"
         self.sun_moon_controller.update_display(city)
 
+    def _build_graphs_page(self):
+        """Build graphs page with controller"""
+        window_width = self.app.winfo_width()
+        window_height = self.app.winfo_height()
+        
+        # Initialize graphs controller if not exists
+        if not hasattr(self, 'graphs_controller'):
+            self.graphs_controller = GraphsController(self.app, self)
+        
+        # Build the graphs page
+        self.graphs_controller.build_page(window_width, window_height)
+
     def _show_map_info(self):
         """Show map overlay information"""
         from tkinter import messagebox
@@ -612,6 +628,10 @@ class WeatherGUI:
         # Clean up sun/moon controller
         if hasattr(self, 'sun_moon_controller'):
             self.sun_moon_controller.cleanup()
+        
+        # Clean up graphs controller
+        if hasattr(self, 'graphs_controller'):
+            self.graphs_controller.cleanup()
 
     def get_widgets(self):
         """Get the widgets list"""
