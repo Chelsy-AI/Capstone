@@ -1,6 +1,25 @@
+"""
+Main GUI Controller
+===================
+
+This is the "director" of the user interface. It manages all the visual elements
+you see on screen like buttons, labels, and different pages.
+
+Think of it like a stage director for a play - it tells all the actors (buttons,
+labels, etc.) where to go and what to do, and switches between different scenes
+(pages) based on what the user wants to see.
+
+Key responsibilities:
+- Creating and positioning buttons, labels, and input fields
+- Switching between different pages (main weather, history, predictions, etc.)
+- Making sure text labels have transparent backgrounds (no ugly blue boxes!)
+- Coordinating with other controllers for specialized features
+"""
+
 import tkinter as tk
 from tkinter import ttk
 
+# Import our specialized controllers for different features
 from .weather_display import WeatherDisplay
 from .animation_controller import AnimationController
 from features.sun_moon_phases.controller import SunMoonController
@@ -10,31 +29,42 @@ from features.weather_quiz.controller import WeatherQuizController
 
 class WeatherGUI:
     """
-    Main GUI Controller with Transparent Label Fix and Sun/Moon Integration
+    Main GUI Controller Class
+    
+    This class manages the entire user interface of the weather app.
+    It creates different pages, handles page switching, and coordinates
+    with specialized controllers for features like animations and sun/moon data.
     """
     
     def __init__(self, parent_app):
-        """Initialize GUI with reference to parent application"""
+        """
+        Initialize the GUI controller.
+        
+        Args:
+            parent_app: The main WeatherApp instance that owns this GUI
+        """
+        # Store reference to the main app
         self.app = parent_app
         
-        # Initialize GUI components
+        # Initialize specialized controllers for different features
         self.weather_display = WeatherDisplay(self.app, self)
         self.animation_controller = AnimationController(self.app, self)
         self.sun_moon_controller = SunMoonController(self.app, self)
         self.weather_quiz_controller = WeatherQuizController(self.app, self)
         
-        # Page management
-        self.current_page = "main"
-        self.pages = {}
+        # Page management - keep track of what page we're currently showing
+        self.current_page = "main"  # Start on the main weather page
+        self.pages = {}  # Dictionary to store page-specific data
         
-        # GUI state tracking
-        self.widgets = []
-        self.history_labels = []
+        # GUI state tracking - keep lists of widgets for easy management
+        self.widgets = []         # All widgets on the current page
+        self.history_labels = []  # Widgets specifically for the history page
         
         # Background elements
-        self.bg_canvas = None
+        self.bg_canvas = None  # The animated background canvas
         
-        # Main weather display widgets (references)
+        # References to main weather display widgets
+        # These will be set when we build the interface
         self.humidity_value = None
         self.wind_value = None
         self.pressure_value = None
@@ -48,6 +78,7 @@ class WeatherGUI:
         self.temp_label = None
         self.desc_label = None
         
+        # Prediction display widgets
         self.temp_prediction = None
         self.accuracy_prediction = None
         self.confidence_prediction = None
@@ -55,43 +86,87 @@ class WeatherGUI:
         self.main_frame = None
 
     def build_gui(self):
-        """Build the complete GUI interface with page system"""
+        """
+        Build the complete GUI interface.
         
+        This is the main function that creates the entire user interface.
+        It sets up the background, creates the animated canvas, and shows
+        the main weather page.
+        """
+        # Clear any existing widgets first
         self._clear_widgets()
+        
+        # Set up window resize handling
         self.app.bind("<Configure>", self._on_window_resize)
+        
+        # Set up the animated background
         self._setup_background()
+        
+        # Show the main weather page
         self.show_page("main")
         
     def _clear_widgets(self):
-        """Clear existing widgets while preserving special elements"""
+        """
+        Clear existing widgets while preserving special elements.
+        
+        This removes all widgets from the window except for special ones
+        like the background canvas that should persist between page changes.
+        """
+        # Go through all child widgets in the main window
         for widget in self.app.winfo_children():
+            # Only destroy widgets that aren't marked as "preserve"
             if (not hasattr(widget, '_preserve') and 
                 widget != self.bg_canvas):
                 widget.destroy()
+        
+        # Clear our widget tracking lists
         self.widgets.clear()
         self.pages.clear()
 
     def _setup_background(self):
-        """Setup background canvas and animation"""
+        """
+        Set up the animated background canvas.
+        
+        This creates the canvas where weather animations (rain, snow, etc.)
+        will be displayed. The canvas sits behind all other widgets.
+        """
+        # Only create the canvas if it doesn't exist yet
         if not self.bg_canvas:
+            # Create a canvas that fills the entire window
             self.bg_canvas = tk.Canvas(
                 self.app, 
-                highlightthickness=0, 
-                bg="#87CEEB"
+                highlightthickness=0,  # No border
+                bg="#87CEEB"          # Sky blue default color
             )
+            # Position it to fill the entire window
             self.bg_canvas.place(x=0, y=0, relwidth=1, relheight=1)
+            
+            # Mark it as "preserve" so it doesn't get deleted during page switches
             self.bg_canvas._preserve = True
             
-            # Initialize animation system
+            # Initialize the animation system
             self.animation_controller.setup_animation(self.bg_canvas)
 
     def show_page(self, page_name):
-        """Show a specific page"""
+        """
+        Switch to a different page in the app.
         
+        This is like changing channels on TV - it hides the current page
+        and shows a different one based on what the user requested.
+        
+        Args:
+            page_name (str): Name of the page to show ("main", "history", etc.)
+        """
+        # Clean up any resources from the current page
         self._cleanup_page_resources()
+        
+        # Remove all widgets from the current page
         self._clear_page_widgets()
+        
+        # Remember what page we're now showing
         self.current_page = page_name
         
+        # Build the requested page
         if page_name == "main":
             self._build_main_page()
         elif page_name == "prediction":
@@ -107,10 +182,12 @@ class WeatherGUI:
         elif page_name == "quiz":
             self._build_quiz_page()
         
+        # Restore any data that should be shown on the new page
         self._restore_current_data()
 
     def _cleanup_page_resources(self):
-        """Clean up page-specific resources like map controllers"""
+        """Clean up page-specific resources like map controllers."""
+        # Clean up map controller if it exists
         if hasattr(self, 'map_controller'):
             try:
                 del self.map_controller
@@ -118,18 +195,38 @@ class WeatherGUI:
                 pass
 
     def _clear_page_widgets(self):
-        """Clear page widgets but preserve background"""
+        """Clear page widgets but preserve the background."""
+        # Destroy all widgets we've been tracking
         for widget in self.widgets:
             widget.destroy()
         for widget in self.history_labels:
             widget.destroy()
+        
+        # Clear the tracking lists
         self.widgets.clear()
         self.history_labels.clear()
 
     def _create_label(self, parent, text, font, fg, x, y, anchor="center", **kwargs):
-        """Helper method to create truly transparent labels - NO BLUE BOXES!"""
+        """
+        Create a label with transparent background - NO BLUE BOXES!
         
-        # Get the actual canvas background color
+        This is a helper function that creates text labels that blend
+        seamlessly with the animated background. The key is setting
+        the background color to match the canvas.
+        
+        Args:
+            parent: The widget to put this label in
+            text: The text to display
+            font: Font specification (family, size, style)
+            fg: Text color
+            x, y: Position where to place the label
+            anchor: How to position the label relative to x,y
+            **kwargs: Any additional label options
+            
+        Returns:
+            tk.Label: The created label widget
+        """
+        # Get the current canvas background color
         canvas_bg = "#87CEEB"  # Default sky blue
         if self.bg_canvas:
             try:
@@ -137,32 +234,44 @@ class WeatherGUI:
             except:
                 canvas_bg = "#87CEEB"
         
+        # Create the label with matching background
         label = tk.Label(
             parent,
             text=text,
             font=font,
             fg=fg,
-            bg=canvas_bg,  
+            bg=canvas_bg,  # This prevents ugly blue boxes!
             anchor=anchor,
-            relief="flat",
-            borderwidth=0,
-            highlightthickness=0,
+            relief="flat",        # No 3D border effect
+            borderwidth=0,        # No border
+            highlightthickness=0, # No highlight border
             **kwargs
         )
+        
+        # Position the label
         label.place(x=x, y=y, anchor=anchor)
         return label
 
     def _build_main_page(self):
-        """Build the main page with transparent labels"""
+        """
+        Build the main weather page.
+        
+        This creates the primary interface with:
+        - City search input
+        - Current weather display
+        - Weather metrics (humidity, wind, etc.)
+        - Navigation buttons to other pages
+        """
+        # Get current window size for responsive design
         window_width = self.app.winfo_width()
         window_height = self.app.winfo_height()
         
-        # City input at top
+        # Create city input field at the top
         city_entry = tk.Entry(
             self.app,
-            textvariable=self.app.city_var,
-            font=("Arial", int(14 + window_width/80)),
-            width=max(15, int(window_width/50)),
+            textvariable=self.app.city_var,  # Connected to app's city variable
+            font=("Arial", int(14 + window_width/80)),  # Responsive font size
+            width=max(15, int(window_width/50)),        # Responsive width
             justify="center",
             bg="white",
             fg="black",
@@ -171,26 +280,36 @@ class WeatherGUI:
             highlightthickness=0
         )
         city_entry.place(x=window_width/2, y=30, anchor="center")
+        
+        # Make Enter key trigger weather search
         city_entry.bind("<Return>", lambda e: self.app.fetch_and_display())
+        
+        # Add to widget tracking and store reference
         self.widgets.append(city_entry)
         self.city_entry = city_entry
         
-        # Weather metrics section
+        # Build different sections of the main page
         self._build_weather_metrics_section(window_width, y_start=70)
-        
-        # Main weather display
         self._build_main_weather_display(window_width, y_start=170)
-        
-        # Navigation buttons
         self._build_navigation_buttons(window_width, y_start=350)
 
     def _build_weather_metrics_section(self, window_width, y_start):
-        """Build weather metrics section with transparent labels"""
+        """
+        Build the weather metrics section with transparent labels.
+        
+        This creates a grid showing humidity, wind speed, pressure, etc.
+        All labels use transparent backgrounds to blend with animations.
+        
+        Args:
+            window_width: Current width of the window
+            y_start: Y position where this section should start
+        """
+        # Calculate layout for 6 columns of metrics
         available_width = window_width - 40
         col_width = available_width / 6
         start_x = 20
         
-        # Headers - TRANSPARENT backgrounds
+        # Create headers row
         metric_headers = ["Humidity", "Wind", "Press.", "Visibility", "UV Index", "Precip."]
         for i, header in enumerate(metric_headers):
             x_pos = start_x + (i * col_width) + (col_width / 2)
@@ -204,7 +323,7 @@ class WeatherGUI:
             )
             self.widgets.append(header_widget)
         
-        # Emojis - TRANSPARENT backgrounds
+        # Create emoji row for visual appeal
         metric_emojis = ["💧", "🌬️", "🧭", "👁️", "☀️", "🌧️"]
         for i, emoji in enumerate(metric_emojis):
             x_pos = start_x + (i * col_width) + (col_width / 2)
@@ -218,13 +337,13 @@ class WeatherGUI:
             )
             self.widgets.append(emoji_widget)
         
-        # Values - TRANSPARENT backgrounds
+        # Create value display widgets
         value_widgets = []
         for i in range(6):
             x_pos = start_x + (i * col_width) + (col_width / 2)
             value_widget = self._create_label(
                 self.app,
-                text="--",
+                text="--",  # Default placeholder
                 font=("Arial", int(10 + window_width/120)),
                 fg=self.app.text_color,
                 x=x_pos,
@@ -233,7 +352,7 @@ class WeatherGUI:
             self.widgets.append(value_widget)
             value_widgets.append(value_widget)
         
-        # Set widget references
+        # Store references to value widgets so we can update them later
         widget_refs = {
             'humidity_value': value_widgets[0],
             'wind_value': value_widgets[1],
@@ -245,13 +364,24 @@ class WeatherGUI:
         self.set_widget_references(widget_refs)
 
     def _build_main_weather_display(self, window_width, y_start):
-        """Build main weather display with transparent labels"""
+        """
+        Build the main weather display with transparent labels.
+        
+        This creates the central weather display showing:
+        - Weather icon
+        - Current temperature (clickable to change units)
+        - Weather description
+        
+        Args:
+            window_width: Current width of the window
+            y_start: Y position where this section should start
+        """
         y_offset = 60
         
-        # Weather icon - TRANSPARENT background
+        # Weather icon display
         icon_label = self._create_label(
             self.app,
-            text="🌤️",
+            text="🌤️",  # Default weather emoji
             font=("Arial", int(40 + window_width/25)),
             fg=self.app.text_color,
             x=window_width/2,
@@ -259,8 +389,8 @@ class WeatherGUI:
         )
         self.widgets.append(icon_label)
         
-        # Temperature (clickable) - MATCH CANVAS BACKGROUND
-        canvas_bg = "#87CEEB"  # Default
+        # Temperature display (clickable to toggle between C and F)
+        canvas_bg = "#87CEEB"  # Default background
         if self.bg_canvas:
             try:
                 canvas_bg = self.bg_canvas.cget("bg")
@@ -272,19 +402,22 @@ class WeatherGUI:
             text="Loading...",
             font=("Arial", int(40 + window_width/25), "bold"),
             fg=self.app.text_color,
-            bg=canvas_bg,  # Match canvas background!
-            cursor="hand2",
+            bg=canvas_bg,  # Match canvas background to prevent blue boxes
+            cursor="hand2",  # Show hand cursor to indicate it's clickable
             anchor="center",
             relief="flat",
             borderwidth=0,
             highlightthickness=0
         )
         temp_label.place(x=window_width/2, y=y_start + 70 + y_offset, anchor="center")
+        
+        # Make temperature clickable to toggle between Celsius and Fahrenheit
         temp_label.bind("<Button-1>", lambda e: [self.app.toggle_unit(), self.app.focus_set()])
         temp_label.bind("<FocusIn>", lambda e: self.app.focus_set())
+        
         self.widgets.append(temp_label)
         
-        # Description - TRANSPARENT background
+        # Weather description
         desc_label = self._create_label(
             self.app,
             text="Fetching weather...",
@@ -295,7 +428,7 @@ class WeatherGUI:
         )
         self.widgets.append(desc_label)
         
-        # Set widget references
+        # Store references to these important widgets
         widget_refs = {
             'icon_label': icon_label,
             'temp_label': temp_label,
@@ -304,17 +437,29 @@ class WeatherGUI:
         self.set_widget_references(widget_refs)
 
     def _build_navigation_buttons(self, window_width, y_start):
-        """Build navigation buttons including Weather Quiz"""
+        """
+        Build navigation buttons to access different app features.
+        
+        This creates buttons that let users navigate to different pages like
+        weather history, predictions, maps, etc.
+        
+        Args:
+            window_width: Current width of the window
+            y_start: Y position where buttons should start
+        """
+        # Button layout configuration
         button_width = 150
         button_height = 40
         button_spacing = 60
         
+        # Calculate positions for two-column layout
         center_x = window_width / 2
         left_x = center_x - button_width/2 - button_spacing/2
         right_x = center_x + button_width/2 + button_spacing/2
         
         y_start += 60
         
+        # Define all buttons with their text, commands, and positions
         buttons = [
             ("Toggle Theme", lambda: self.app.toggle_theme(), left_x, y_start),
             ("Tomorrow's Prediction", lambda: self.show_page("prediction"), right_x, y_start),
@@ -325,6 +470,7 @@ class WeatherGUI:
             ("Sun & Moon", lambda: self.show_page("sun_moon"), left_x, y_start + (button_height + 30) * 3)
         ]
         
+        # Create each button
         for text, command, x, y in buttons:
             btn = tk.Button(
                 self.app,
@@ -337,23 +483,24 @@ class WeatherGUI:
                 borderwidth=2,
                 width=15,
                 height=2,
-                activeforeground="black",
-                activebackground="lightgrey",
+                activeforeground="black",      # Color when clicked
+                activebackground="lightgrey",  # Background when clicked
                 highlightthickness=0
             )
             btn.place(x=x, y=y, anchor="center")
             self.widgets.append(btn)
         
+        # Store reference to theme button for later access
         self.theme_btn = buttons[0]
 
     def _build_prediction_page(self):
-        """Build tomorrow's prediction page with transparent labels"""
+        """Build the tomorrow's weather prediction page."""
         window_width = self.app.winfo_width()
         
-        # Back button
+        # Add back button to return to main page
         self._add_back_button()
         
-        # Title - TRANSPARENT
+        # Page title
         title = self._create_label(
             self.app,
             text="Tomorrow's Weather Prediction",
@@ -364,16 +511,22 @@ class WeatherGUI:
         )
         self.widgets.append(title)
         
-        # Prediction grid
+        # Build the prediction display grid
         self._build_prediction_grid(window_width, y_start=200)
 
     def _build_prediction_grid(self, window_width, y_start):
-        """Build prediction display grid with transparent labels"""
+        """
+        Build the prediction display grid with transparent labels.
+        
+        This creates a 3-column grid showing predicted temperature,
+        prediction accuracy, and confidence level.
+        """
+        # Calculate layout for 3 columns
         available_width = window_width - 40
         col_width = available_width / 3
         start_x = 20
         
-        # Headers - TRANSPARENT
+        # Headers
         prediction_headers = ["Temperature", "Accuracy", "Confidence"]
         for i, header in enumerate(prediction_headers):
             x_pos = start_x + (i * col_width) + (col_width / 2)
@@ -387,7 +540,7 @@ class WeatherGUI:
             )
             self.widgets.append(header_widget)
         
-        # Emojis - TRANSPARENT
+        # Emojis
         prediction_emojis = ["🌡️", "🎯", "😎"]
         for i, emoji in enumerate(prediction_emojis):
             x_pos = start_x + (i * col_width) + (col_width / 2)
@@ -401,7 +554,7 @@ class WeatherGUI:
             )
             self.widgets.append(emoji_widget)
         
-        # Values - TRANSPARENT
+        # Value displays
         prediction_widgets = []
         for i in range(3):
             x_pos = start_x + (i * col_width) + (col_width / 2)
@@ -416,7 +569,7 @@ class WeatherGUI:
             self.widgets.append(prediction_widget)
             prediction_widgets.append(prediction_widget)
         
-        # Set widget references
+        # Store widget references
         widget_refs = {
             'temp_prediction': prediction_widgets[0],
             'accuracy_prediction': prediction_widgets[1],
@@ -425,13 +578,13 @@ class WeatherGUI:
         self.set_widget_references(widget_refs)
 
     def _build_history_page(self):
-        """Build weather history page with transparent labels"""
+        """Build the weather history page."""
         window_width = self.app.winfo_width()
         
-        # Back button
+        # Add back button
         self._add_back_button()
         
-        # Title - TRANSPARENT
+        # Page title
         title = self._create_label(
             self.app,
             text="Weather History",
@@ -442,19 +595,19 @@ class WeatherGUI:
         )
         self.widgets.append(title)
         
-        # Force update history display when building history page
+        # Update history display when page is built
         city = self.app.city_var.get()
         self.app.after(100, lambda: self.update_history_display(city))
 
     def _build_map_page(self):
-        """Build map view page"""
+        """Build the interactive map page."""
         window_width = self.app.winfo_width()
         window_height = self.app.winfo_height()
         
-        # Back button
+        # Add back button
         self._add_back_button()
         
-        # Title - TRANSPARENT
+        # Page title
         title = self._create_label(
             self.app,
             text="Weather Map",
@@ -484,10 +637,10 @@ class WeatherGUI:
         info_btn.place(x=window_width/2 + 180, y=100, anchor="center")
         self.widgets.append(info_btn)
         
-        # Map frame
+        # Map display area
         map_y_position = window_height/2 + 40
         
-        # Get canvas background for map frame
+        # Get canvas background color for consistency
         canvas_bg = "#87CEEB"
         if self.bg_canvas:
             try:
@@ -495,9 +648,10 @@ class WeatherGUI:
             except:
                 canvas_bg = "#87CEEB"
         
+        # Create map frame
         map_frame = tk.Frame(
             self.app,
-            bg=canvas_bg,  # Match canvas background
+            bg=canvas_bg,
             relief="solid",
             borderwidth=2,
             highlightthickness=0
@@ -505,7 +659,7 @@ class WeatherGUI:
         map_frame.place(x=window_width/2, y=map_y_position, anchor="center", width=600, height=400)
         self.widgets.append(map_frame)
         
-        # Initialize map controller
+        # Try to initialize map controller
         try:
             from features.interactive_map.controller import MapController
             import os
@@ -513,7 +667,7 @@ class WeatherGUI:
             
             self.map_controller = MapController(map_frame, self.app.city_var.get, api_key, show_grid=True)
         except Exception as e:
-            # Fallback placeholder - TRANSPARENT
+            # Show fallback placeholder if map fails to load
             map_placeholder = self._create_label(
                 map_frame,
                 text="🗺️\nInteractive Map\n(Map temporarily unavailable)",
@@ -524,12 +678,11 @@ class WeatherGUI:
             )
 
     def _build_sun_moon_page(self):
-        """Build sun/moon phases page"""
+        """Build the sun and moon phases page."""
         window_width = self.app.winfo_width()
         window_height = self.app.winfo_height()
         
-        
-        # Use the controller to build the page
+        # Use the specialized controller to build this page
         self.sun_moon_controller.build_page(window_width, window_height)
         
         # Update display with current city
@@ -537,11 +690,11 @@ class WeatherGUI:
         self.sun_moon_controller.update_display(city)
 
     def _build_graphs_page(self):
-        """Build graphs page with controller"""
+        """Build the weather graphs page."""
         window_width = self.app.winfo_width()
         window_height = self.app.winfo_height()
         
-        # Initialize graphs controller if not exists
+        # Initialize graphs controller if it doesn't exist
         if not hasattr(self, 'graphs_controller'):
             self.graphs_controller = GraphsController(self.app, self)
         
@@ -549,20 +702,20 @@ class WeatherGUI:
         self.graphs_controller.build_page(window_width, window_height)
 
     def _build_quiz_page(self):
-        """Build weather quiz page"""
+        """Build the weather quiz page."""
         window_width = self.app.winfo_width()
         window_height = self.app.winfo_height()
         
-        # Build the quiz page
+        # Build the quiz page using the specialized controller
         self.weather_quiz_controller.build_page(window_width, window_height)
 
     def _show_map_info(self):
-        """Show map overlay information"""
+        """Show information popup about the map feature."""
         from tkinter import messagebox
         messagebox.showinfo("Map Info", "Weather overlay information would go here.")
 
     def _add_back_button(self):
-        """Add back button to return to main page"""
+        """Add a back button to return to the main page."""
         back_btn = tk.Button(
             self.app,
             text="← Back",
@@ -582,12 +735,13 @@ class WeatherGUI:
         self.widgets.append(back_btn)
 
     def _on_window_resize(self, event):
-        """Handle window resize events"""
+        """Handle window resize events by rebuilding the current page."""
         if event.widget == self.app:
+            # Use after_idle to prevent too many rapid rebuilds
             self.app.after_idle(self._rebuild_current_page)
 
     def _rebuild_current_page(self):
-        """Rebuild current page when window is resized"""
+        """Rebuild the current page when window is resized."""
         try:
             current_page = self.current_page
             self.show_page(current_page)
@@ -596,69 +750,75 @@ class WeatherGUI:
             pass
 
     def _restore_current_data(self):
-        """Restore current data after page rebuild"""
+        """Restore current data after page rebuild."""
+        # Restore weather data if available
         if self.app.current_weather_data:
             self.weather_display.update_weather_display(self.app.current_weather_data)
         
+        # Restore prediction data if available
         if self.app.current_prediction_data:
             predicted_temp, confidence, accuracy = self.app.current_prediction_data
             self.weather_display.update_tomorrow_prediction_direct(
                 predicted_temp, confidence, accuracy
             )
 
-    # Public interface methods
+    # Public interface methods for other parts of the app to use
+    
     def update_weather_display(self, weather_data):
-        """Update weather display"""
+        """Update the weather display with new data."""
         self.weather_display.update_weather_display(weather_data)
 
     def update_tomorrow_prediction_direct(self, predicted_temp, confidence, accuracy):
-        """Update prediction display"""
+        """Update the prediction display with new data."""
         self.weather_display.update_tomorrow_prediction_direct(
             predicted_temp, confidence, accuracy
         )
 
     def update_history_display(self, city):
-        """Update history display"""
+        """Update the history display for a specific city."""
         self.weather_display.update_history_display(city)
 
     def update_background_animation(self, weather_data):
-        """Update background animation"""
+        """Update the background animation based on weather conditions."""
         self.animation_controller.update_background_animation(weather_data)
 
     def update_sun_moon_display(self, city):
-        """Update sun/moon display"""
+        """Update the sun and moon display for a specific city."""
         if hasattr(self, 'sun_moon_controller'):
             self.sun_moon_controller.update_display(city)
 
     def toggle_theme(self):
-        """Toggle theme"""
+        """Toggle between light and dark themes."""
         self.weather_display.toggle_theme()
 
     def cleanup_animation(self):
-        """Clean up animation resources"""
+        """Clean up animation resources when closing the app."""
         self.animation_controller.cleanup_animation()
         
-        # Clean up sun/moon controller
+        # Clean up other controllers
         if hasattr(self, 'sun_moon_controller'):
             self.sun_moon_controller.cleanup()
         
-        # Clean up graphs controller
         if hasattr(self, 'graphs_controller'):
             self.graphs_controller.cleanup()
         
-        # Clean up quiz controller
         if hasattr(self, 'weather_quiz_controller'):
             self.weather_quiz_controller.cleanup()
 
     def get_widgets(self):
-        """Get the widgets list"""
+        """Get the list of widgets for external access."""
         return self.widgets
 
     def get_history_labels(self):
-        """Get the history labels list"""
+        """Get the list of history labels for external access."""
         return self.history_labels
 
     def set_widget_references(self, widget_refs):
-        """Set widget references from layout manager"""
+        """
+        Set widget references for easy access by other components.
+        
+        Args:
+            widget_refs (dict): Dictionary mapping attribute names to widgets
+        """
         for attr_name, widget in widget_refs.items():
             setattr(self, attr_name, widget)

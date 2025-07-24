@@ -1,73 +1,110 @@
 """
 Weather API Integration Module
-=============================
+==============================
 
-This module handles all external API calls for weather data retrieval.
-It integrates with multiple weather APIs to provide comprehensive weather information.
+This module handles all communication with weather APIs on the internet.
+It's like a translator that speaks to weather services and gets data for our app.
+
+Key functions:
+- Convert city names to map coordinates (latitude/longitude)
+- Get current weather from multiple sources
+- Combine data from different APIs for complete weather picture
+- Handle errors gracefully when internet is slow or APIs are down
+
+APIs used:
+- Open-Meteo: Free weather data (no API key needed)
+- WeatherDB: Detailed current conditions (requires API key)
+- Geocoding: Convert city names to coordinates
 """
 
-import requests
+import requests  # For making HTTP requests to APIs
 import os
 from dotenv import load_dotenv
 
+# Load API keys and settings from .env file
 load_dotenv()
 
-# Retrieve API credentials from environment variables
+# Get API credentials from environment variables
+# These are stored in a .env file so they're not visible in the code
 API_KEY = os.getenv("weatherdb_api_key")
 BASE_URL = os.getenv("weatherdb_base_url")
 
 
 def get_lat_lon(city):
     """
-    Convert city name to latitude and longitude coordinates
+    Convert a city name to map coordinates (latitude and longitude).
     
-    This function uses the Open-Meteo geocoding API to find the geographic
-    coordinates of a given city name.
+    This is needed because weather APIs use coordinates, not city names.
+    For example: "New York" becomes latitude 40.7128, longitude -74.0060
+    
+    Args:
+        city (str): Name of the city (like "London" or "Tokyo")
+        
+    Returns:
+        tuple: (latitude, longitude) as numbers, or (None, None) if city not found
+        
+    Example:
+        lat, lon = get_lat_lon("Paris")
+        # lat = 48.8566, lon = 2.3522
     """
+    # Check if the input is valid
     if not isinstance(city, str):
         return None, None
     
-    # Construct the geocoding API URL with the city name
+    # Build the URL for the geocoding API
+    # This API is free and doesn't require an API key
     url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1&language=en&format=json"
     
     try:
-        # Make HTTP GET request to the geocoding API
-        response = requests.get(url, timeout=10)
+        # Make the HTTP request to the geocoding service
+        response = requests.get(url, timeout=10)  # Wait max 10 seconds
         
-        # Check if the API request was successful (HTTP 200)
+        # Check if the request was successful (HTTP 200 = OK)
         if response.status_code != 200:
             return None, None
 
-        # Parse the JSON response from the API
+        # Convert the response from JSON format to a Python dictionary
         data = response.json()
         
-        # Extract results array from the API response
+        # Get the search results from the response
         results = data.get("results")
         
-        # Check if we got valid results
+        # Check if we found any matching cities
         if results and len(results) > 0:
-            # Extract latitude and longitude from the first result
+            # Get coordinates from the first (best) result
             lat = results[0].get("latitude")
             lon = results[0].get("longitude")
             
-            # Ensure both coordinates are present and valid
+            # Make sure both coordinates are valid numbers
             if lat is not None and lon is not None:
                 return lat, lon
         
+        # If we get here, no city was found
         return None, None
         
     except Exception:
+        # If anything goes wrong (network error, invalid response, etc.)
+        # just return None values - the app will handle this gracefully
         return None, None
 
 
 def resolve_coordinates_by_city(city_name):
     """
-    Convert city name to latitude and longitude coordinates
+    Alternative function to get coordinates for a city.
+    
+    This does the same thing as get_lat_lon() but with a different name
+    for backward compatibility with older code.
+    
+    Args:
+        city_name (str): Name of the city
+        
+    Returns:
+        tuple: (latitude, longitude) or (None, None) if not found
     """
-    # Construct the geocoding API URL with the city name
+    # Build the geocoding API URL
     url = f"https://geocoding-api.open-meteo.com/v1/search?name={city_name}"
     
-    # Make HTTP GET request to the geocoding API
+    # Make the HTTP request
     response = requests.get(url)
     
     # Parse the JSON response
@@ -75,7 +112,7 @@ def resolve_coordinates_by_city(city_name):
     
     # Check if we got valid results
     if data.get("results"):
-        # Extract latitude and longitude from the first result
+        # Extract coordinates from the first result
         lat = data["results"][0]["latitude"]
         lon = data["results"][0]["longitude"]
         return lat, lon
@@ -86,55 +123,76 @@ def resolve_coordinates_by_city(city_name):
 
 def get_basic_weather_from_weatherdb(city_name):
     """
-    Fetch basic current weather data from WeatherDB API
+    Get basic weather data from WeatherDB API.
+    
+    This API provides current weather conditions like temperature,
+    humidity, wind speed, and weather descriptions. It requires an API key.
+    
+    Args:
+        city_name (str): Name of the city to get weather for
+        
+    Returns:
+        tuple: (weather_data_dict, error_message)
+               If successful: (data, None)
+               If failed: (None, error_message)
     """
     try:
-        # Set up API request parameters
+        # Set up the parameters for the API request
         params = {
-            "q": city_name,           # City name query
-            "appid": API_KEY,         # API authentication key
+            "q": city_name,           # City name to search for
+            "appid": API_KEY,         # API key for authentication
             "units": "metric"         # Use Celsius for temperature
         }
         
-        # Make HTTP GET request to WeatherDB API
+        # Make the HTTP request to WeatherDB API
         response = requests.get(BASE_URL, params=params)
         
-        # Check if request was successful (status code 200)
+        # Check if the request was successful
         if response.status_code == 200:
+            # Success! Return the weather data and no error
             return response.json(), None
         else:
-            # Return error message for unsuccessful requests
+            # Failed! Return no data and an error message
             return None, f"City '{city_name}' not found."
             
     except Exception as e:
-        # Handle any network or parsing errors
+        # If anything goes wrong, return the error message
         return None, str(e)
 
 
 def get_detailed_environmental_data(city):
     """
-    Fetch detailed environmental data from Open-Meteo API
+    Get detailed environmental data from Open-Meteo API.
+    
+    This API provides additional data like UV index, visibility,
+    and precipitation that might not be available from other sources.
+    
+    Args:
+        city (str): Name of the city
+        
+    Returns:
+        dict: Detailed weather data, or None if request failed
     """
-    # First, get the latitude and longitude for the city
+    # First, convert city name to coordinates
     lat, lon = get_lat_lon(city)
     
-    # Return None if we couldn't geocode the city
+    # If we couldn't find the city, return None
     if not lat or not lon:
         return None
     
-    # Construct the Open-Meteo API URL with all required parameters
+    # Build the Open-Meteo API URL with all the data we want
     url = (
         "https://api.open-meteo.com/v1/forecast?"
         f"latitude={lat}&longitude={lon}"
         "&current=temperature_2m,relative_humidity_2m,wind_speed_10m,surface_pressure,visibility"
         "&daily=uv_index_max,precipitation_sum"
-        "&timezone=auto"
+        "&timezone=auto"  # Use the local timezone for the city
     )
     
-    # Make HTTP GET request to Open-Meteo API
+    # Make the HTTP request
     resp = requests.get(url)
     
-    # Return parsed JSON if successful, None otherwise
+    # Return the data if successful, None if failed
     if resp.status_code == 200:
         return resp.json()
     return None
@@ -142,15 +200,38 @@ def get_detailed_environmental_data(city):
 
 def get_current_weather(city):
     """
-    Combine and process weather data from multiple APIs
+    Get comprehensive weather data by combining multiple APIs.
+    
+    This is the main function that other parts of the app use to get weather data.
+    It combines data from multiple sources to provide the most complete picture.
+    
+    Args:
+        city (str): Name of the city to get weather for
+        
+    Returns:
+        dict: Complete weather data with all available information
+              Always returns a dict, even if some data is missing
+              
+    Example return data:
+        {
+            "temperature": 22.5,
+            "humidity": 65,
+            "wind_speed": 12.3,
+            "pressure": 1013,
+            "icon": "01d",
+            "description": "Clear sky",
+            "uv_index": 7,
+            "precipitation": 0.0,
+            "error": None
+        }
     """
-    # Get basic weather data from WeatherDB API
+    # Step 1: Get basic weather data from WeatherDB
     weather_data, err = get_basic_weather_from_weatherdb(city)
     
-    # Get detailed environmental data from Open-Meteo API
+    # Step 2: Get detailed environmental data from Open-Meteo
     detailed_data = get_detailed_environmental_data(city)
     
-    # Handle case where basic weather data is unavailable
+    # Step 3: Handle the case where basic weather data failed
     if not weather_data:
         return {
             "temperature": None,
@@ -162,41 +243,43 @@ def get_current_weather(city):
             "description": "No description"
         }
     
-    # Extract data from the basic weather response
-    main = weather_data.get("main", {})  # Main weather data (temp, humidity, pressure)
-    wind = weather_data.get("wind", {})  # Wind information
-    weather_list = weather_data.get("weather", [{}])  # Weather conditions array
+    # Step 4: Extract data from the basic weather response
+    # Use .get() method so we don't crash if a field is missing
+    main = weather_data.get("main", {})      # Temperature, humidity, pressure
+    wind = weather_data.get("wind", {})      # Wind information
+    weather_list = weather_data.get("weather", [{}])  # Weather conditions
     
-    # Get weather icon and description from the first weather condition
+    # Step 5: Get weather icon and description
+    # Use the first weather condition, or defaults if none available
     icon = weather_list[0].get("icon", "01d")  # Default to clear day icon
     description = weather_list[0].get("description", "No description").capitalize()
     
-    # Initialize UV index and precipitation with default values
+    # Step 6: Initialize additional data with default values
     uv_index = None
     precipitation = None
     
-    # Process detailed environmental data if available
+    # Step 7: Extract additional data from Open-Meteo if available
     if detailed_data:
-        # Extract UV index (maximum for today)
+        # Try to get UV index (maximum for today)
         uv_index_list = detailed_data.get("daily", {}).get("uv_index_max")
         if uv_index_list and isinstance(uv_index_list, list) and len(uv_index_list) > 0:
             uv_index = uv_index_list[0]
         
-        # Extract precipitation data (sum for today)
+        # Try to get precipitation data (sum for today)
         precipitation_list = detailed_data.get("daily", {}).get("precipitation_sum")
         if precipitation_list and isinstance(precipitation_list, list) and len(precipitation_list) > 0:
             precipitation = precipitation_list[0]
     
-    # Return comprehensive weather data dictionary
+    # Step 8: Return comprehensive weather data dictionary
     return {
-        "temperature": main.get("temp"),
-        "humidity": main.get("humidity"),
-        "wind_speed": wind.get("speed"),
-        "pressure": main.get("pressure"),
-        "icon": icon,
+        "temperature": main.get("temp"),         # Temperature in Celsius
+        "humidity": main.get("humidity"),        # Humidity percentage
+        "wind_speed": wind.get("speed"),         # Wind speed in m/s
+        "pressure": main.get("pressure"),        # Atmospheric pressure in hPa
+        "icon": icon,                            # Weather icon code
         "visibility": detailed_data.get("current", {}).get("visibility") if detailed_data else None,
         "uv_index": uv_index if uv_index is not None else "N/A",
         "precipitation": precipitation if precipitation is not None else "N/A",
-        "error": None,
-        "description": description
+        "error": None,                           # No error occurred
+        "description": description               # Human-readable weather description
     }
