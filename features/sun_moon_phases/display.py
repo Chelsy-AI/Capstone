@@ -54,6 +54,15 @@ class SunMoonDisplay:
         # Pre-calculate some values for better performance
         self._cached_canvas_bg = None
         self._last_window_width = 0
+
+    def get_translated_text(self, key):
+        """Get translated text from the main app's language controller."""
+        try:
+            if hasattr(self.app, 'gui') and hasattr(self.app.gui, 'language_controller'):
+                return self.app.gui.language_controller.get_text(key)
+            return key
+        except:
+            return key
         
     def build_sun_moon_page(self, window_width, window_height):
         """
@@ -97,7 +106,7 @@ class SunMoonDisplay:
         # Main page title - scales with window size
         title_font_size = int(28 + window_width/40)
         title_main = self._create_label(
-            text="Sun and Moon Phases",
+            text=self.get_translated_text("sun_moon_phases"),
             font=("Arial", title_font_size, "bold"),
             x=window_width/2,
             y=80
@@ -107,7 +116,7 @@ class SunMoonDisplay:
         # Simple day/night status indicator
         status_font_size = int(16 + window_width/80)
         self.day_night_label = self._create_label(
-            text="🌤️ Loading...",
+            text="🌤️ " + self.get_translated_text("loading"),
             font=("Arial", status_font_size, "bold"),
             x=window_width/2,
             y=120
@@ -190,7 +199,7 @@ class SunMoonDisplay:
         """
         # East label (left side)
         east_label = self._create_label(
-            text="East",
+            text="पूर्व",
             font=("Arial", 12, "bold"),
             x=100,
             y=horizon_y - 20
@@ -199,7 +208,7 @@ class SunMoonDisplay:
         
         # West label (right side)
         west_label = self._create_label(
-            text="West", 
+            text="पश्चिम", 
             font=("Arial", 12, "bold"),
             x=self._last_window_width - 100,
             y=horizon_y - 20
@@ -208,7 +217,7 @@ class SunMoonDisplay:
         
         # Zenith label (top center - highest point in sky)
         zenith_label = self._create_label(
-            text="Zenith",
+            text="शीर्ष",
             font=("Arial", 12, "bold"),
             x=center_x,
             y=viz_y + 15
@@ -323,10 +332,10 @@ class SunMoonDisplay:
         
         # Define the information sections to create
         sections_config = [
-            ("sun_section", "☀️ Solar Data", left_x, row1_y),
-            ("moon_section", "🌙 Lunar Data", right_x, row1_y),
-            ("position_section", "🧭 Positions", left_x, row2_y),
-            ("time_section", "⏰ Golden Hours", right_x, row2_y)
+            ("sun_section", "☀️ " + self.get_translated_text("sun_moon"), left_x, row1_y),
+            ("moon_section", "🌙 " + self.get_translated_text("moon_phase"), right_x, row1_y),
+            ("position_section", "🧭 " + self.get_translated_text("positions"), left_x, row2_y),
+            ("time_section", "⏰ " + self.get_translated_text("golden_hours"), right_x, row2_y)
         ]
         
         # Create each information section
@@ -358,7 +367,7 @@ class SunMoonDisplay:
         
         # Create content area below the title
         content_label = self._create_label(
-            text="Loading...",
+            text=self.get_translated_text("loading"),
             font=("Arial", 11),
             x=x,
             y=y + 25,  # Position below title
@@ -449,9 +458,9 @@ class SunMoonDisplay:
         """
         if hasattr(self, 'day_night_label') and self.day_night_label:
             if data.get("is_daytime", True):
-                self.day_night_label.configure(text="☀️ Daytime")
+                self.day_night_label.configure(text="☀️ दिन का समय")
             else:
-                self.day_night_label.configure(text="🌙 Nighttime")
+                self.day_night_label.configure(text="🌙 रात का समय")
     
     def _update_text_sections(self, data):
         """
@@ -488,13 +497,13 @@ class SunMoonDisplay:
         sunrise = format_time_for_display(data.get("sunrise"))
         sunset = format_time_for_display(data.get("sunset"))
         solar_noon = format_time_for_display(data.get("solar_noon"))
-        status = 'Above Horizon' if data.get('is_daytime') else 'Below Horizon'
+        status = self.get_translated_text("above_horizon") if data.get('is_daytime') else self.get_translated_text("below_horizon")
         
         # Create formatted text content
-        sun_content = f"""Sunrise: {sunrise}
-Sunset: {sunset}
-Solar Noon: {solar_noon}
-Status: {status}"""
+        sun_content = f"""{self.get_translated_text("sunrise")}: {sunrise}
+{self.get_translated_text("sunset")}: {sunset}
+{self.get_translated_text("solar_noon")}: {solar_noon}
+{self.get_translated_text("status")}: {status}"""
         
         # Update the display
         self.info_sections["sun_section"]["content"].configure(text=sun_content)
@@ -505,16 +514,16 @@ Status: {status}"""
             return
             
         # Extract and format lunar information
-        moon_phase_name = data.get("moon_phase_name", "Unknown")
+        moon_phase_name = data.get("moon_phase_name", self.get_translated_text("unknown"))
         moon_illumination = data.get("moon_illumination", 0)
         moon_emoji = get_moon_phase_emoji(data.get("moon_phase", 0))
-        visibility = 'Visible' if data.get('moon_position', {}).get('elevation', 0) > 0 else 'Below Horizon'
+        visibility = self.get_translated_text("visible") if data.get('moon_position', {}).get('elevation', 0) > 0 else self.get_translated_text("below_horizon")
         
-        # Create formatted text content
+        # Create formatted text content with proper Hindi labels
         moon_content = f"""{moon_emoji} {moon_phase_name}
-Illumination: {moon_illumination:.1f}%
-Cycle: {data.get('moon_phase', 0):.3f}
-Visibility: {visibility}"""
+प्रकाश: {moon_illumination:.1f}%
+चक्र: {data.get('moon_phase', 0):.3f}
+दृश्यता: {visibility}"""
         
         # Update the display
         self.info_sections["moon_section"]["content"].configure(text=moon_content)
@@ -528,11 +537,11 @@ Visibility: {visibility}"""
         sun_pos = data.get("sun_position", {})
         moon_pos = data.get("moon_position", {})
         
-        # Create formatted text content
-        position_content = f"""Sun: {sun_pos.get('elevation', 0):.1f}° / {sun_pos.get('azimuth', 0):.1f}°
-Moon: {moon_pos.get('elevation', 0):.1f}° / {moon_pos.get('azimuth', 0):.1f}°
+        # Create formatted text content with proper Hindi labels
+        position_content = f"""सूर्य: {sun_pos.get('elevation', 0):.1f}° / {sun_pos.get('azimuth', 0):.1f}°
+चंद्रमा: {moon_pos.get('elevation', 0):.1f}° / {moon_pos.get('azimuth', 0):.1f}°
 
-(Elevation / Azimuth)"""
+(उन्नयन / दिगंश)"""
         
         # Update the display
         self.info_sections["position_section"]["content"].configure(text=position_content)
@@ -545,11 +554,11 @@ Moon: {moon_pos.get('elevation', 0):.1f}° / {moon_pos.get('azimuth', 0):.1f}°
         # Calculate golden hour times
         golden_hour = calculate_golden_hour(data.get("sunrise"), data.get("sunset"))
         
-        # Create formatted text content
-        time_content = f"""Morning:
+        # Create formatted text content with proper Hindi labels
+        time_content = f"""सुबह:
 {golden_hour.get('morning_start', 'N/A')} - {golden_hour.get('morning_end', 'N/A')}
 
-Evening:
+शाम:
 {golden_hour.get('evening_start', 'N/A')} - {golden_hour.get('evening_end', 'N/A')}"""
         
         # Update the display
@@ -623,12 +632,12 @@ Evening:
         try:
             # Update day/night label to show error
             if hasattr(self, 'day_night_label') and self.day_night_label:
-                self.day_night_label.configure(text="❌ Error loading data")
+                self.day_night_label.configure(text="❌ " + self.get_translated_text("error_loading_data"))
             
             # Update all information sections to show error
             for section_id, section_data in self.info_sections.items():
                 if 'content' in section_data and section_data['content']:
-                    section_data['content'].configure(text="Error loading data\nPlease try refreshing")
+                    section_data['content'].configure(text=self.get_translated_text("error_loading_data") + "\n" + self.get_translated_text("please_try_refreshing"))
                     
         except Exception as e:
             pass  # Even error handling can fail, so be defensive
@@ -681,7 +690,7 @@ Evening:
         """
         back_btn = tk.Button(
             self.app,
-            text="← Back",
+            text="← " + self.get_translated_text("back"),
             command=lambda: self.gui.show_page("main"),  # Return to main page
             bg="grey",
             fg="black", 

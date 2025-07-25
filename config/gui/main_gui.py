@@ -1,19 +1,17 @@
 """
-Main GUI Controller
-===================
+Main GUI Controller - Complete Fixed Version
+===========================================
 
-This is the "director" of the user interface. It manages all the visual elements
-you see on screen like buttons, labels, and different pages.
-
-Think of it like a stage director for a play - it tells all the actors (buttons,
-labels, etc.) where to go and what to do, and switches between different scenes
-(pages) based on what the user wants to see.
+This is the "director" of the user interface with comprehensive translation support.
+It manages all the visual elements you see on screen like buttons, labels, and different pages.
 
 Key responsibilities:
 - Creating and positioning buttons, labels, and input fields
 - Switching between different pages (main weather, history, predictions, etc.)
 - Making sure text labels have transparent backgrounds (no ugly blue boxes!)
 - Coordinating with other controllers for specialized features
+- Supporting full multi-language translation for ALL UI text consistently
+- Proper widget cleanup and reference management
 """
 
 import tkinter as tk
@@ -25,15 +23,17 @@ from .animation_controller import AnimationController
 from features.sun_moon_phases.controller import SunMoonController
 from features.graphs.controller import GraphsController
 from features.weather_quiz.controller import WeatherQuizController
+from features.language.controller import LanguageController
 
 
 class WeatherGUI:
     """
-    Main GUI Controller Class
+    Main GUI Controller Class with Comprehensive Translation Support
     
     This class manages the entire user interface of the weather app.
     It creates different pages, handles page switching, and coordinates
     with specialized controllers for features like animations and sun/moon data.
+    All text elements are properly translated and consistently updated.
     """
     
     def __init__(self, parent_app):
@@ -51,6 +51,7 @@ class WeatherGUI:
         self.animation_controller = AnimationController(self.app, self)
         self.sun_moon_controller = SunMoonController(self.app, self)
         self.weather_quiz_controller = WeatherQuizController(self.app, self)
+        self.language_controller = LanguageController(self.app, self)
         
         # Page management - keep track of what page we're currently showing
         self.current_page = "main"  # Start on the main weather page
@@ -149,14 +150,22 @@ class WeatherGUI:
 
     def show_page(self, page_name):
         """
-        Switch to a different page in the app.
+        Switch to a different page in the app with proper cleanup.
         
         This is like changing channels on TV - it hides the current page
         and shows a different one based on what the user requested.
+        All translations are properly handled during page switches.
         
         Args:
             page_name (str): Name of the page to show ("main", "history", etc.)
         """
+        # Clean up language widgets specifically before switching
+        if hasattr(self, 'language_controller'):
+            try:
+                self.language_controller._clear_widgets()
+            except:
+                pass
+        
         # Clean up any resources from the current page
         self._cleanup_page_resources()
         
@@ -166,7 +175,7 @@ class WeatherGUI:
         # Remember what page we're now showing
         self.current_page = page_name
         
-        # Build the requested page
+        # Build the requested page with proper translations
         if page_name == "main":
             self._build_main_page()
         elif page_name == "prediction":
@@ -181,26 +190,48 @@ class WeatherGUI:
             self._build_graphs_page()
         elif page_name == "quiz":
             self._build_quiz_page()
+        elif page_name == "language":
+            self._build_language_page()
         
         # Restore any data that should be shown on the new page
         self._restore_current_data()
 
     def _cleanup_page_resources(self):
-        """Clean up page-specific resources like map controllers."""
+        """Clean up page-specific resources like map controllers and language widgets."""
         # Clean up map controller if it exists
         if hasattr(self, 'map_controller'):
             try:
                 del self.map_controller
             except:
                 pass
+        
+        # Clean up language controller widgets when switching pages
+        if hasattr(self, 'language_controller'):
+            try:
+                self.language_controller._clear_widgets()
+            except:
+                pass
 
     def _clear_page_widgets(self):
         """Clear page widgets but preserve the background."""
+        # Clean up language widgets first
+        if hasattr(self, 'language_controller'):
+            try:
+                self.language_controller._clear_widgets()
+            except:
+                pass
+        
         # Destroy all widgets we've been tracking
         for widget in self.widgets:
-            widget.destroy()
+            try:
+                widget.destroy()
+            except:
+                pass
         for widget in self.history_labels:
-            widget.destroy()
+            try:
+                widget.destroy()
+            except:
+                pass
         
         # Clear the tracking lists
         self.widgets.clear()
@@ -216,7 +247,7 @@ class WeatherGUI:
         
         Args:
             parent: The widget to put this label in
-            text: The text to display
+            text: The text to display (should be properly translated)
             font: Font specification (family, size, style)
             fg: Text color
             x, y: Position where to place the label
@@ -254,13 +285,14 @@ class WeatherGUI:
 
     def _build_main_page(self):
         """
-        Build the main weather page.
+        Build the main weather page with translated text.
         
         This creates the primary interface with:
         - City search input
         - Current weather display
         - Weather metrics (humidity, wind, etc.)
         - Navigation buttons to other pages
+        All text is properly translated based on current language.
         """
         # Get current window size for responsive design
         window_width = self.app.winfo_width()
@@ -295,10 +327,10 @@ class WeatherGUI:
 
     def _build_weather_metrics_section(self, window_width, y_start):
         """
-        Build the weather metrics section with transparent labels.
+        Build the weather metrics section with fully translated labels.
         
         This creates a grid showing humidity, wind speed, pressure, etc.
-        All labels use transparent backgrounds to blend with animations.
+        All labels use translated text and transparent backgrounds.
         
         Args:
             window_width: Current width of the window
@@ -309,8 +341,16 @@ class WeatherGUI:
         col_width = available_width / 6
         start_x = 20
         
-        # Create headers row
-        metric_headers = ["Humidity", "Wind", "Press.", "Visibility", "UV Index", "Precip."]
+        # Create headers row with translated text
+        metric_headers = [
+            self.language_controller.get_text("humidity"),
+            self.language_controller.get_text("wind"),
+            self.language_controller.get_text("pressure"),
+            self.language_controller.get_text("visibility"),
+            self.language_controller.get_text("uv_index"),
+            self.language_controller.get_text("precipitation")
+        ]
+        
         for i, header in enumerate(metric_headers):
             x_pos = start_x + (i * col_width) + (col_width / 2)
             header_widget = self._create_label(
@@ -365,7 +405,7 @@ class WeatherGUI:
 
     def _build_main_weather_display(self, window_width, y_start):
         """
-        Build the main weather display with transparent labels.
+        Build the main weather display with translated loading text.
         
         This creates the central weather display showing:
         - Weather icon
@@ -397,9 +437,12 @@ class WeatherGUI:
             except:
                 canvas_bg = "#87CEEB"
         
+        # Use translated loading text
+        loading_text = self.language_controller.get_text("loading")
+        
         temp_label = tk.Label(
             self.app,
-            text="Loading...",
+            text=loading_text,
             font=("Arial", int(40 + window_width/25), "bold"),
             fg=self.app.text_color,
             bg=canvas_bg,  # Match canvas background to prevent blue boxes
@@ -417,10 +460,11 @@ class WeatherGUI:
         
         self.widgets.append(temp_label)
         
-        # Weather description
+        # Weather description with translated text
+        fetching_text = self.language_controller.get_text("fetching_weather")
         desc_label = self._create_label(
             self.app,
-            text="Fetching weather...",
+            text=fetching_text,
             font=("Arial", int(16 + window_width/60)),
             fg=self.app.text_color,
             x=window_width/2,
@@ -438,10 +482,11 @@ class WeatherGUI:
 
     def _build_navigation_buttons(self, window_width, y_start):
         """
-        Build navigation buttons to access different app features.
+        Build navigation buttons with fully translated text.
         
         This creates buttons that let users navigate to different pages like
-        weather history, predictions, maps, etc.
+        weather history, predictions, maps, etc. All button text is properly
+        translated based on the current language setting.
         
         Args:
             window_width: Current width of the window
@@ -459,15 +504,16 @@ class WeatherGUI:
         
         y_start += 60
         
-        # Define all buttons with their text, commands, and positions
+        # Define all buttons with translated text, commands, and positions
         buttons = [
-            ("Toggle Theme", lambda: self.app.toggle_theme(), left_x, y_start),
-            ("Tomorrow's Prediction", lambda: self.show_page("prediction"), right_x, y_start),
-            ("Weather History", lambda: self.show_page("history"), left_x, y_start + button_height + 30),
-            ("Weather Quiz", lambda: self.show_page("quiz"), right_x, y_start + button_height + 30),
-            ("Weather Graphs", lambda: self.show_page("graphs"), left_x, y_start + (button_height + 30) * 2),
-            ("Map View", lambda: self.show_page("map"), right_x, y_start + (button_height + 30) * 2),
-            ("Sun & Moon", lambda: self.show_page("sun_moon"), left_x, y_start + (button_height + 30) * 3)
+            (self.language_controller.get_text("toggle_theme"), lambda: self.app.toggle_theme(), left_x, y_start),
+            (self.language_controller.get_text("tomorrow_prediction"), lambda: self.show_page("prediction"), right_x, y_start),
+            (self.language_controller.get_text("weather_history"), lambda: self.show_page("history"), left_x, y_start + button_height + 30),
+            (self.language_controller.get_text("weather_quiz"), lambda: self.show_page("quiz"), right_x, y_start + button_height + 30),
+            (self.language_controller.get_text("weather_graphs"), lambda: self.show_page("graphs"), left_x, y_start + (button_height + 30) * 2),
+            (self.language_controller.get_text("map_view"), lambda: self.show_page("map"), right_x, y_start + (button_height + 30) * 2),
+            (self.language_controller.get_text("sun_moon"), lambda: self.show_page("sun_moon"), left_x, y_start + (button_height + 30) * 3),
+            (self.language_controller.get_text("language"), lambda: self.show_page("language"), right_x, y_start + (button_height + 30) * 3)
         ]
         
         # Create each button
@@ -494,16 +540,17 @@ class WeatherGUI:
         self.theme_btn = buttons[0]
 
     def _build_prediction_page(self):
-        """Build the tomorrow's weather prediction page."""
+        """Build the tomorrow's weather prediction page with translated text."""
         window_width = self.app.winfo_width()
         
         # Add back button to return to main page
         self._add_back_button()
         
-        # Page title
+        # Page title with translated text
+        title_text = self.language_controller.get_text("tomorrow_weather_prediction")
         title = self._create_label(
             self.app,
-            text="Tomorrow's Weather Prediction",
+            text=title_text,
             font=("Arial", int(24 + window_width/50), "bold"),
             fg=self.app.text_color,
             x=window_width/2,
@@ -516,7 +563,7 @@ class WeatherGUI:
 
     def _build_prediction_grid(self, window_width, y_start):
         """
-        Build the prediction display grid with transparent labels.
+        Build the prediction display grid with translated labels.
         
         This creates a 3-column grid showing predicted temperature,
         prediction accuracy, and confidence level.
@@ -526,8 +573,13 @@ class WeatherGUI:
         col_width = available_width / 3
         start_x = 20
         
-        # Headers
-        prediction_headers = ["Temperature", "Accuracy", "Confidence"]
+        # Headers with translated text
+        prediction_headers = [
+            self.language_controller.get_text("temperature"),
+            self.language_controller.get_text("accuracy"),
+            self.language_controller.get_text("confidence")
+        ]
+        
         for i, header in enumerate(prediction_headers):
             x_pos = start_x + (i * col_width) + (col_width / 2)
             header_widget = self._create_label(
@@ -578,16 +630,17 @@ class WeatherGUI:
         self.set_widget_references(widget_refs)
 
     def _build_history_page(self):
-        """Build the weather history page."""
+        """Build the weather history page with translated text."""
         window_width = self.app.winfo_width()
         
         # Add back button
         self._add_back_button()
         
-        # Page title
+        # Page title with translated text
+        title_text = self.language_controller.get_text("weather_history_title")
         title = self._create_label(
             self.app,
-            text="Weather History",
+            text=title_text,
             font=("Arial", int(24 + window_width/50), "bold"),
             fg=self.app.text_color,
             x=window_width/2,
@@ -600,17 +653,18 @@ class WeatherGUI:
         self.app.after(100, lambda: self.update_history_display(city))
 
     def _build_map_page(self):
-        """Build the interactive map page."""
+        """Build the interactive map page with translated text."""
         window_width = self.app.winfo_width()
         window_height = self.app.winfo_height()
         
         # Add back button
         self._add_back_button()
         
-        # Page title
+        # Page title with translated text
+        title_text = self.language_controller.get_text("weather_map")
         title = self._create_label(
             self.app,
-            text="Weather Map",
+            text=title_text,
             font=("Arial", int(24 + window_width/50), "bold"),
             fg=self.app.text_color,
             x=window_width/2,
@@ -618,11 +672,12 @@ class WeatherGUI:
         )
         self.widgets.append(title)
         
-        # Info button
+        # Info button with translated text
+        info_text = self.language_controller.get_text("map_info")
         info_btn = tk.Button(
             self.app,
             text="i",
-            command=self._show_map_info,
+            command=lambda: self._show_map_info(info_text),
             bg="grey",
             fg="black",
             font=("Arial", int(16 + window_width/80), "bold"),
@@ -667,10 +722,11 @@ class WeatherGUI:
             
             self.map_controller = MapController(map_frame, self.app.city_var.get, api_key, show_grid=True)
         except Exception as e:
-            # Show fallback placeholder if map fails to load
+            # Show fallback placeholder with translated text
+            map_unavailable_text = self.language_controller.get_text("map_unavailable")
             map_placeholder = self._create_label(
                 map_frame,
-                text="🗺️\nInteractive Map\n(Map temporarily unavailable)",
+                text=f"🗺️\n{map_unavailable_text}",
                 font=("Arial", int(16 + window_width/80)),
                 fg=self.app.text_color,
                 x=300,
@@ -709,16 +765,27 @@ class WeatherGUI:
         # Build the quiz page using the specialized controller
         self.weather_quiz_controller.build_page(window_width, window_height)
 
-    def _show_map_info(self):
-        """Show information popup about the map feature."""
+    def _build_language_page(self):
+        """Build the language selection page."""
+        window_width = self.app.winfo_width()
+        window_height = self.app.winfo_height()
+        
+        # Build the language page using the specialized controller
+        self.language_controller.build_page(window_width, window_height)
+
+    def _show_map_info(self, info_text=None):
+        """Show information popup about the map feature with translated text."""
         from tkinter import messagebox
-        messagebox.showinfo("Map Info", "Weather overlay information would go here.")
+        if not info_text:
+            info_text = self.language_controller.get_text("map_info")
+        messagebox.showinfo(info_text, "Weather overlay information would go here.")
 
     def _add_back_button(self):
-        """Add a back button to return to the main page."""
+        """Add a back button to return to the main page with translated text."""
+        back_text = self.language_controller.get_text("back")
         back_btn = tk.Button(
             self.app,
-            text="← Back",
+            text=back_text,
             command=lambda: self.show_page("main"),
             bg="grey",
             fg="black",
@@ -804,6 +871,9 @@ class WeatherGUI:
         
         if hasattr(self, 'weather_quiz_controller'):
             self.weather_quiz_controller.cleanup()
+            
+        if hasattr(self, 'language_controller'):
+            self.language_controller.cleanup()
 
     def get_widgets(self):
         """Get the list of widgets for external access."""

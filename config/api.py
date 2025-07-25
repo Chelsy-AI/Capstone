@@ -10,6 +10,7 @@ Key functions:
 - Get current weather from multiple sources
 - Combine data from different APIs for complete weather picture
 - Handle errors gracefully when internet is slow or APIs are down
+- Support multiple languages for weather descriptions
 
 APIs used:
 - Open-Meteo: Free weather data (no API key needed)
@@ -121,15 +122,16 @@ def resolve_coordinates_by_city(city_name):
     return None, None
 
 
-def get_basic_weather_from_weatherdb(city_name):
+def get_basic_weather_from_weatherdb(city_name, language="en"):
     """
-    Get basic weather data from WeatherDB API.
+    Get basic weather data from WeatherDB API with language support.
     
     This API provides current weather conditions like temperature,
     humidity, wind speed, and weather descriptions. It requires an API key.
     
     Args:
         city_name (str): Name of the city to get weather for
+        language (str): Language code for weather descriptions (en, es, hi)
         
     Returns:
         tuple: (weather_data_dict, error_message)
@@ -141,7 +143,8 @@ def get_basic_weather_from_weatherdb(city_name):
         params = {
             "q": city_name,           # City name to search for
             "appid": API_KEY,         # API key for authentication
-            "units": "metric"         # Use Celsius for temperature
+            "units": "metric",        # Use Celsius for temperature
+            "lang": language          # Language for weather descriptions
         }
         
         # Make the HTTP request to WeatherDB API
@@ -198,15 +201,16 @@ def get_detailed_environmental_data(city):
     return None
 
 
-def get_current_weather(city):
+def get_current_weather(city, language="en"):
     """
-    Get comprehensive weather data by combining multiple APIs.
+    Get comprehensive weather data by combining multiple APIs with language support.
     
     This is the main function that other parts of the app use to get weather data.
     It combines data from multiple sources to provide the most complete picture.
     
     Args:
         city (str): Name of the city to get weather for
+        language (str): Language code for weather descriptions (en, es, hi)
         
     Returns:
         dict: Complete weather data with all available information
@@ -225,8 +229,8 @@ def get_current_weather(city):
             "error": None
         }
     """
-    # Step 1: Get basic weather data from WeatherDB
-    weather_data, err = get_basic_weather_from_weatherdb(city)
+    # Step 1: Get basic weather data from WeatherDB with language support
+    weather_data, err = get_basic_weather_from_weatherdb(city, language)
     
     # Step 2: Get detailed environmental data from Open-Meteo
     detailed_data = get_detailed_environmental_data(city)

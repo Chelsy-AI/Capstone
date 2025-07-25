@@ -56,6 +56,15 @@ class SunMoonController:
         # Error handling
         self._consecutive_errors = 0
         self._max_error_count = 3
+
+    def get_translated_text(self, key):
+        """Get translated text from the main app's language controller."""
+        try:
+            if hasattr(self.app, 'gui') and hasattr(self.app.gui, 'language_controller'):
+                return self.app.gui.language_controller.get_text(key)
+            return key
+        except:
+            return key
         
     def build_page(self, window_width, window_height):
         """Build the complete sun/moon page interface."""
@@ -233,6 +242,55 @@ class SunMoonController:
             self.display.update_for_theme_change()
         except Exception:
             pass
+    
+    def handle_language_change(self, window_width=None, window_height=None):
+        """Handle language changes by completely rebuilding the display."""
+        try:
+            # Get window dimensions if not provided
+            if window_width is None:
+                window_width = self.app.winfo_width()
+            if window_height is None:
+                window_height = self.app.winfo_height()
+            
+            # Clear existing widgets first
+            if hasattr(self.gui, 'widgets'):
+                for widget in self.gui.widgets:
+                    try:
+                        widget.destroy()
+                    except:
+                        pass
+                self.gui.widgets.clear()
+            
+            # Clear display references
+            self.display.info_sections.clear()
+            self.display.day_night_label = None
+            self.display.sun_indicator = None
+            self.display.moon_indicator = None
+            
+            # Rebuild the entire page
+            self.build_page(window_width, window_height)
+            
+            # Restore data if we have it
+            if self.current_data:
+                self._update_display_safe(self.current_data)
+                
+        except Exception as e:
+            print(f"Error handling language change: {e}")
+            traceback.print_exc()
+
+    def refresh_for_language_change(self):
+        """Public method to refresh display for language changes."""
+        try:
+            window_width = self.app.winfo_width() or 800
+            window_height = self.app.winfo_height() or 600
+            self.handle_language_change(window_width, window_height)
+        except Exception as e:
+            print(f"Error refreshing for language change: {e}")
+            # Fallback: try to rebuild with default dimensions
+            try:
+                self.handle_language_change(800, 600)
+            except:
+                pass
     
     def get_current_data(self):
         """Get a copy of the current sun/moon data."""
