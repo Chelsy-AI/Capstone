@@ -344,21 +344,21 @@ def get_moon_phase_name(phase: float) -> str:
     """
     # Define phase ranges and their corresponding names
     if phase < 0.0625 or phase >= 0.9375:
-        return "New Moon"          # Completely dark
+        return "new_moon"          # Translation key for new moon
     elif 0.0625 <= phase < 0.1875:
-        return "Waxing Crescent"   # Thin crescent, growing
+        return "waxing_crescent"   # Translation key for waxing crescent
     elif 0.1875 <= phase < 0.3125:
-        return "First Quarter"     # Half illuminated, right side
+        return "first_quarter"     # Translation key for first quarter
     elif 0.3125 <= phase < 0.4375:
-        return "Waxing Gibbous"    # More than half, growing
+        return "waxing_gibbous"    # Translation key for waxing gibbous
     elif 0.4375 <= phase < 0.5625:
-        return "Full Moon"         # Completely illuminated
+        return "full_moon"         # Translation key for full moon
     elif 0.5625 <= phase < 0.6875:
-        return "Waning Gibbous"    # More than half, shrinking
+        return "waning_gibbous"    # Translation key for waning gibbous
     elif 0.6875 <= phase < 0.8125:
-        return "Last Quarter"      # Half illuminated, left side
+        return "last_quarter"      # Translation key for last quarter
     else:
-        return "Waning Crescent"   # Thin crescent, shrinking
+        return "waning_crescent"   # Translation key for waning crescent
 
 
 def get_moon_phase_emoji(phase: float) -> str:
@@ -500,7 +500,7 @@ def get_fallback_data(error_msg: str = "No data available") -> Dict:
         "day_length": None,
         "sun_position": {"elevation": 45, "azimuth": 180, "hour_angle": 0, "declination": 0},
         "moon_phase": 0.25,                    # Default to waxing crescent
-        "moon_phase_name": "Waxing Crescent",
+        "moon_phase_name": "waxing_crescent",  # Translation key
         "moon_illumination": 50.0,
         "moon_position": {"elevation": 30, "azimuth": 90, "longitude": 0},
         "is_daytime": 6 <= now.hour < 18,      # Simple daytime guess
@@ -599,7 +599,7 @@ def get_astronomical_season(date: datetime.date = None) -> str:
         date (datetime.date): Date to check (default: today)
         
     Returns:
-        str: Season name ("Spring", "Summer", "Fall", "Winter")
+        str: Season translation key ("spring", "summer", "fall", "winter")
         
     Example:
         season = get_astronomical_season()
@@ -614,13 +614,13 @@ def get_astronomical_season(date: datetime.date = None) -> str:
     # Approximate astronomical season boundaries
     # These vary slightly each year, but these are close averages
     if 80 <= day_of_year < 172:    # Around March 21 to June 21
-        return "Spring"
+        return "spring"
     elif 172 <= day_of_year < 266:  # Around June 21 to September 23
-        return "Summer"
+        return "summer"
     elif 266 <= day_of_year < 355:  # Around September 23 to December 21
-        return "Fall"
+        return "fall"
     else:                           # Around December 21 to March 21
-        return "Winter"
+        return "winter"
 
 
 def get_daylight_info(sunrise_str: Optional[str], sunset_str: Optional[str]) -> Dict:
@@ -738,17 +738,3 @@ if __name__ == "__main__":
     print(f"  🌙 Current moon phase: {moon_name} {moon_emoji}")
     print(f"  💡 Moon illumination: {moon_illumination}%")
     print(f"  📊 Phase value: {moon_phase}")
-    
-    # Test season calculation
-    season = get_astronomical_season()
-    print(f"  🍂 Current season: {season}")
-    
-    # Test coordinate lookup
-    lat, lon = get_coordinates_for_city("Paris")
-    if lat and lon:
-        print(f"  📍 Paris coordinates: {lat:.4f}, {lon:.4f}")
-    
-    print(f"\n✅ Sun and moon API testing completed!")
-    print(f"\nNote: This API provides real astronomical data")
-    print(f"including sunrise/sunset times and moon phases for any city worldwide.")
-    

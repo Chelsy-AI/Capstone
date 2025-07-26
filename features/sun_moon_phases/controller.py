@@ -10,6 +10,7 @@ Key Responsibilities:
 - Managing the visual display of celestial information  
 - Handling user interactions and auto-refresh
 - Caching data for performance
+- Supporting multiple languages (English, Hindi, Spanish)
 """
 
 import threading
@@ -311,7 +312,7 @@ class SunMoonController:
         if self.is_data_available():
             return {
                 "phase": self.current_data.get("moon_phase", 0),
-                "name": self.current_data.get("moon_phase_name", "Unknown"),
+                "name": self.current_data.get("moon_phase_name", "unknown"),
                 "illumination": self.current_data.get("moon_illumination", 0)
             }
         return {}

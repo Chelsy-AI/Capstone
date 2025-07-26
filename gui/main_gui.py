@@ -23,7 +23,7 @@ from .animation_controller import AnimationController
 from features.sun_moon_phases.controller import SunMoonController
 from features.graphs.controller import GraphsController
 from features.weather_quiz.controller import WeatherQuizController
-from features.language.controller import LanguageController
+from language.controller import LanguageController
 
 
 class WeatherGUI:
