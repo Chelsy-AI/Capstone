@@ -24,6 +24,8 @@ from features.sun_moon_phases.controller import SunMoonController
 from features.graphs.controller import GraphsController
 from features.weather_quiz.controller import WeatherQuizController
 from language.controller import LanguageController
+from features.city_comparison.controller import CityComparisonController
+
 
 
 class WeatherGUI:
@@ -52,7 +54,8 @@ class WeatherGUI:
         self.sun_moon_controller = SunMoonController(self.app, self)
         self.weather_quiz_controller = WeatherQuizController(self.app, self)
         self.language_controller = LanguageController(self.app, self)
-        
+        self.city_comparison_controller = CityComparisonController(self.app, self)
+
         # Page management - keep track of what page we're currently showing
         self.current_page = "main"  # Start on the main weather page
         self.pages = {}  # Dictionary to store page-specific data
@@ -482,41 +485,68 @@ class WeatherGUI:
 
     def _build_navigation_buttons(self, window_width, y_start):
         """
-        Build navigation buttons with fully translated text.
-        
-        This creates buttons that let users navigate to different pages like
-        weather history, predictions, maps, etc. All button text is properly
-        translated based on the current language setting.
-        
+        Build navigation buttons in a 3x3 grid format with city comparison feature.
+    
+        This creates a professional 3x3 grid of buttons that let users navigate 
+        to different pages including the new city comparison feature. All button 
+        text is properly translated based on the current language setting.
+    
         Args:
             window_width: Current width of the window
             y_start: Y position where buttons should start
         """
         # Button layout configuration
-        button_width = 150
-        button_height = 40
-        button_spacing = 60
-        
-        # Calculate positions for two-column layout
-        center_x = window_width / 2
-        left_x = center_x - button_width/2 - button_spacing/2
-        right_x = center_x + button_width/2 + button_spacing/2
-        
+        button_width = 140
+        button_height = 35
+        button_spacing_x = 20  # Horizontal spacing between buttons
+        button_spacing_y = 15  # Vertical spacing between buttons
+    
+        # Calculate positions for 3-column layout
+        total_button_width = (button_width * 3) + (button_spacing_x * 2)
+        start_x = (window_width - total_button_width) / 2
+    
+        # Calculate column positions
+        col1_x = start_x + (button_width / 2)
+        col2_x = start_x + button_width + button_spacing_x + (button_width / 2)
+        col3_x = start_x + (button_width * 2) + (button_spacing_x * 2) + (button_width / 2)
+
+        # Calculate row positions
         y_start += 60
-        
-        # Define all buttons with translated text, commands, and positions
+        row1_y = y_start
+        row2_y = y_start + button_height + button_spacing_y
+        row3_y = y_start + (button_height + button_spacing_y) * 2
+
+        # Define all buttons with translated text, commands, and positions in 3x3 grid
+        # Row 1: Core weather features
+        # Row 2: Analysis and visualization features  
+        # Row 3: Settings and utility features
         buttons = [
-            (self.language_controller.get_text("toggle_theme"), lambda: self.app.toggle_theme(), left_x, y_start),
-            (self.language_controller.get_text("tomorrow_prediction"), lambda: self.show_page("prediction"), right_x, y_start),
-            (self.language_controller.get_text("weather_history"), lambda: self.show_page("history"), left_x, y_start + button_height + 30),
-            (self.language_controller.get_text("weather_quiz"), lambda: self.show_page("quiz"), right_x, y_start + button_height + 30),
-            (self.language_controller.get_text("weather_graphs"), lambda: self.show_page("graphs"), left_x, y_start + (button_height + 30) * 2),
-            (self.language_controller.get_text("map_view"), lambda: self.show_page("map"), right_x, y_start + (button_height + 30) * 2),
-            (self.language_controller.get_text("sun_moon"), lambda: self.show_page("sun_moon"), left_x, y_start + (button_height + 30) * 3),
-            (self.language_controller.get_text("language"), lambda: self.show_page("language"), right_x, y_start + (button_height + 30) * 3)
+            # Row 1: Core Weather Features
+            (self.language_controller.get_text("toggle_theme"), 
+             lambda: self.app.toggle_theme(), col1_x, row1_y),
+            (self.language_controller.get_text("tomorrow_prediction"), 
+             lambda: self.show_page("prediction"), col2_x, row1_y),
+            (self.language_controller.get_text("weather_history"), 
+             lambda: self.show_page("history"), col3_x, row1_y),
+
+            # Row 2: Analysis & Visualization
+            (self.language_controller.get_text("city_comparison"), 
+             lambda: self.show_page("comparison"), col1_x, row2_y),
+            (self.language_controller.get_text("weather_graphs"), 
+             lambda: self.show_page("graphs"), col2_x, row2_y),
+            (self.language_controller.get_text("map_view"), 
+             lambda: self.show_page("map"), col3_x, row2_y),
+
+            # Row 3: Interactive & Settings
+            (self.language_controller.get_text("weather_quiz"), 
+             lambda: self.show_page("quiz"), col1_x, row3_y),
+            (self.language_controller.get_text("sun_moon"), 
+             lambda: self.show_page("sun_moon"), col2_x, row3_y),
+            (self.language_controller.get_text("language"), 
+             lambda: self.show_page("language"), col3_x, row3_y)
         ]
-        
-        # Create each button
+
+        # Create each button with consistent styling
         for text, command, x, y in buttons:
             btn = tk.Button(
                 self.app,
@@ -524,18 +554,19 @@ class WeatherGUI:
                 command=command,
                 bg="grey",
                 fg="black",
-                font=("Arial", int(10 + window_width/120), "bold"),
+                font=("Arial", int(9 + window_width/150), "bold"),  # Slightly smaller font for 3x3 grid
                 relief="raised",
                 borderwidth=2,
-                width=15,
+                width=14,  # Slightly narrower to fit 3 columns
                 height=2,
                 activeforeground="black",      # Color when clicked
                 activebackground="lightgrey",  # Background when clicked
-                highlightthickness=0
+                highlightthickness=0,
+                cursor="hand2"  # Show hand cursor on hover
             )
             btn.place(x=x, y=y, anchor="center")
             self.widgets.append(btn)
-        
+
         # Store reference to theme button for later access
         self.theme_btn = buttons[0]
 
