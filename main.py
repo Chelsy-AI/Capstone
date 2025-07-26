@@ -8,17 +8,61 @@ It handles:
 - Creating necessary folders
 - Starting the main weather app
 - Showing helpful error messages if something goes wrong
+- Configuring matplotlib to suppress font warnings
 
 Think of this as the "power button" for your weather app!
 """
 
 import sys
 import os
+import warnings
+
+# Suppress matplotlib warnings BEFORE any other imports
+warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
+warnings.filterwarnings('ignore', message='.*Glyph.*missing from font.*')
+warnings.filterwarnings('ignore', message='.*Matplotlib currently does not support.*')
+warnings.filterwarnings('ignore', message='.*DejaVu Sans.*')
 
 # Add the main project folder to Python's search path
 # This helps Python find all our weather app files
 project_root = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, project_root)
+
+def configure_matplotlib():
+    """
+    Configure matplotlib to avoid font warnings and work better with our GUI.
+    
+    This function sets up matplotlib with safe font settings before the
+    weather app starts, preventing those annoying font warning messages.
+    """
+    try:
+        import matplotlib
+        
+        # Use non-interactive backend first
+        matplotlib.use('Agg')
+        
+        # Configure safe font settings
+        matplotlib.rcParams.update({
+            'font.family': ['DejaVu Sans', 'Arial', 'Liberation Sans', 'sans-serif'],
+            'font.size': 10,
+            'axes.unicode_minus': False,  # Fix minus sign rendering
+            'figure.autolayout': True,    # Automatic layout adjustment
+            'text.usetex': False,         # Don't use LaTeX for text rendering
+            'mathtext.default': 'regular', # Use regular fonts for math text
+        })
+        
+        # Switch to GUI backend for our weather app
+        matplotlib.use('TkAgg')
+        
+        print("✓ Matplotlib configured successfully")
+        return True
+        
+    except ImportError:
+        print("ℹ️  Matplotlib not available - graphs will be disabled")
+        return False
+    except Exception as e:
+        print(f"⚠️  Matplotlib configuration warning: {e}")
+        return False
 
 def check_dependencies():
     """
@@ -37,7 +81,15 @@ def check_dependencies():
         'PIL',       # For handling weather icons and images
     ]
     
+    # Optional modules for enhanced features
+    optional_modules = [
+        'matplotlib',  # For creating weather graphs
+        'numpy',      # For numerical calculations in graphs
+        'pandas',     # For data processing in graphs
+    ]
+    
     missing = []  # Keep track of what's missing
+    missing_optional = []  # Keep track of missing optional modules
     
     # Try to import each required library
     for module in required_modules:
@@ -48,13 +100,27 @@ def check_dependencies():
             missing.append(module)  # Add to missing list
             print(f"❌ {module} missing")  # Error message
     
-    # If anything is missing, tell the user how to fix it
+    # Check optional modules
+    for module in optional_modules:
+        try:
+            __import__(module)
+            print(f"✓ {module} found (optional)")
+        except ImportError:
+            missing_optional.append(module)
+            print(f"ℹ️  {module} missing (optional)")
+    
+    # If core modules are missing, tell the user how to fix it
     if missing:
-        print(f"\nMissing dependencies: {', '.join(missing)}")
+        print(f"\nMissing required dependencies: {', '.join(missing)}")
         print("Please install them using: pip install requests pillow")
         return False
     
-    print("✓ All dependencies found")
+    # Show info about optional modules
+    if missing_optional:
+        print(f"\nOptional features disabled due to missing: {', '.join(missing_optional)}")
+        print("For graphs feature, install: pip install matplotlib numpy pandas")
+    
+    print("✓ All required dependencies found")
     return True
 
 
@@ -103,11 +169,14 @@ def run_weather_app():
             print("\n❌ Cannot start app - missing dependencies")
             return False
         
-        # Step 2: Make sure we have a place to save weather data
+        # Step 2: Configure matplotlib to prevent font warnings
+        configure_matplotlib()
+        
+        # Step 3: Make sure we have a place to save weather data
         if not create_data_directory():
             print("\n⚠️ Warning: Could not create data directory")
         
-        # Step 3: Import and start the actual weather app
+        # Step 4: Import and start the actual weather app
         print("\n🚀 Launching weather app...")
         from config.weather_app import run_app
         run_app()  # This opens the weather app window

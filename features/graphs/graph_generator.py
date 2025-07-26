@@ -1,9 +1,9 @@
 """
-Weather Graph Generator - Optimized Version with Beginner Comments
-==================================================================
+Weather Graph Generator - Fixed Version with Font Handling
+=========================================================
 
 This file creates different types of graphs to show weather data visually.
-Think of it like making charts in Excel, but for weather information!
+Fixed to handle font issues and provide better error handling.
 
 Key Features:
 - Temperature trends (line graphs)
@@ -11,8 +11,8 @@ Key Features:
 - Humidity tracking (line graphs)
 - Weather conditions pie charts
 - Prediction accuracy tracking
-
-The graphs have working hover tooltips that show details when you move your mouse over them.
+- Proper font handling for all text
+- Enhanced error handling
 """
 
 # Import required libraries for making graphs and handling data
@@ -22,9 +22,11 @@ try:
     import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
     from matplotlib.figure import Figure
+    import matplotlib.font_manager as fm
     import numpy as np
     from datetime import datetime, timedelta
     import random
+    import warnings
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
     # If matplotlib isn't installed, we'll show an error message later
@@ -39,11 +41,7 @@ class WeatherGraphGenerator:
     """
     Main class that creates different types of weather graphs.
     
-    Think of this like a specialized drawing tool that knows how to:
-    - Draw temperature lines over time
-    - Create bar charts for daily temperature ranges
-    - Make pie charts showing different weather conditions
-    - Add interactive hover tooltips to all graphs
+    Fixed to handle font issues and provide better error handling.
     """
     
     def __init__(self, app):
@@ -59,22 +57,51 @@ class WeatherGraphGenerator:
         self._data_cache = {}
         self._cache_timeout = 300  # Cache data for 5 minutes
         
+        # Set up proper font handling
+        self._setup_fonts()
+        
+        # Suppress specific matplotlib warnings
+        self._suppress_font_warnings()
+        
+    def _setup_fonts(self):
+        """
+        Set up proper font handling to avoid font warnings.
+        """
+        try:
+            # Configure matplotlib to use safe, widely available fonts
+            plt.rcParams['font.family'] = ['DejaVu Sans', 'Arial', 'sans-serif']
+            plt.rcParams['font.size'] = 10
+            plt.rcParams['axes.unicode_minus'] = False  # Fix minus sign rendering
+            
+            # Set up fallback fonts for different text elements
+            plt.rcParams['axes.titlesize'] = 12
+            plt.rcParams['axes.labelsize'] = 10
+            plt.rcParams['xtick.labelsize'] = 9
+            plt.rcParams['ytick.labelsize'] = 9
+            plt.rcParams['legend.fontsize'] = 9
+            
+        except Exception as e:
+            print(f"Font setup warning: {e}")
+    
+    def _suppress_font_warnings(self):
+        """
+        Suppress specific matplotlib font warnings that clutter output.
+        """
+        # Filter out Devanagari font warnings specifically
+        warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
+        warnings.filterwarnings('ignore', message='.*Glyph.*missing from font.*')
+        warnings.filterwarnings('ignore', message='.*Matplotlib currently does not support.*')
+        
     def generate_graph(self, graph_type, city):
         """
         Main method to create any type of weather graph.
         
-        This is like a factory that decides which specific graph to make
-        based on what type you request.
-        
         Args:
-            graph_type (str): What kind of graph to make ("temperature_trend", "humidity_trends", etc.)
+            graph_type (str): What kind of graph to make
             city (str): Which city to show data for
             
         Returns:
             tuple: (figure_object, success_status, error_message)
-                - figure_object: The actual graph (or None if failed)
-                - success_status: True if it worked, False if there was a problem
-                - error_message: What went wrong (or None if successful)
         """
         # First, check if matplotlib is available
         if not MATPLOTLIB_AVAILABLE:
@@ -83,6 +110,9 @@ class WeatherGraphGenerator:
         try:
             # Set up matplotlib to use a clean, professional style
             plt.style.use('default')
+            
+            # Apply our font settings
+            self._setup_fonts()
             
             # Decide which specific graph method to call based on the type requested
             graph_methods = {
@@ -107,17 +137,6 @@ class WeatherGraphGenerator:
     def _generate_temperature_trend(self, city):
         """
         Create a line graph showing how temperature changes over 7 days.
-        
-        This shows three lines:
-        - Maximum daily temperature (red line)
-        - Minimum daily temperature (blue line)  
-        - Average daily temperature (green line)
-        
-        Args:
-            city (str): City name to get data for
-            
-        Returns:
-            tuple: (figure, success, error_message)
         """
         try:
             # Try to get real weather data from our API
@@ -133,12 +152,12 @@ class WeatherGraphGenerator:
                 min_temps = data.get('temperature_2m_min', [])
                 mean_temps = data.get('temperature_2m_mean', [])
                 
-                # Make sure the data makes sense (no missing values, logical relationships)
+                # Make sure the data makes sense
                 max_temps, min_temps, mean_temps = self._validate_temperature_data(max_temps, min_temps, mean_temps)
             
-            # Create the figure (this is like a blank canvas for our graph)
+            # Create the figure with safe font settings
             fig = Figure(figsize=(12, 7), dpi=100)
-            ax = fig.add_subplot(111)  # Add one subplot that fills the whole figure
+            ax = fig.add_subplot(111)
             
             # Draw the three temperature lines with different colors and markers
             line1 = ax.plot(dates, max_temps, 'r-', label='Max Temperature', linewidth=3, 
@@ -148,19 +167,19 @@ class WeatherGraphGenerator:
             line3 = ax.plot(dates, mean_temps, 'g-', label='Average Temperature', linewidth=3, 
                            marker='^', markersize=8, markerfacecolor='green', markeredgecolor='darkgreen')[0]
             
-            # Add interactive hover tooltips (so users can see exact values)
+            # Add interactive hover tooltips
             self._add_working_hover(ax, fig, [
                 (line1, dates, max_temps, 'Max Temperature'),
                 (line2, dates, min_temps, 'Min Temperature'), 
                 (line3, dates, mean_temps, 'Average Temperature')
             ])
             
-            # Add labels and formatting to make the graph look professional
+            # Add labels and formatting with safe fonts
             ax.set_title(f'7-Day Temperature Trend - {city}', fontsize=18, fontweight='bold', pad=15)
             ax.set_xlabel('Date', fontsize=14, fontweight='bold')
             ax.set_ylabel('Temperature (°C)', fontsize=14, fontweight='bold')
             ax.legend(fontsize=12, loc='best')
-            ax.grid(True, alpha=0.3)  # Add a subtle grid to help read values
+            ax.grid(True, alpha=0.3)
             
             # Make the tick labels readable
             ax.tick_params(axis='both', which='major', labelsize=11)
@@ -168,10 +187,10 @@ class WeatherGraphGenerator:
             # Format the date labels on x-axis
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
             ax.xaxis.set_major_locator(mdates.DayLocator())
-            fig.autofmt_xdate()  # Rotate date labels so they don't overlap
+            fig.autofmt_xdate()
             
-            # Adjust layout so nothing gets cut off
-            fig.tight_layout(pad=2.0, rect=[0.05, 0.05, 0.95, 0.95])
+            # Adjust layout with safe padding
+            self._safe_tight_layout(fig)
             return fig, True, None
             
         except Exception as e:
@@ -180,18 +199,9 @@ class WeatherGraphGenerator:
     def _generate_temperature_range(self, city):
         """
         Create a bar chart showing daily temperature ranges.
-        
-        Each bar shows how much the temperature varied on that day
-        (difference between max and min temperature).
-        
-        Args:
-            city (str): City name to get data for
-            
-        Returns:
-            tuple: (figure, success, error_message)
         """
         try:
-            # Get weather data (cached if available)
+            # Get weather data
             data = self._get_cached_weather_data(city)
             
             if not data or 'time' not in data:
@@ -209,18 +219,16 @@ class WeatherGraphGenerator:
                 # Validate and clean the data
                 max_temps, min_temps, _ = self._validate_temperature_data(max_temps, min_temps, [])
                 
-                # Calculate temperature ranges (only keep logical ones)
+                # Calculate temperature ranges
                 ranges = []
                 valid_dates = []
                 for i, (max_t, min_t) in enumerate(zip(max_temps, min_temps)):
                     if max_t is not None and min_t is not None and max_t > min_t:
                         range_val = max_t - min_t
-                        # Only include realistic temperature ranges (3-30°C daily variation)
-                        if 3 <= range_val <= 30:
+                        if 3 <= range_val <= 30:  # Realistic temperature ranges
                             ranges.append(range_val)
                             valid_dates.append(dates[i] if i < len(dates) else f"Day {i+1}")
                 
-                # If we don't have enough good data, use fallback values
                 if not ranges:
                     ranges = [random.uniform(8, 18) for _ in range(7)]
                     valid_dates = dates[:7]
@@ -236,11 +244,11 @@ class WeatherGraphGenerator:
             # Add hover tooltips for the bars
             self._add_bar_hover(ax, fig, bars, dates, ranges, "Temperature Range")
             
-            # Add titles and labels
+            # Add titles and labels with safe fonts
             ax.set_title(f'Daily Temperature Range - {city}', fontsize=18, fontweight='bold', pad=15)
             ax.set_xlabel('Date', fontsize=14, fontweight='bold')
             ax.set_ylabel('Temperature Range (°C)', fontsize=14, fontweight='bold')
-            ax.grid(True, alpha=0.3, axis='y')  # Only show horizontal grid lines
+            ax.grid(True, alpha=0.3, axis='y')
             
             # Set logical y-axis limits
             min_range = min(ranges) if ranges else 5
@@ -254,7 +262,7 @@ class WeatherGraphGenerator:
                        f'{range_val:.1f}°C', ha='center', va='bottom', 
                        fontsize=11, fontweight='bold')
             
-            fig.tight_layout(pad=2.0, rect=[0.05, 0.05, 0.95, 0.95])
+            self._safe_tight_layout(fig)
             return fig, True, None
             
         except Exception as e:
@@ -263,14 +271,6 @@ class WeatherGraphGenerator:
     def _generate_humidity_trends(self, city):
         """
         Create a line graph showing how humidity changes over time.
-        
-        Humidity is the amount of water vapor in the air, shown as a percentage.
-        
-        Args:
-            city (str): City name to get data for
-            
-        Returns:
-            tuple: (figure, success, error_message)
         """
         try:
             # Try to get humidity data from our local storage first
@@ -284,8 +284,7 @@ class WeatherGraphGenerator:
                 for record in city_data[-7:]:
                     try:
                         hum = float(record.get('humidity', 50))
-                        # Ensure humidity is within realistic bounds (0-100%)
-                        hum = max(0, min(100, hum))
+                        hum = max(0, min(100, hum))  # Ensure 0-100% range
                         humidity.append(hum)
                     except (ValueError, TypeError):
                         humidity.append(50)  # Use reasonable default
@@ -305,7 +304,7 @@ class WeatherGraphGenerator:
             # Add interactive hover tooltips
             self._add_working_hover(ax, fig, [(line, dates, humidity, 'Humidity')])
             
-            # Format the graph
+            # Format the graph with safe fonts
             ax.set_title(f'Humidity Trends - {city}', fontsize=18, fontweight='bold', pad=15)
             ax.set_xlabel('Date', fontsize=14, fontweight='bold')
             ax.set_ylabel('Humidity (%)', fontsize=14, fontweight='bold')
@@ -317,7 +316,7 @@ class WeatherGraphGenerator:
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
             fig.autofmt_xdate()
             
-            fig.tight_layout(pad=2.0, rect=[0.05, 0.05, 0.95, 0.95])
+            self._safe_tight_layout(fig)
             return fig, True, None
             
         except Exception as e:
@@ -326,14 +325,7 @@ class WeatherGraphGenerator:
     def _generate_conditions_distribution(self, city):
         """
         Create a pie chart showing the distribution of different weather conditions.
-        
-        This shows what percentage of time had clear skies, clouds, rain, etc.
-        
-        Args:
-            city (str): City name to get data for
-            
-        Returns:
-            tuple: (figure, success, error_message)
+        Fixed to use proper English condition names and realistic data.
         """
         try:
             # Get weather history from our local storage
@@ -345,37 +337,70 @@ class WeatherGraphGenerator:
                 condition_counts = {}
                 for record in city_data:
                     condition = record.get('description', 'Unknown')
-                    # Clean up condition names for better display
-                    condition = condition.title()
+                    # Clean up and standardize condition names
+                    condition = self._standardize_condition_name(condition)
                     condition_counts[condition] = condition_counts.get(condition, 0) + 1
                 
-                conditions = list(condition_counts.keys())
-                counts = list(condition_counts.values())
+                # Sort by frequency and take top 6 conditions
+                sorted_conditions = sorted(condition_counts.items(), key=lambda x: x[1], reverse=True)
+                if len(sorted_conditions) > 6:
+                    # Keep top 5 and group the rest as "Other"
+                    top_conditions = sorted_conditions[:5]
+                    other_count = sum(count for _, count in sorted_conditions[5:])
+                    if other_count > 0:
+                        top_conditions.append(("Other", other_count))
+                    conditions = [name for name, _ in top_conditions]
+                    counts = [count for _, count in top_conditions]
+                else:
+                    conditions = [name for name, _ in sorted_conditions]
+                    counts = [count for _, count in sorted_conditions]
             else:
-                # Use realistic sample data if we don't have enough real data
-                conditions = ['Clear Sky', 'Few Clouds', 'Scattered Clouds', 'Overcast Clouds', 'Light Rain']
-                counts = [35, 25, 20, 15, 5]  # Realistic distribution percentages
+                # Use realistic sample data for common weather conditions
+                conditions, counts = self._get_realistic_weather_distribution(city)
+            
+            # Ensure we have valid data
+            if not conditions or not counts or len(conditions) != len(counts):
+                conditions, counts = self._get_realistic_weather_distribution(city)
             
             # Create the pie chart figure
             fig = Figure(figsize=(10, 8), dpi=100)
             ax = fig.add_subplot(111)
             
             # Create attractive colors for the pie slices
-            colors = plt.cm.Set3(np.linspace(0, 1, len(conditions)))
-            wedges, texts, autotexts = ax.pie(counts, labels=conditions, autopct='%1.1f%%', 
-                                            colors=colors, startangle=90, textprops={'fontsize': 11})
+            colors = ['#87CEEB', '#98FB98', '#F0E68C', '#DDA0DD', '#F4A460', '#FFB6C1', '#D3D3D3']
+            colors = colors[:len(conditions)]  # Only use as many colors as we have conditions
             
-            # Add hover tooltips for the pie chart
-            self._add_pie_hover(ax, fig, wedges, conditions, counts)
+            # Create the pie chart with enhanced styling
+            wedges, texts, autotexts = ax.pie(
+                counts, 
+                labels=conditions, 
+                autopct='%1.1f%%',
+                colors=colors, 
+                startangle=90, 
+                textprops={'fontsize': 11, 'fontweight': 'bold'},
+                explode=[0.05] * len(conditions)  # Slightly separate all slices
+            )
+            
+            # Make labels more readable
+            for text in texts:
+                text.set_fontsize(12)
+                text.set_fontweight('bold')
+                text.set_color('black')
             
             # Make percentage text bold and readable
             for autotext in autotexts:
                 autotext.set_fontweight('bold')
-                autotext.set_fontsize(12)
+                autotext.set_fontsize(11)
+                autotext.set_color('white')
+                autotext.set_bbox(dict(boxstyle='round,pad=0.3', facecolor='black', alpha=0.7))
             
-            ax.set_title(f'Weather Conditions Distribution - {city}', fontsize=18, fontweight='bold', pad=15)
+            # Add hover tooltips for the pie chart
+            self._add_pie_hover(ax, fig, wedges, conditions, counts)
             
-            fig.tight_layout(pad=2.0, rect=[0.05, 0.05, 0.95, 0.95])
+            ax.set_title(f'Weather Conditions Distribution - {city}', 
+                        fontsize=18, fontweight='bold', pad=20)
+            
+            self._safe_tight_layout(fig)
             return fig, True, None
             
         except Exception as e:
@@ -384,21 +409,12 @@ class WeatherGraphGenerator:
     def _generate_prediction_accuracy(self, city):
         """
         Create a line graph showing how accurate our weather predictions have been over time.
-        
-        This helps users understand how reliable our forecasts are.
-        
-        Args:
-            city (str): City name to get data for
-            
-        Returns:
-            tuple: (figure, success, error_message)
         """
         try:
             # Generate realistic prediction accuracy data over 2 weeks
             dates = [datetime.now() - timedelta(days=i) for i in range(14, 0, -1)]
             
-            # Create realistic accuracy pattern (predictions are usually pretty good)
-            base_accuracy = 75
+            # Create realistic accuracy pattern
             accuracy = []
             for i, date in enumerate(dates):
                 # Accuracy tends to improve over time as systems get better
@@ -423,7 +439,7 @@ class WeatherGraphGenerator:
             ax.axhline(y=75, color='orange', linestyle='--', alpha=0.7, linewidth=2, label='Good (75%)')
             ax.axhline(y=60, color='r', linestyle='--', alpha=0.7, linewidth=2, label='Fair (60%)')
             
-            # Format the graph
+            # Format the graph with safe fonts
             ax.set_title(f'Prediction Accuracy Over Time - {city}', fontsize=18, fontweight='bold', pad=15)
             ax.set_xlabel('Date', fontsize=14, fontweight='bold')
             ax.set_ylabel('Accuracy (%)', fontsize=14, fontweight='bold')
@@ -435,37 +451,165 @@ class WeatherGraphGenerator:
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%m/%d'))
             fig.autofmt_xdate()
             
-            fig.tight_layout(pad=2.0, rect=[0.05, 0.05, 0.95, 0.95])
+            self._safe_tight_layout(fig)
             return fig, True, None
             
         except Exception as e:
             return None, False, str(e)
     
+    def _standardize_condition_name(self, condition):
+        """
+        Standardize weather condition names to proper English terms.
+        
+        This function maps various weather API responses to standard, user-friendly names.
+        """
+        # Convert to string and clean up
+        condition = str(condition).strip().lower()
+        
+        # Dictionary mapping various condition names to standardized English names
+        condition_mapping = {
+            # Clear sky variations
+            'clear': 'Clear Sky',
+            'clear sky': 'Clear Sky',
+            'sunny': 'Clear Sky',
+            'fair': 'Clear Sky',
+            
+            # Cloud variations
+            'few clouds': 'Few Clouds',
+            'partly cloudy': 'Few Clouds',
+            'partly sunny': 'Few Clouds',
+            'scattered clouds': 'Scattered Clouds',
+            'broken clouds': 'Broken Clouds',
+            'overcast': 'Overcast Clouds',
+            'overcast clouds': 'Overcast Clouds',
+            'cloudy': 'Overcast Clouds',
+            'mostly cloudy': 'Overcast Clouds',
+            
+            # Rain variations
+            'light rain': 'Light Rain',
+            'rain': 'Rain',
+            'moderate rain': 'Rain',
+            'heavy rain': 'Heavy Rain',
+            'drizzle': 'Light Rain',
+            'shower': 'Rain Showers',
+            'showers': 'Rain Showers',
+            
+            # Snow variations
+            'snow': 'Snow',
+            'light snow': 'Light Snow',
+            'heavy snow': 'Heavy Snow',
+            'sleet': 'Sleet',
+            
+            # Storm variations
+            'thunderstorm': 'Thunderstorm',
+            'storm': 'Thunderstorm',
+            'thunder': 'Thunderstorm',
+            
+            # Fog/Mist variations
+            'fog': 'Fog',
+            'mist': 'Mist',
+            'haze': 'Haze',
+            
+            # Wind variations
+            'windy': 'Windy',
+            'breezy': 'Windy',
+            
+            # Default fallbacks
+            'unknown': 'Mixed Conditions',
+            '': 'Mixed Conditions'
+        }
+        
+        # Try to find exact match first
+        if condition in condition_mapping:
+            return condition_mapping[condition]
+        
+        # Try partial matches for compound conditions
+        for key, value in condition_mapping.items():
+            if key in condition:
+                return value
+        
+        # If no match found, clean up the original and title case it
+        cleaned = condition.replace('_', ' ').replace('-', ' ').title()
+        
+        # Remove any non-ASCII characters
+        cleaned = ''.join(char if ord(char) < 128 else '' for char in cleaned)
+        
+        # Return cleaned version or fallback
+        return cleaned if cleaned.strip() else 'Mixed Conditions'
+    
+    def _get_realistic_weather_distribution(self, city):
+        """
+        Generate realistic weather condition distribution based on location and season.
+        
+        Args:
+            city (str): City name for seasonal adjustments
+            
+        Returns:
+            tuple: (condition_names, condition_counts)
+        """
+        from datetime import datetime
+        
+        current_month = datetime.now().month
+        
+        # Seasonal adjustments
+        if 12 <= current_month <= 2:  # Winter
+            conditions = ['Overcast Clouds', 'Snow', 'Clear Sky', 'Few Clouds', 'Light Rain', 'Fog']
+            counts = [30, 25, 20, 15, 7, 3]
+        elif 3 <= current_month <= 5:  # Spring
+            conditions = ['Few Clouds', 'Clear Sky', 'Light Rain', 'Overcast Clouds', 'Rain Showers', 'Thunderstorm']
+            counts = [28, 25, 20, 15, 8, 4]
+        elif 6 <= current_month <= 8:  # Summer
+            conditions = ['Clear Sky', 'Few Clouds', 'Thunderstorm', 'Scattered Clouds', 'Rain Showers', 'Haze']
+            counts = [35, 25, 15, 12, 8, 5]
+        else:  # Fall
+            conditions = ['Overcast Clouds', 'Clear Sky', 'Few Clouds', 'Light Rain', 'Fog', 'Windy']
+            counts = [30, 25, 20, 15, 6, 4]
+        
+        # Adjust for specific cities (optional enhancement)
+        city_lower = city.lower()
+        if 'desert' in city_lower or city_lower in ['phoenix', 'las vegas', 'tucson']:
+            # Desert cities - more clear weather
+            conditions = ['Clear Sky', 'Few Clouds', 'Scattered Clouds', 'Haze', 'Windy']
+            counts = [50, 25, 15, 7, 3]
+        elif city_lower in ['seattle', 'portland', 'vancouver']:
+            # Pacific Northwest - more rain and clouds
+            conditions = ['Overcast Clouds', 'Light Rain', 'Few Clouds', 'Rain Showers', 'Clear Sky', 'Fog']
+            counts = [35, 25, 15, 12, 8, 5]
+        elif city_lower in ['miami', 'new orleans', 'houston']:
+            # Humid subtropical - more thunderstorms
+            conditions = ['Few Clouds', 'Clear Sky', 'Thunderstorm', 'Rain Showers', 'Haze', 'Overcast Clouds']
+            counts = [30, 25, 18, 12, 10, 5]
+        
+        return conditions, counts
+    
+    def _safe_tight_layout(self, fig):
+        """
+        Apply tight_layout with error handling to prevent font warnings.
+        """
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                fig.tight_layout(pad=2.0, rect=[0.05, 0.05, 0.95, 0.95])
+        except Exception:
+            # If tight_layout fails, just use basic layout
+            pass
+    
     def _add_working_hover(self, ax, fig, line_data):
         """
         Add interactive hover tooltips to line plots.
-        
-        When users move their mouse over a data point, this shows a popup
-        with the exact date and value.
-        
-        Args:
-            ax: The matplotlib axes object
-            fig: The matplotlib figure object
-            line_data: List of tuples containing (line, x_data, y_data, label)
         """
         try:
-            # Create the annotation object (this is the popup tooltip)
+            # Create the annotation object
             annot = ax.annotate('', xy=(0,0), xytext=(20,20), textcoords="offset points",
                               bbox=dict(boxstyle="round", fc="white", alpha=0.8),
                               arrowprops=dict(arrowstyle="->"))
-            annot.set_visible(False)  # Hide it initially
+            annot.set_visible(False)
             
             def update_annot(line, x_data, y_data, label, ind):
                 """Update the tooltip with data for the hovered point."""
                 x, y = line.get_data()
-                annot.xy = (x[ind], y[ind])  # Position tooltip at the data point
+                annot.xy = (x[ind], y[ind])
                 
-                # Format the tooltip text nicely
                 if isinstance(x_data[ind], datetime):
                     date_str = x_data[ind].strftime('%Y-%m-%d')
                 else:
@@ -478,39 +622,27 @@ class WeatherGraphGenerator:
             
             def hover(event):
                 """Handle mouse movement over the graph."""
-                if event.inaxes == ax:  # Mouse is over our graph
-                    # Check each line to see if mouse is near it
+                if event.inaxes == ax:
                     for line, x_data, y_data, label in line_data:
                         cont, ind = line.contains(event)
-                        if cont:  # Mouse is close to this line
+                        if cont:
                             update_annot(line, x_data, y_data, label, ind["ind"][0])
-                            fig.canvas.draw_idle()  # Redraw to show tooltip
+                            fig.canvas.draw_idle()
                             return
                 
-                # If we get here, mouse isn't near any line
                 annot.set_visible(False)
                 fig.canvas.draw_idle()
             
-            # Connect the hover function to mouse movement events
             fig.canvas.mpl_connect("motion_notify_event", hover)
             
         except Exception as e:
-            pass  # If hover setup fails, the graph still works, just without tooltips
+            pass  # Fail silently if hover setup doesn't work
     
     def _add_bar_hover(self, ax, fig, bars, labels, values, title):
         """
         Add interactive hover tooltips to bar charts.
-        
-        Args:
-            ax: The matplotlib axes object
-            fig: The matplotlib figure object  
-            bars: List of bar objects from the bar chart
-            labels: Labels for each bar (usually dates)
-            values: The values for each bar
-            title: Title to show in tooltip
         """
         try:
-            # Create tooltip annotation
             annot = ax.annotate('', xy=(0,0), xytext=(20,20), textcoords="offset points",
                               bbox=dict(boxstyle="round", fc="white", alpha=0.8),
                               arrowprops=dict(arrowstyle="->"))
@@ -519,43 +651,31 @@ class WeatherGraphGenerator:
             def hover(event):
                 """Handle mouse movement over bars."""
                 if event.inaxes == ax:
-                    # Check if mouse is over any bar
                     for i, bar in enumerate(bars):
-                        if bar.contains(event)[0]:  # Mouse is over this bar
-                            # Position tooltip at top of bar
+                        if bar.contains(event)[0]:
                             x = bar.get_x() + bar.get_width()/2
                             y = bar.get_height()
                             annot.xy = (x, y)
                             
-                            # Create tooltip text
                             text = f"{title}\n{labels[i]}\nValue: {values[i]:.1f}"
                             annot.set_text(text)
                             annot.set_visible(True)
                             fig.canvas.draw_idle()
                             return
                     
-                    # Mouse not over any bar
                     annot.set_visible(False)
                     fig.canvas.draw_idle()
             
             fig.canvas.mpl_connect("motion_notify_event", hover)
             
         except Exception as e:
-            pass  # Fail silently if hover setup doesn't work
+            pass
     
     def _add_pie_hover(self, ax, fig, wedges, labels, values):
         """
         Add interactive hover tooltips to pie charts.
-        
-        Args:
-            ax: The matplotlib axes object
-            fig: The matplotlib figure object
-            wedges: List of pie wedge objects
-            labels: Labels for each wedge
-            values: Values for each wedge
         """
         try:
-            # Create tooltip annotation
             annot = ax.annotate('', xy=(0,0), xytext=(20,20), textcoords="offset points",
                               bbox=dict(boxstyle="round", fc="white", alpha=0.8))
             annot.set_visible(False)
@@ -563,54 +683,38 @@ class WeatherGraphGenerator:
             def hover(event):
                 """Handle mouse movement over pie wedges."""
                 if event.inaxes == ax:
-                    # Check if mouse is over any wedge
                     for i, wedge in enumerate(wedges):
-                        if wedge.contains(event)[0]:  # Mouse is over this wedge
-                            # Calculate percentage for this wedge
+                        if wedge.contains(event)[0]:
                             total = sum(values)
                             percentage = (values[i] / total) * 100
                             
-                            # Position tooltip at mouse location
                             annot.xy = (event.xdata, event.ydata)
                             
-                            # Create tooltip text
                             text = f"{labels[i]}\nCount: {values[i]}\nPercentage: {percentage:.1f}%"
                             annot.set_text(text)
                             annot.set_visible(True)
                             fig.canvas.draw_idle()
                             return
                     
-                    # Mouse not over any wedge
                     annot.set_visible(False)
                     fig.canvas.draw_idle()
             
             fig.canvas.mpl_connect("motion_notify_event", hover)
             
         except Exception as e:
-            pass  # Fail silently if hover setup doesn't work
+            pass
     
     def _get_cached_weather_data(self, city):
         """
         Get weather data from cache if available, otherwise fetch fresh data.
-        
-        This improves performance by avoiding repeated API calls for the same city.
-        
-        Args:
-            city (str): City name
-            
-        Returns:
-            dict: Weather data or None if not available
         """
         import time
         
-        # Check if we have cached data for this city
         if city in self._data_cache:
             data, timestamp = self._data_cache[city]
-            # If data is less than 5 minutes old, use it
             if time.time() - timestamp < self._cache_timeout:
                 return data
         
-        # Fetch fresh data and cache it
         try:
             data = fetch_world_history(city)
             if data:
@@ -622,17 +726,7 @@ class WeatherGraphGenerator:
     def _generate_realistic_temp_data(self, city):
         """
         Generate realistic temperature data when API fails.
-        
-        This creates sample data that looks like real weather patterns
-        based on the current season.
-        
-        Args:
-            city (str): City name (used for seasonal adjustments)
-            
-        Returns:
-            tuple: (dates, max_temps, min_temps, mean_temps)
         """
-        # Create dates for the last 7 days
         dates = [datetime.now() - timedelta(days=i) for i in range(6, -1, -1)]
         
         # Adjust base temperature based on current season
@@ -648,7 +742,6 @@ class WeatherGraphGenerator:
         else:  # Winter
             base_temp = 0
         
-        # Generate temperature sequences with realistic day-to-day variation
         max_temps = self._generate_realistic_temps(base_temp + 5, 3, 7)
         min_temps = [max_t - random.uniform(8, 15) for max_t in max_temps]
         mean_temps = [(max_t + min_t) / 2 for max_t, min_t in zip(max_temps, min_temps)]
@@ -658,24 +751,13 @@ class WeatherGraphGenerator:
     def _generate_realistic_temps(self, base, variation, count):
         """
         Generate a realistic temperature sequence with trends and variation.
-        
-        Args:
-            base (float): Base temperature to start from
-            variation (float): How much temperatures can vary day to day
-            count (int): How many temperature values to generate
-            
-        Returns:
-            list: List of realistic temperature values
         """
         temps = []
         current = base
         
         for i in range(count):
-            # Add gradual trend (temperatures don't jump randomly)
-            trend = random.uniform(-0.5, 0.5)  # Small daily trend
-            # Add some random variation
-            daily_var = random.gauss(0, variation)  # Normal distribution around 0
-            
+            trend = random.uniform(-0.5, 0.5)
+            daily_var = random.gauss(0, variation)
             current += trend + daily_var
             temps.append(round(current, 1))
         
@@ -684,24 +766,13 @@ class WeatherGraphGenerator:
     def _generate_realistic_humidity(self, count):
         """
         Generate realistic humidity data (0-100%).
-        
-        Humidity tends to be cyclical and stays within reasonable bounds.
-        
-        Args:
-            count (int): How many humidity values to generate
-            
-        Returns:
-            list: List of realistic humidity percentages
         """
         humidity = []
-        current = random.uniform(40, 70)  # Start with reasonable humidity
+        current = random.uniform(40, 70)
         
         for i in range(count):
-            # Small daily changes in humidity
             trend = random.uniform(-2, 2)
             current += trend
-            
-            # Keep humidity within realistic bounds (20-90%)
             current = max(20, min(90, current))
             humidity.append(round(current, 1))
         
@@ -710,21 +781,7 @@ class WeatherGraphGenerator:
     def _validate_temperature_data(self, max_temps, min_temps, mean_temps):
         """
         Clean and validate temperature data to ensure it makes logical sense.
-        
-        This fixes common data problems like:
-        - Missing values (None)
-        - Illogical relationships (min > max)
-        - Extreme outliers
-        
-        Args:
-            max_temps (list): Maximum temperatures
-            min_temps (list): Minimum temperatures  
-            mean_temps (list): Mean temperatures
-            
-        Returns:
-            tuple: (cleaned_max_temps, cleaned_min_temps, cleaned_mean_temps)
         """
-        # If any list is empty, generate reasonable defaults
         if not max_temps:
             max_temps = self._generate_realistic_temps(20, 5, 7)
         if not min_temps:
@@ -732,26 +789,24 @@ class WeatherGraphGenerator:
         if not mean_temps:
             mean_temps = [(max_t + min_t) / 2 for max_t, min_t in zip(max_temps, min_temps)]
         
-        # Fill any None values with reasonable defaults
+        # Fill None values
         for i in range(len(max_temps)):
             if max_temps[i] is None:
-                max_temps[i] = 20.0  # Reasonable default temperature
+                max_temps[i] = 20.0
             
             if i < len(min_temps) and min_temps[i] is None:
-                min_temps[i] = max_temps[i] - 10  # Min is typically 10 degrees less
+                min_temps[i] = max_temps[i] - 10
                 
             if i < len(mean_temps) and mean_temps[i] is None:
                 min_val = min_temps[i] if i < len(min_temps) else max_temps[i] - 10
                 mean_temps[i] = (max_temps[i] + min_val) / 2
         
-        # Ensure logical temperature relationships (max >= mean >= min)
+        # Ensure logical relationships
         for i in range(len(max_temps)):
             if i < len(min_temps) and max_temps[i] <= min_temps[i]:
-                # If max is not greater than min, fix it
                 min_temps[i] = max_temps[i] - 5
                 
             if i < len(mean_temps):
-                # Recalculate mean to be between min and max
                 min_val = min_temps[i] if i < len(min_temps) else max_temps[i] - 5
                 mean_temps[i] = (max_temps[i] + min_val) / 2
         
