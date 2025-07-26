@@ -1,16 +1,9 @@
 """
-Sun and Moon Phases Controller
-===============================
+Sun and Moon Phases Controller - Fixed Language Change Handling
+==============================================================
 
-This file manages the sun and moon phases feature of our weather application.
-It coordinates between getting astronomical data and displaying it on screen.
-
-Key Responsibilities:
-- Fetching sun and moon data from APIs
-- Managing the visual display of celestial information  
-- Handling user interactions and auto-refresh
-- Caching data for performance
-- Supporting multiple languages (English, Hindi, Spanish)
+Fixed the controller to properly handle language changes by calling
+the display's new update_for_language_change method.
 """
 
 import threading
@@ -26,6 +19,7 @@ class SunMoonController:
     Main controller class for the Sun and Moon Phases feature.
     
     Coordinates between API calls, display updates, and user interactions.
+    Now properly handles language changes with improved translation support.
     """
     
     def __init__(self, app, gui_controller):
@@ -245,8 +239,24 @@ class SunMoonController:
             pass
     
     def handle_language_change(self, window_width=None, window_height=None):
-        """Handle language changes by completely rebuilding the display."""
+        """
+        IMPROVED: Handle language changes more efficiently.
+        
+        Instead of completely rebuilding the page, we now update existing
+        text elements with new translations, which is much faster and smoother.
+        """
         try:
+            # Method 1: Try the new efficient update method first
+            if hasattr(self.display, 'update_for_language_change'):
+                self.display.update_for_language_change()
+                
+                # If we have current data, update the sections with translated content
+                if self.current_data:
+                    self._update_display_safe(self.current_data)
+                
+                return  # Success! No need for complete rebuild
+            
+            # Method 2: Fallback to complete rebuild if new method not available
             # Get window dimensions if not provided
             if window_width is None:
                 window_width = self.app.winfo_width()
@@ -264,6 +274,8 @@ class SunMoonController:
             
             # Clear display references
             self.display.info_sections.clear()
+            self.display.direction_labels.clear()
+            self.display.degree_labels.clear()
             self.display.day_night_label = None
             self.display.sun_indicator = None
             self.display.moon_indicator = None
@@ -280,7 +292,11 @@ class SunMoonController:
             traceback.print_exc()
 
     def refresh_for_language_change(self):
-        """Public method to refresh display for language changes."""
+        """
+        IMPROVED: Public method to refresh display for language changes.
+        
+        Now uses the more efficient update method when possible.
+        """
         try:
             window_width = self.app.winfo_width() or 800
             window_height = self.app.winfo_height() or 600
@@ -368,3 +384,4 @@ def get_quick_sun_moon_data(city):
         return fetch_sun_moon_data(city)
     except Exception as e:
         return {"error": str(e), "city": city}
+    
