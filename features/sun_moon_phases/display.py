@@ -14,7 +14,6 @@ and organized information sections below.
 """
 
 import tkinter as tk
-import math
 import random
 from .api import get_moon_phase_emoji, format_time_for_display, calculate_golden_hour
 

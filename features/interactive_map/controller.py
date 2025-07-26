@@ -3,7 +3,6 @@ import tkinter as tk
 from tkinter import ttk
 from tkintermapview import TkinterMapView
 import requests
-import os
 import threading
 
 # Import our local tile server to combine map and weather data

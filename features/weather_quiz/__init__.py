@@ -1,23 +1,23 @@
 """
-Enhanced Weather Quiz Module
-============================
+Weather Quiz Module - Static Questions Database Version
+========================================================
 
-This module provides an intelligent weather quiz feature that uses
-pre-computed questions based on real weather data analysis.
+This module provides a weather quiz feature using a pre-computed static questions database.
+No CSV processing or real-time data analysis is performed.
 
 Features:
-- 30+ pre-computed quiz questions from comprehensive weather data analysis
+- 40 pre-computed quiz questions from comprehensive weather data analysis
 - Random selection of 5 questions per quiz for variety
 - Multiple choice answers with detailed explanations
 - Categorized questions covering different weather aspects
 - Performance tracking and educational insights
-- Consistent quiz experience without data processing delays
+- Instant quiz generation with no loading delays
 
 Data Sources:
-- Pre-analyzed weather dataset with multiple cities
-- Questions based on temperature, rainfall, humidity, and wind data
+- Static database of pre-computed questions based on weather analysis
+- Questions derived from temperature, rainfall, humidity, and wind patterns
 - Historical weather patterns and seasonal variations
-- Comparative analysis across different climates
+- Comparative analysis across different global climates
 
 Question Categories:
 - Temperature Analysis: City temperature comparisons and extremes
@@ -27,18 +27,20 @@ Question Categories:
 - Seasonal Variations: Monthly and seasonal weather patterns
 - Weather Trends: Temperature stability and variability analysis
 - Atmospheric Conditions: Wind, humidity, and pressure patterns
+- Fun Weather Facts: Interesting meteorological trivia
 
 Educational Value:
-Each question teaches meteorological concepts through real-world data,
-helping users understand weather patterns, climate differences, and
+Each question teaches meteorological concepts through real-world data patterns,
+helping users understand weather systems, climate differences, and
 atmospheric science principles. All questions include detailed explanations
 that provide context and learning opportunities.
 
 Performance Benefits:
-- No CSV loading delays - instant quiz generation
+- Instant quiz generation - no data processing delays
 - Consistent question quality and difficulty
-- Reliable quiz experience regardless of data file availability
+- Reliable quiz experience with no external dependencies
 - Pre-validated questions with accurate answers and explanations
+- No CSV file requirements or data loading concerns
 """
 
 from .controller import WeatherQuizController
@@ -47,7 +49,9 @@ from .questions_database import (
     get_all_questions, 
     get_questions_by_category, 
     get_categories,
-    get_question_count
+    get_question_count,
+    get_random_questions,
+    get_question_by_id
 )
 
 __all__ = [
@@ -56,13 +60,16 @@ __all__ = [
     'get_all_questions',
     'get_questions_by_category', 
     'get_categories',
-    'get_question_count'
+    'get_question_count',
+    'get_random_questions',
+    'get_question_by_id'
 ]
 
-__version__ = "3.0.0"
+__version__ = "4.0.0"
 __author__ = "Weather App Team"
-__description__ = "Enhanced weather quiz with static question database"
-__data_sources__ = "Pre-computed questions from comprehensive weather data analysis"
+__description__ = "Static weather quiz with pre-computed questions database"
+__data_sources__ = "Static database of 40 pre-computed weather analysis questions"
+__dependencies__ = "None - completely self-contained"
 __capabilities__ = [
     "Static question database",
     "Random question selection", 
@@ -70,5 +77,7 @@ __capabilities__ = [
     "Educational insights",
     "Performance tracking",
     "Category-based filtering",
-    "Question search functionality"
+    "Question search functionality",
+    "No external data dependencies",
+    "Consistent quiz experience"
 ]

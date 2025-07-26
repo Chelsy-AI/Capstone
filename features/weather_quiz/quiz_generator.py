@@ -1,22 +1,27 @@
 """
-Simplified Weather Quiz Generator - Randomly selects questions from database
-Modified to pull 5 random questions from the static questions database
+Weather Quiz Generator - Uses static questions database only
 
-This module loads pre-defined questions and randomly selects 5 for each quiz session.
-All questions are based on real weather data analysis but are now stored statically.
+This module randomly selects questions from the pre-computed questions database.
+No CSV processing or data analysis - all questions are pre-defined and ready to use.
 """
 
 import random
 from typing import List, Dict, Any, Optional
-from .questions_database import get_all_questions, get_question_count, get_categories
+from .questions_database import (
+    get_all_questions, 
+    get_question_count, 
+    get_categories,
+    get_questions_by_category,
+    get_random_questions
+)
 
 
 class WeatherQuizGenerator:
     """
-    Simplified quiz generator that randomly selects questions from a static database.
+    Quiz generator that randomly selects questions from a static database.
     
-    This class no longer analyzes CSV data directly. Instead, it pulls from pre-computed
-    questions that were created based on comprehensive weather data analysis.
+    This class provides pre-computed questions based on comprehensive weather data analysis.
+    No real-time CSV processing is performed.
     """
     
     def __init__(self):
@@ -37,30 +42,34 @@ class WeatherQuizGenerator:
         else:
             print("❌ No questions available in database")
     
-    def generate_quiz(self) -> List[Dict[str, Any]]:
+    def generate_quiz(self, num_questions: int = 5) -> List[Dict[str, Any]]:
         """
-        Generate exactly 5 random quiz questions from the database.
+        Generate random quiz questions from the database.
         
-        This method randomly selects 5 unique questions from the static database,
-        ensuring variety and different quiz experiences each time.
+        Args:
+            num_questions: Number of questions to select (default 5)
         
         Returns:
-            List[Dict]: List of 5 quiz question dictionaries
+            List[Dict]: List of quiz question dictionaries
         """
-        # Check if we have enough questions
-        if not self.data_loaded or len(self.all_questions) < 5:
-            print("❌ Not enough questions in database to generate quiz")
+        if not self.data_loaded:
+            print("❌ No questions available in database")
             return []
         
-        print(f"Generating 5 random questions from {len(self.all_questions)} available questions")
+        # Ensure we don't try to select more questions than available
+        available_questions = len(self.all_questions)
+        if num_questions > available_questions:
+            print(f"⚠ Only {available_questions} questions available, selecting all")
+            num_questions = available_questions
         
-        # Randomly select 5 unique questions
-        selected_questions = random.sample(self.all_questions, 5)
+        print(f"Generating {num_questions} random questions from {available_questions} available questions")
+        
+        # Use the database function to get random questions
+        selected_questions = get_random_questions(num_questions)
         
         # Convert to the format expected by the controller
         quiz_questions = []
         for question_data in selected_questions:
-            # Create a copy and remove the ID to match expected format
             quiz_question = {
                 "question": question_data["question"],
                 "choices": question_data["choices"].copy(),
@@ -87,22 +96,25 @@ class WeatherQuizGenerator:
         if not self.data_loaded:
             return {
                 "data_available": False,
-                "message": "No questions available in database"
+                "message": "No questions available in database",
+                "total_records": 0,
+                "cities": []
             }
         
         # Count questions by category
         categories = self.get_categories()
         category_counts = {}
         for category in categories:
-            category_counts[category] = len([q for q in self.all_questions if q["category"] == category])
+            category_questions = get_questions_by_category(category)
+            category_counts[category] = len(category_questions)
         
         return {
             "data_available": True,
             "total_questions": len(self.all_questions),
             "categories": categories,
             "category_breakdown": category_counts,
-            "cities": ["Phoenix", "Ahmedabad", "Denver", "Columbus", "Lebrija"],  # Static list from questions
-            "total_records": "Pre-computed from comprehensive weather dataset",
+            "cities": ["Phoenix", "Ahmedabad", "Denver", "Columbus", "Lebrija"],
+            "total_records": f"{len(self.all_questions)} pre-computed questions",
             "quiz_capability": "static_database"
         }
     
@@ -114,15 +126,21 @@ class WeatherQuizGenerator:
             Dict containing quality assessment and list of issues
         """
         if not self.data_loaded:
-            return {"quality": "none", "issues": ["No questions loaded from database"]}
+            return {
+                "quality": "none", 
+                "issues": ["No questions loaded from database"]
+            }
         
         issues = []
         quality = "excellent"
         
         # Check if we have enough questions for variety
-        if len(self.all_questions) < 10:
-            issues.append(f"Limited question pool: only {len(self.all_questions)} questions")
+        total_questions = len(self.all_questions)
+        if total_questions < 10:
+            issues.append(f"Limited question pool: only {total_questions} questions")
             quality = "fair"
+        elif total_questions < 20:
+            quality = "good"
         
         # Check if we have diverse categories
         categories = self.get_categories()
@@ -130,35 +148,41 @@ class WeatherQuizGenerator:
             issues.append(f"Limited question variety: only {len(categories)} categories")
             quality = "good"
         
-        # Check for duplicate questions (basic check)
+        # Check for duplicate questions
         question_texts = [q["question"] for q in self.all_questions]
         if len(question_texts) != len(set(question_texts)):
             issues.append("Duplicate questions detected in database")
             quality = "good"
         
+        # Check each question has required fields
+        for i, question in enumerate(self.all_questions):
+            required_fields = ["question", "choices", "correct_answer", "explanation", "category"]
+            for field in required_fields:
+                if field not in question:
+                    issues.append(f"Question {i+1} missing required field: {field}")
+                    quality = "poor"
+        
         return {"quality": quality, "issues": issues}
     
     def get_categories(self) -> List[str]:
         """
-        Get all unique question categories.
+        Get all unique question categories from the database.
         
         Returns:
             List of category names
         """
         if self._categories is None:
-            self._categories = list(set(q["category"] for q in self.all_questions))
+            self._categories = get_categories()
         return self._categories
     
     def get_all_possible_questions(self) -> List[Dict[str, Any]]:
         """
         Get all possible questions from the database.
         
-        This is useful for showing users what types of questions are available.
-        
         Returns:
-            List of all question dictionaries with category information
+            List of all question dictionaries
         """
-        return self.all_questions.copy()  # Return a copy to prevent modification
+        return self.all_questions.copy()
     
     def get_questions_by_category(self, category: str) -> List[Dict[str, Any]]:
         """
@@ -170,7 +194,7 @@ class WeatherQuizGenerator:
         Returns:
             List of questions in the specified category
         """
-        return [q for q in self.all_questions if q["category"] == category]
+        return get_questions_by_category(category)
     
     def generate_quiz_from_category(self, category: str, num_questions: int = 5) -> List[Dict[str, Any]]:
         """
@@ -190,6 +214,7 @@ class WeatherQuizGenerator:
             num_questions = len(category_questions)
         
         if num_questions == 0:
+            print(f"❌ No questions found in category '{category}'")
             return []
         
         # Randomly select questions from the category
@@ -231,6 +256,9 @@ class WeatherQuizGenerator:
         Returns:
             List of questions containing the search term
         """
+        if not self.data_loaded:
+            return []
+        
         search_term = search_term.lower()
         matching_questions = []
         

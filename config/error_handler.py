@@ -18,7 +18,6 @@ Think of this as the app's "immune system" that keeps it healthy even when thing
 """
 
 import logging      # For recording error messages
-import traceback    # For detailed error information
 import tkinter as tk
 from tkinter import messagebox
 from datetime import datetime

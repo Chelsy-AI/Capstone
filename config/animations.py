@@ -22,7 +22,6 @@ or when weather conditions change.
 import tkinter as tk  # For creating the graphics canvas
 import random        # For random positions and movements
 import math          # For calculating sun rays and particle movements
-import time          # For timing and animation frames
 
 
 class AnimationParticle:
@@ -48,14 +47,6 @@ class AnimationParticle:
         self.id = None               # Canvas object ID for this particle
         self.active = True           # Whether this particle is still active
 
-    def update(self):
-        """
-        Update particle position - override in subclasses.
-        
-        This method is called every frame to move the particle.
-        Each type of particle (rain, snow, etc.) implements this differently.
-        """
-        pass
 
     def draw(self, canvas):
         """

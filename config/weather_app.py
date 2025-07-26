@@ -32,7 +32,7 @@ from features.tomorrows_guess.predictor import get_tomorrows_prediction
 from config.themes import LIGHT_THEME, DARK_THEME
 from config.api import get_current_weather
 from config.storage import save_weather
-from config.gui import WeatherGUI
+from gui import WeatherGUI
 
 
 class WeatherApp(tk.Tk):

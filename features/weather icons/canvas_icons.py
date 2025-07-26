@@ -12,8 +12,7 @@ to help understand how programmatic graphics and weather visualization work.
 
 import customtkinter as ctk
 import math
-import random
-from typing import Tuple, List, Dict, Any, Optional, Union
+from typing import List, Dict, Any, Union
 import tkinter as tk
 
 
