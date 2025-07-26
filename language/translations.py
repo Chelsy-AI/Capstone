@@ -1,9 +1,9 @@
 """
-Language Translations Data
-=========================
+Updated Language Translations Data with Graph Support
+====================================================
 
-Contains all translation data for the weather application.
-Supports English, Spanish, and Hindi languages.
+Contains all translation data for the weather application including 
+comprehensive translations for the graphs page and all UI elements.
 """
 
 TRANSLATIONS = {
@@ -35,6 +35,88 @@ TRANSLATIONS = {
         "map_view": "Map View",
         "sun_moon": "Sun & Moon",
         "language": "Language",
+        
+        # Graphs Page - Main Elements
+        "weather_graphs_title": "Weather Graphs",
+        "select_graph_type": "Select Graph Type:",
+        "graph_information": "Graph Information",
+        
+        # Graph Types (for dropdown)
+        "7_day_temperature_trend": "7-Day Temperature Trend",
+        "temperature_range_chart": "Temperature Range Chart",
+        "humidity_trends": "Humidity Trends",
+        "weather_conditions_distribution": "Weather Conditions Distribution",
+        "prediction_accuracy_chart": "Prediction Accuracy Chart",
+        
+        # Graph Loading and Error Messages
+        "loading_graph": "📊 Loading graph...\nPlease wait while we generate your visualization.",
+        "generating_graph": "📊 Generating graph...",
+        "processing_data_wait": "This may take a few moments.\nPlease wait while we process your data.",
+        "error_loading_graph": "❌ Error loading graph",
+        "try_refresh_or_different_graph": "Please try refreshing or selecting a different graph.",
+        "unable_to_display_graph": "❌ Unable to display graph",
+        "try_again_later": "Please try again later.",
+        
+        # Dependency Error Messages
+        "missing_dependencies": "Missing Dependencies",
+        "install_matplotlib": "To use the graphs feature, please install:",
+        "restart_application": "Then restart the application.",
+        
+        # Graph Information Tooltips - Temperature Trend
+        "temp_trend_what_shows": "What This Shows:",
+        "red_line_max_temp": "• Red line: Daily maximum temperatures",
+        "blue_line_min_temp": "• Blue line: Daily minimum temperatures", 
+        "green_line_avg_temp": "• Green line: Daily average temperatures",
+        "data_sources": "Data Sources:",
+        "primary_open_meteo": "• Primary: Open-Meteo historical weather API",
+        "secondary_local_history": "• Secondary: Local weather search history",
+        "fallback_sample_data": "• Fallback: Realistic sample data based on season and location",
+        "understanding_graph": "Understanding the Graph:",
+        "temp_patterns_7_days": "• Shows temperature patterns over the last 7 days",
+        "temp_displayed_celsius": "• Temperatures displayed in Celsius (°C)",
+        "each_point_one_day": "• Each point represents one day's temperature reading",
+        
+        # Graph Information - Temperature Range
+        "temp_range_what_shows": "What This Shows:",
+        "bar_represents_daily_variation": "• Each bar represents the daily temperature variation",
+        "bar_height_max_min_diff": "• Bar height = Maximum temperature - Minimum temperature",
+        "shows_temp_fluctuation": "• Shows how much temperatures fluctuate each day",
+        "higher_bars_more_variation": "• Higher bars = more temperature variation that day",
+        "lower_bars_stable_temps": "• Lower bars = more stable temperatures",
+        "values_celsius_difference": "• Values show the difference in degrees Celsius",
+        
+        # Graph Information - Humidity
+        "humidity_what_shows": "What This Shows:",
+        "green_line_humidity_percent": "• Green line tracks humidity percentage over time",
+        "shows_moisture_changes": "• Shows how moisture levels change day by day",
+        "humidity_range_0_to_100": "• Values range from 0% (very dry) to 100% (very humid)",
+        "higher_values_humid": "• Higher values = more humid conditions",
+        "lower_values_dry": "• Lower values = drier air",
+        "comfortable_range_30_60": "• Typical comfortable range is 30-60%",
+        
+        # Graph Information - Weather Conditions
+        "conditions_what_shows": "What This Shows:",
+        "pie_chart_weather_types": "• Pie chart showing percentage of different weather types",
+        "based_on_search_history": "• Based on your weather search history for this city",
+        "slice_represents_frequency": "• Each slice represents how often that condition occurred",
+        "larger_slices_common": "• Larger slices = more common weather conditions",
+        "percentages_add_to_100": "• Percentages add up to 100%",
+        "reflects_search_patterns": "• Reflects the weather patterns during your searches",
+        
+        # Graph Information - Prediction Accuracy
+        "accuracy_what_shows": "What This Shows:",
+        "purple_line_accuracy": "• Purple line tracks how accurate our weather predictions have been",
+        "performance_2_weeks": "• Shows prediction performance over the last 2 weeks",
+        "accuracy_percentage_higher_better": "• Values represent accuracy percentage (higher = better predictions)",
+        "excellent_90_plus": "• 90%+ = Excellent prediction accuracy",
+        "good_75_plus": "• 75%+ = Good prediction accuracy", 
+        "fair_below_60": "• Below 60% = Fair prediction accuracy",
+        "reference_lines_thresholds": "• Reference lines show performance thresholds",
+        
+        # General Graph Information
+        "weather_graph_information": "Weather Graph Information",
+        "current_selection": "Current Selection",
+        "select_specific_graph_info": "Select a specific graph type to see detailed information about that visualization.",
         
         # Prediction Page
         "tomorrow_weather_prediction": "Tomorrow's Weather Prediction",
@@ -104,12 +186,6 @@ TRANSLATIONS = {
         "map_info": "Map Info",
         "map_unavailable": "Interactive Map\n(Map temporarily unavailable)",
         
-        # Graphs Page
-        "weather_graphs_title": "Weather Graphs",
-        "temperature_graph": "Temperature Trends",
-        "humidity_graph": "Humidity Levels", 
-        "pressure_graph": "Pressure Changes",
-        
         # Common UI Elements
         "loading": "Loading...",
         "fetching_weather": "Fetching weather...",
@@ -122,6 +198,7 @@ TRANSLATIONS = {
         "refresh": "Refresh",
         "visible": "Visible",
         "unknown": "Unknown",
+        "unknown_error": "Unknown error occurred",
         "error_loading_data": "Error loading data",
         "please_try_refreshing": "Please try refreshing",
         
@@ -175,6 +252,88 @@ TRANSLATIONS = {
         "map_view": "Vista del Mapa",
         "sun_moon": "Sol y Luna",
         "language": "Idioma",
+        
+        # Graphs Page - Main Elements
+        "weather_graphs_title": "Gráficos del Clima",
+        "select_graph_type": "Seleccionar tipo de gráfico:",
+        "graph_information": "Información del Gráfico",
+        
+        # Graph Types (for dropdown)
+        "7_day_temperature_trend": "Tendencia de Temperatura de 7 Días",
+        "temperature_range_chart": "Gráfico de Rango de Temperatura",
+        "humidity_trends": "Tendencias de Humedad",
+        "weather_conditions_distribution": "Distribución de Condiciones Climáticas",
+        "prediction_accuracy_chart": "Gráfico de Precisión de Predicción",
+        
+        # Graph Loading and Error Messages
+        "loading_graph": "📊 Cargando gráfico...\nPor favor espere mientras generamos su visualización.",
+        "generating_graph": "📊 Generando gráfico...",
+        "processing_data_wait": "Esto puede tomar unos momentos.\nPor favor espere mientras procesamos sus datos.",
+        "error_loading_graph": "❌ Error al cargar el gráfico",
+        "try_refresh_or_different_graph": "Por favor intente actualizar o seleccionar un gráfico diferente.",
+        "unable_to_display_graph": "❌ No se puede mostrar el gráfico",
+        "try_again_later": "Por favor intente de nuevo más tarde.",
+        
+        # Dependency Error Messages
+        "missing_dependencies": "Dependencias Faltantes",
+        "install_matplotlib": "Para usar la función de gráficos, por favor instale:",
+        "restart_application": "Luego reinicie la aplicación.",
+        
+        # Graph Information Tooltips - Temperature Trend
+        "temp_trend_what_shows": "Lo que muestra:",
+        "red_line_max_temp": "• Línea roja: Temperaturas máximas diarias",
+        "blue_line_min_temp": "• Línea azul: Temperaturas mínimas diarias",
+        "green_line_avg_temp": "• Línea verde: Temperaturas promedio diarias",
+        "data_sources": "Fuentes de Datos:",
+        "primary_open_meteo": "• Primaria: API histórica del clima Open-Meteo",
+        "secondary_local_history": "• Secundaria: Historial local de búsquedas del clima",
+        "fallback_sample_data": "• Respaldo: Datos de muestra realistas basados en temporada y ubicación",
+        "understanding_graph": "Entendiendo el Gráfico:",
+        "temp_patterns_7_days": "• Muestra patrones de temperatura durante los últimos 7 días",
+        "temp_displayed_celsius": "• Temperaturas mostradas en Celsius (°C)",
+        "each_point_one_day": "• Cada punto representa la lectura de temperatura de un día",
+        
+        # Graph Information - Temperature Range
+        "temp_range_what_shows": "Lo que muestra:",
+        "bar_represents_daily_variation": "• Cada barra representa la variación diaria de temperatura",
+        "bar_height_max_min_diff": "• Altura de barra = Temperatura máxima - Temperatura mínima",
+        "shows_temp_fluctuation": "• Muestra cuánto fluctúan las temperaturas cada día",
+        "higher_bars_more_variation": "• Barras más altas = más variación de temperatura ese día",
+        "lower_bars_stable_temps": "• Barras más bajas = temperaturas más estables",
+        "values_celsius_difference": "• Los valores muestran la diferencia en grados Celsius",
+        
+        # Graph Information - Humidity
+        "humidity_what_shows": "Lo que muestra:",
+        "green_line_humidity_percent": "• La línea verde rastrea el porcentaje de humedad a lo largo del tiempo",
+        "shows_moisture_changes": "• Muestra cómo cambian los niveles de humedad día a día",
+        "humidity_range_0_to_100": "• Los valores van de 0% (muy seco) a 100% (muy húmedo)",
+        "higher_values_humid": "• Valores más altos = condiciones más húmedas",
+        "lower_values_dry": "• Valores más bajos = aire más seco",
+        "comfortable_range_30_60": "• El rango cómodo típico es 30-60%",
+        
+        # Graph Information - Weather Conditions
+        "conditions_what_shows": "Lo que muestra:",
+        "pie_chart_weather_types": "• Gráfico circular mostrando porcentaje de diferentes tipos de clima",
+        "based_on_search_history": "• Basado en su historial de búsquedas del clima para esta ciudad",
+        "slice_represents_frequency": "• Cada porción representa qué tan frecuente ocurrió esa condición",
+        "larger_slices_common": "• Porciones más grandes = condiciones climáticas más comunes",
+        "percentages_add_to_100": "• Los porcentajes suman 100%",
+        "reflects_search_patterns": "• Refleja los patrones climáticos durante sus búsquedas",
+        
+        # Graph Information - Prediction Accuracy
+        "accuracy_what_shows": "Lo que muestra:",
+        "purple_line_accuracy": "• La línea púrpura rastrea qué tan precisas han sido nuestras predicciones del clima",
+        "performance_2_weeks": "• Muestra el rendimiento de predicción durante las últimas 2 semanas",
+        "accuracy_percentage_higher_better": "• Los valores representan porcentaje de precisión (más alto = mejores predicciones)",
+        "excellent_90_plus": "• 90%+ = Excelente precisión de predicción",
+        "good_75_plus": "• 75%+ = Buena precisión de predicción",
+        "fair_below_60": "• Menos del 60% = Precisión de predicción regular",
+        "reference_lines_thresholds": "• Las líneas de referencia muestran umbrales de rendimiento",
+        
+        # General Graph Information
+        "weather_graph_information": "Información del Gráfico del Clima",
+        "current_selection": "Selección Actual",
+        "select_specific_graph_info": "Seleccione un tipo específico de gráfico para ver información detallada sobre esa visualización.",
         
         # Prediction Page
         "tomorrow_weather_prediction": "Predicción del Clima para Mañana",
@@ -244,12 +403,6 @@ TRANSLATIONS = {
         "map_info": "Info del Mapa",
         "map_unavailable": "Mapa Interactivo\n(Mapa temporalmente no disponible)",
         
-        # Graphs Page
-        "weather_graphs_title": "Gráficos del Clima",
-        "temperature_graph": "Tendencias de Temperatura",
-        "humidity_graph": "Niveles de Humedad",
-        "pressure_graph": "Cambios de Presión",
-        
         # Common UI Elements
         "loading": "Cargando...",
         "fetching_weather": "Obteniendo clima...",
@@ -262,6 +415,7 @@ TRANSLATIONS = {
         "refresh": "Actualizar",
         "visible": "Visible",
         "unknown": "Desconocido",
+        "unknown_error": "Error desconocido ocurrido",
         "error_loading_data": "Error al cargar datos",
         "please_try_refreshing": "Por favor, intente actualizar",
         
@@ -315,6 +469,88 @@ TRANSLATIONS = {
         "map_view": "मानचित्र दृश्य",
         "sun_moon": "सूर्य और चंद्रमा",
         "language": "भाषा",
+        
+        # Graphs Page - Main Elements
+        "weather_graphs_title": "मौसम चार्ट",
+        "select_graph_type": "चार्ट प्रकार चुनें:",
+        "graph_information": "चार्ट की जानकारी",
+        
+        # Graph Types (for dropdown)
+        "7_day_temperature_trend": "७-दिन तापमान रुझान",
+        "temperature_range_chart": "तापमान सीमा चार्ट",
+        "humidity_trends": "आर्द्रता रुझान",
+        "weather_conditions_distribution": "मौसम स्थितियों का वितरण",
+        "prediction_accuracy_chart": "भविष्यवाणी सटीकता चार्ट",
+        
+        # Graph Loading and Error Messages
+        "loading_graph": "📊 चार्ट लोड हो रहा है...\nकृपया प्रतीक्षा करें जब तक हम आपका दृश्य तैयार करते हैं।",
+        "generating_graph": "📊 चार्ट बना रहे हैं...",
+        "processing_data_wait": "इसमें कुछ समय लग सकता है।\nकृपया प्रतीक्षा करें जब तक हम आपका डेटा प्रोसेस करते हैं।",
+        "error_loading_graph": "❌ चार्ट लोड करने में त्रुटि",
+        "try_refresh_or_different_graph": "कृपया रीफ्रेश करने या एक अलग चार्ट चुनने का प्रयास करें।",
+        "unable_to_display_graph": "❌ चार्ट प्रदर्शित करने में असमर्थ",
+        "try_again_later": "कृपया बाद में पुनः प्रयास करें।",
+        
+        # Dependency Error Messages
+        "missing_dependencies": "अनुपस्थित निर्भरताएं",
+        "install_matplotlib": "चार्ट सुविधा का उपयोग करने के लिए, कृपया स्थापित करें:",
+        "restart_application": "फिर एप्लिकेशन को पुनः आरंभ करें।",
+        
+        # Graph Information Tooltips - Temperature Trend
+        "temp_trend_what_shows": "यह क्या दिखाता है:",
+        "red_line_max_temp": "• लाल रेखा: दैनिक अधिकतम तापमान",
+        "blue_line_min_temp": "• नीली रेखा: दैनिक न्यूनतम तापमान",
+        "green_line_avg_temp": "• हरी रेखा: दैनिक औसत तापमान",
+        "data_sources": "डेटा स्रोत:",
+        "primary_open_meteo": "• प्राथमिक: ओपन-मेटिओ ऐतिहासिक मौसम एपीआई",
+        "secondary_local_history": "• द्वितीयक: स्थानीय मौसम खोज इतिहास",
+        "fallback_sample_data": "• बैकअप: मौसम और स्थान के आधार पर यथार्थवादी नमूना डेटा",
+        "understanding_graph": "चार्ट को समझना:",
+        "temp_patterns_7_days": "• पिछले 7 दिनों में तापमान पैटर्न दिखाता है",
+        "temp_displayed_celsius": "• तापमान सेल्सियस (°C) में प्रदर्शित",
+        "each_point_one_day": "• प्रत्येक बिंदु एक दिन की तापमान रीडिंग दर्शाता है",
+        
+        # Graph Information - Temperature Range
+        "temp_range_what_shows": "यह क्या दिखाता है:",
+        "bar_represents_daily_variation": "• प्रत्येक बार दैनिक तापमान भिन्नता दर्शाता है",
+        "bar_height_max_min_diff": "• बार की ऊंचाई = अधिकतम तापमान - न्यूनतम तापमान",
+        "shows_temp_fluctuation": "• दिखाता है कि प्रत्येक दिन तापमान कितना बदलता है",
+        "higher_bars_more_variation": "• ऊंचे बार = उस दिन अधिक तापमान भिन्नता",
+        "lower_bars_stable_temps": "• नीचे बार = अधिक स्थिर तापमान",
+        "values_celsius_difference": "• मान सेल्सियस डिग्री में अंतर दिखाते हैं",
+        
+        # Graph Information - Humidity
+        "humidity_what_shows": "यह क्या दिखाता है:",
+        "green_line_humidity_percent": "• हरी रेखा समय के साथ आर्द्रता प्रतिशत को ट्रैक करती है",
+        "shows_moisture_changes": "• दिखाता है कि नमी का स्तर दिन-प्रतिदिन कैसे बदलता है",
+        "humidity_range_0_to_100": "• मान 0% (बहुत शुष्क) से 100% (बहुत आर्द्र) तक होते हैं",
+        "higher_values_humid": "• उच्च मान = अधिक आर्द्र स्थितियां",
+        "lower_values_dry": "• कम मान = सूखी हवा",
+        "comfortable_range_30_60": "• सामान्य आरामदायक सीमा 30-60% है",
+        
+        # Graph Information - Weather Conditions
+        "conditions_what_shows": "यह क्या दिखाता है:",
+        "pie_chart_weather_types": "• पाई चार्ट विभिन्न मौसम प्रकारों का प्रतिशत दिखाता है",
+        "based_on_search_history": "• इस शहर के लिए आपके मौसम खोज इतिहास पर आधारित",
+        "slice_represents_frequency": "• प्रत्येक टुकड़ा दर्शाता है कि वह स्थिति कितनी बार हुई",
+        "larger_slices_common": "• बड़े टुकड़े = अधिक सामान्य मौसम स्थितियां",
+        "percentages_add_to_100": "• प्रतिशत 100% तक जोड़ते हैं",
+        "reflects_search_patterns": "• आपकी खोजों के दौरान मौसम पैटर्न को दर्शाता है",
+        
+        # Graph Information - Prediction Accuracy
+        "accuracy_what_shows": "यह क्या दिखाता है:",
+        "purple_line_accuracy": "• बैंगनी रेखा ट्रैक करती है कि हमारी मौसम भविष्यवाणियां कितनी सटीक रही हैं",
+        "performance_2_weeks": "• पिछले 2 सप्ताह में भविष्यवाणी प्रदर्शन दिखाता है",
+        "accuracy_percentage_higher_better": "• मान सटीकता प्रतिशत दर्शाते हैं (उच्चतर = बेहतर भविष्यवाणियां)",
+        "excellent_90_plus": "• 90%+ = उत्कृष्ट भविष्यवाणी सटीकता",
+        "good_75_plus": "• 75%+ = अच्छी भविष्यवाणी सटीकता",
+        "fair_below_60": "• 60% से कम = मध्यम भविष्यवाणी सटीकता",
+        "reference_lines_thresholds": "• संदर्भ रेखाएं प्रदर्शन सीमा दिखाती हैं",
+        
+        # General Graph Information
+        "weather_graph_information": "मौसम चार्ट की जानकारी",
+        "current_selection": "वर्तमान चयन",
+        "select_specific_graph_info": "उस दृश्यकरण के बारे में विस्तृत जानकारी देखने के लिए एक विशिष्ट चार्ट प्रकार चुनें।",
         
         # Prediction Page
         "tomorrow_weather_prediction": "कल के मौसम की भविष्यवाणी",
@@ -384,12 +620,6 @@ TRANSLATIONS = {
         "map_info": "मानचित्र जानकारी",
         "map_unavailable": "इंटरैक्टिव मानचित्र\n(मानचित्र अस्थायी रूप से अनुपलब्ध)",
         
-        # Graphs Page
-        "weather_graphs_title": "मौसम चार्ट",
-        "temperature_graph": "तापमान रुझान",
-        "humidity_graph": "आर्द्रता स्तर",
-        "pressure_graph": "दबाव परिवर्तन",
-        
         # Common UI Elements
         "loading": "लोड हो रहा है...",
         "fetching_weather": "मौसम प्राप्त कर रहे हैं...",
@@ -402,6 +632,7 @@ TRANSLATIONS = {
         "refresh": "रीफ्रेश करें",
         "visible": "दिखाई दे रहा",
         "unknown": "अज्ञात",
+        "unknown_error": "अज्ञात त्रुटि हुई",
         "error_loading_data": "डेटा लोड करने में त्रुटि",
         "please_try_refreshing": "कृपया रीफ्रेश करने का प्रयास करें",
         
