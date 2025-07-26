@@ -174,6 +174,9 @@ TRANSLATIONS = {
         
         # Quiz Page
         "weather_quiz_title": "Weather Quiz",
+        "quiz_ready": "Quiz Ready!",
+        "quiz_description": "This comprehensive weather quiz is based on meteorological data from five major global cities: Phoenix, Ahmedabad, Denver, Columbus, and Lebrija. Test your knowledge of climate patterns, temperature variations, and weather phenomena.",
+        "click_start_to_begin": "Click Start to begin the quiz!",
         "start_quiz": "Start Quiz",
         "next_question": "Next Question",
         "submit_answer": "Submit Answer",
@@ -391,6 +394,9 @@ TRANSLATIONS = {
         
         # Quiz Page
         "weather_quiz_title": "Quiz del Clima",
+        "quiz_ready": "¡Quiz Listo!",
+        "quiz_description": "Este quiz meteorológico integral está basado en datos climáticos de cinco importantes ciudades globales: Phoenix, Ahmedabad, Denver, Columbus y Lebrija. Pon a prueba tu conocimiento sobre patrones climáticos, variaciones de temperatura y fenómenos meteorológicos.",
+        "click_start_to_begin": "¡Haz clic en Iniciar para comenzar el quiz!",
         "start_quiz": "Iniciar Quiz",
         "next_question": "Siguiente Pregunta",
         "submit_answer": "Enviar Respuesta",
@@ -608,6 +614,9 @@ TRANSLATIONS = {
         
         # Quiz Page
         "weather_quiz_title": "मौसम प्रश्नोत्तरी",
+        "quiz_ready": "प्रश्नोत्तरी तैयार!",
+        "quiz_description": "यह व्यापक मौसम प्रश्नोत्तरी पांच प्रमुख वैश्विक शहरों के मौसम विज्ञान डेटा पर आधारित है: फीनिक्स, अहमदाबाद, डेनवर, कोलंबस और लेब्रिजा। जलवायु पैटर्न, तापमान विविधताओं और मौसम घटनाओं के अपने ज्ञान का परीक्षण करें।",
+        "click_start_to_begin": "प्रश्नोत्तरी शुरू करने के लिए स्टार्ट पर क्लिक करें!",
         "start_quiz": "प्रश्नोत्तरी शुरू करें",
         "next_question": "अगला प्रश्न",
         "submit_answer": "उत्तर जमा करें",

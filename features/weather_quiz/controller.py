@@ -63,6 +63,52 @@ class WeatherQuizController:
             print(f"❌ Database test failed: {e}")
             traceback.print_exc()
     
+    def _get_text(self, key):
+        """Get translated text using the language controller."""
+        try:
+            # Try multiple ways to access the language controller
+            lang_controller = None
+            
+            # Method 1: Direct attribute
+            if hasattr(self.app, 'language_controller'):
+                lang_controller = self.app.language_controller
+            
+            # Method 2: Through GUI controller
+            elif hasattr(self.gui, 'language_controller'):
+                lang_controller = self.gui.language_controller
+            
+            # Method 3: Look for language_ctrl
+            elif hasattr(self.app, 'language_ctrl'):
+                lang_controller = self.app.language_ctrl
+            
+            if lang_controller and hasattr(lang_controller, 'get_text'):
+                return lang_controller.get_text(key)
+            
+            # Fallback to hardcoded English if no language controller
+            fallback_translations = {
+                'weather_quiz_title': 'Weather Quiz',
+                'back': '← Back',
+                'quiz_ready': 'Quiz Ready!',
+                'quiz_description': 'This comprehensive weather quiz is based on meteorological data from five major global cities: Phoenix, Ahmedabad, Denver, Columbus, and Lebrija. Test your knowledge of climate patterns, temperature variations, and weather phenomena.',
+                'click_start_to_begin': 'Click Start to begin the quiz!',
+                'start_quiz': 'Start Quiz'
+            }
+            
+            return fallback_translations.get(key, key)
+            
+        except Exception as e:
+            print(f"Translation error for key '{key}': {e}")
+            # Return English fallback
+            fallback_translations = {
+                'weather_quiz_title': 'Weather Quiz',
+                'back': '← Back',
+                'quiz_ready': 'Quiz Ready!',
+                'quiz_description': 'This comprehensive weather quiz is based on meteorological data from five major global cities: Phoenix, Ahmedabad, Denver, Columbus, and Lebrija. Test your knowledge of climate patterns, temperature variations, and weather phenomena.',
+                'click_start_to_begin': 'Click Start to begin the quiz!',
+                'start_quiz': 'Start Quiz'
+            }
+            return fallback_translations.get(key, key)
+    
     def build_page(self, window_width: int, window_height: int):
         """Build a simplified quiz page for testing."""
         try:
@@ -71,10 +117,11 @@ class WeatherQuizController:
             # Add back button
             self._add_back_button()
             
-            # Add title
+            # Add title with language support
+            title_text = f"🌤️ {self._get_text('weather_quiz_title')}"
             title_label = tk.Label(
                 self.app,
-                text="🌤️ Weather Quiz (Test Mode)",
+                text=title_text,
                 font=("Arial", 24, "bold"),
                 fg="black",
                 bg="#87CEEB"
@@ -95,9 +142,10 @@ class WeatherQuizController:
     
     def _add_back_button(self):
         """Add back button."""
+        back_text = self._get_text('back')
         back_button = tk.Button(
             self.app,
-            text="← Back",
+            text=back_text,
             command=lambda: self.gui.show_page("main"),
             bg="grey",
             fg="black",
@@ -192,32 +240,47 @@ class WeatherQuizController:
             
             print(f"Frame dimensions: {frame_width}x{frame_height}")
             
-            # Success message
+            # Success message with language support
+            success_text = f"✅ {self._get_text('quiz_ready')}"
             success_label = tk.Label(
                 self.quiz_frame,
-                text="✅ Quiz Ready!",
+                text=success_text,
                 font=("Arial", 20, "bold"),
                 fg="green",
                 bg="#87CEEB"
             )
             success_label.pack(pady=(50, 20))
             
-            # Info message
-            info_text = f"Loaded {len(self.current_questions)} questions from database\n\nClick Start to begin the quiz!"
-            info_label = tk.Label(
+            # Quiz description with language support
+            description_text = self._get_text('quiz_description')
+            description_label = tk.Label(
                 self.quiz_frame,
-                text=info_text,
+                text=description_text,
                 font=("Arial", 14),
+                fg="black",
+                bg="#87CEEB",
+                justify="center",
+                wraplength=frame_width - 40
+            )
+            description_label.pack(pady=10)
+            
+            # Click start message with language support
+            click_start_text = self._get_text('click_start_to_begin')
+            click_start_label = tk.Label(
+                self.quiz_frame,
+                text=click_start_text,
+                font=("Arial", 12, "bold"),
                 fg="black",
                 bg="#87CEEB",
                 justify="center"
             )
-            info_label.pack(pady=10)
+            click_start_label.pack(pady=(20, 10))
             
-            # Start button
+            # Start button with language support
+            start_text = f"🚀 {self._get_text('start_quiz')}"
             start_button = tk.Button(
                 self.quiz_frame,
-                text="🚀 Start Quiz",
+                text=start_text,
                 command=self._start_quiz,
                 bg="lightgreen",
                 fg="black",
@@ -227,42 +290,9 @@ class WeatherQuizController:
             )
             start_button.pack(pady=20)
             
-            # Debug button
-            debug_button = tk.Button(
-                self.quiz_frame,
-                text="🔍 Show First Question",
-                command=self._show_debug_info,
-                bg="lightblue",
-                fg="black",
-                font=("Arial", 12),
-                width=20,
-                height=1
-            )
-            debug_button.pack(pady=10)
-            
         except Exception as e:
             print(f"❌ Error showing quiz ready: {e}")
             traceback.print_exc()
-    
-    def _show_debug_info(self):
-        """Show debug information about loaded questions."""
-        try:
-            if not self.current_questions:
-                messagebox.showinfo("Debug", "No questions loaded")
-                return
-            
-            first_q = self.current_questions[0]
-            debug_text = f"First Question Debug Info:\n\n"
-            debug_text += f"Question: {first_q['question']}\n\n"
-            debug_text += f"Choices: {first_q['choices']}\n\n"
-            debug_text += f"Answer: {first_q['correct_answer']}\n\n"
-            debug_text += f"Category: {first_q['category']}\n\n"
-            debug_text += f"Total questions loaded: {len(self.current_questions)}"
-            
-            messagebox.showinfo("Debug Info", debug_text)
-            
-        except Exception as e:
-            messagebox.showerror("Debug Error", f"Error showing debug info: {str(e)}")
     
     def _start_quiz(self):
         """Start the actual quiz."""
@@ -305,9 +335,10 @@ class WeatherQuizController:
                 frame_height = 400
             
             # Progress
+            progress_text = f"Question {self.current_question_index + 1} of {len(self.current_questions)}"
             progress_label = tk.Label(
                 self.quiz_frame,
-                text=f"Question {self.current_question_index + 1} of {len(self.current_questions)}",
+                text=progress_text,
                 font=("Arial", 12, "bold"),
                 fg="black",
                 bg="#87CEEB"
@@ -404,9 +435,10 @@ class WeatherQuizController:
             percentage = round((self.score / len(self.current_questions)) * 100)
             
             # Results
+            results_text = f"🎉 Quiz Complete!\n\nScore: {self.score}/{len(self.current_questions)} ({percentage}%)"
             results_label = tk.Label(
                 self.quiz_frame,
-                text=f"🎉 Quiz Complete!\n\nScore: {self.score}/{len(self.current_questions)} ({percentage}%)",
+                text=results_text,
                 font=("Arial", 18, "bold"),
                 fg="green",
                 bg="#87CEEB",
