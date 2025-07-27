@@ -15,15 +15,11 @@ import customtkinter as ctk
 from config.themes import LIGHT_THEME, DARK_THEME
 
 # Configure logging for theme operations
-# This helps track theme changes and debug any issues
 logger = logging.getLogger(__name__)
 
-# ────────────────────────────────────────────────────────────────────────────── 
 # THEME CONSTANTS AND CONFIGURATION
-# ────────────────────────────────────────────────────────────────────────────── 
 
 # Theme name constants for easy reference throughout the code
-# Using constants prevents typos and makes the code more maintainable
 THEME_LIGHT = "light"
 THEME_DARK = "dark"
 THEME_SYSTEM = "system"  # Follow the operating system's theme preference
@@ -36,9 +32,7 @@ _current_theme_cache: Optional[str] = None
 _theme_change_callbacks: list = []  # Functions to call when theme changes
 
 
-# ────────────────────────────────────────────────────────────────────────────── 
 # MAIN THEME SWITCHING FUNCTIONS
-# ────────────────────────────────────────────────────────────────────────────── 
 
 def toggle_theme(app) -> str:
     """
@@ -52,10 +46,6 @@ def toggle_theme(app) -> str:
         
     Returns:
         str: Name of the newly applied theme ("light" or "dark")
-        
-    Example:
-        >>> current_theme = toggle_theme(my_app)
-        >>> print(f"Switched to {current_theme} theme")
     """
     try:
         # Validate that the app object has the required theme attribute
@@ -64,7 +54,6 @@ def toggle_theme(app) -> str:
             raise AttributeError("App object must have 'theme' attribute")
         
         # Determine current theme and switch to the opposite
-        # This creates a simple on/off toggle behavior that users expect
         if app.theme == LIGHT_THEME:
             logger.info("Toggling from light to dark theme")
             return set_night_mode(app)
@@ -82,18 +71,11 @@ def set_day_mode(app) -> str:
     """
     Apply light theme (day mode) to the application.
     
-    Light theme is typically used during daytime or in bright environments.
-    It uses light backgrounds with dark text for good readability.
-    
     Args:
         app: The main application object to apply theming to
         
     Returns:
         str: "light" to confirm the theme was applied
-        
-    Example:
-        >>> set_day_mode(my_app)
-        "light"
     """
     try:
         logger.info("Applying light theme (day mode)")
@@ -104,11 +86,9 @@ def set_day_mode(app) -> str:
             return THEME_LIGHT
         
         # Set the theme data in the app object
-        # This stores the theme configuration for other parts of the app to use
         app.theme = LIGHT_THEME
         
         # Apply CustomTkinter appearance mode
-        # CustomTkinter is the GUI library, and this sets its overall appearance
         ctk.set_appearance_mode("light")
         
         # Update the visual appearance of app components
@@ -132,19 +112,12 @@ def set_night_mode(app) -> str:
     """
     Apply dark theme (night mode) to the application.
     
-    Dark theme is popular for nighttime use or users who prefer darker interfaces.
-    It uses dark backgrounds with light text, which can reduce eye strain in
-    low-light environments and save battery on OLED displays.
     
     Args:
         app: The main application object to apply theming to
         
     Returns:
         str: "dark" to confirm the theme was applied
-        
-    Example:
-        >>> set_night_mode(my_app)
-        "dark"
     """
     try:
         logger.info("Applying dark theme (night mode)")
@@ -190,10 +163,6 @@ def apply_theme(app, theme: str) -> str:
         
     Returns:
         str: Name of the actually applied theme
-        
-    Example:
-        >>> apply_theme(my_app, "system")  # Uses OS theme preference
-        "dark"  # If OS is in dark mode
     """
     # Input validation - ensure we have a valid theme name
     if theme not in VALID_THEMES:
@@ -218,51 +187,15 @@ def apply_theme(app, theme: str) -> str:
         # Always fallback to light theme if there's an error
         return set_day_mode(app)
 
-
-# ────────────────────────────────────────────────────────────────────────────── 
-# THEME INFORMATION AND PREFERENCE FUNCTIONS
-# ────────────────────────────────────────────────────────────────────────────── 
-
-def get_user_preference() -> Optional[str]:
-    """
-    Get the user's saved theme preference from storage.
-    
-    This would typically read from a config file or database.
-    Currently returns None since user preferences aren't implemented yet.
-    
-    Returns:
-        str or None: User's preferred theme, or None if not set
-        
-    Example:
-        >>> user_pref = get_user_preference()
-        >>> if user_pref:
-        >>>     apply_theme(app, user_pref)
-    """
-    try:
-        # TODO: Implement user preference storage (config file, database, etc.)
-        # For now, return None since we don't have persistent storage set up
-        return None
-    except Exception as e:
-        logger.error(f"Error loading user theme preference: {e}")
-        return None
-
-
 def get_current_theme(app) -> Optional[str]:
     """
     Get the currently applied theme name.
-    
-    This function checks the app's current theme configuration and returns
-    a user-friendly theme name.
     
     Args:
         app: The main application object
         
     Returns:
         str or None: Current theme name ("light", "dark") or None if unknown
-        
-    Example:
-        >>> current = get_current_theme(my_app)
-        >>> print(f"Current theme: {current}")
     """
     try:
         # Check the cached value first for better performance
@@ -286,20 +219,11 @@ def is_dark_mode(app) -> bool:
     """
     Check if the application is currently using dark theme.
     
-    This is a convenience function for code that needs to know if the current
-    theme is dark (for example, to choose appropriate icon colors).
-    
     Args:
         app: The main application object
         
     Returns:
         bool: True if in dark mode, False otherwise
-        
-    Example:
-        >>> if is_dark_mode(my_app):
-        >>>     use_light_colored_icons()
-        >>> else:
-        >>>     use_dark_colored_icons()
     """
     try:
         return get_current_theme(app) == THEME_DARK
@@ -312,18 +236,11 @@ def reset_theme_to_default(app) -> str:
     """
     Reset the application theme to the default (light mode).
     
-    This is useful for error recovery, initialization, or when users want
-    to return to the standard appearance.
-    
     Args:
         app: The main application object
         
     Returns:
         str: "light" to confirm reset to default theme
-        
-    Example:
-        >>> reset_theme_to_default(my_app)
-        "light"
     """
     try:
         logger.info("Resetting theme to default (light mode)")
@@ -333,9 +250,7 @@ def reset_theme_to_default(app) -> str:
         return THEME_LIGHT
 
 
-# ────────────────────────────────────────────────────────────────────────────── 
 # INTERNAL HELPER FUNCTIONS (OPTIMIZED FOR PERFORMANCE)
-# ────────────────────────────────────────────────────────────────────────────── 
 
 def _apply_theme_colors_efficiently(app, theme_config: Dict[str, Any]) -> None:
     """
@@ -354,7 +269,6 @@ def _apply_theme_colors_efficiently(app, theme_config: Dict[str, Any]) -> None:
         bg_color = theme_config.get("bg", "#FFFFFF")
         
         # List of app components that might need theme updates
-        # Only update components that actually exist to avoid errors
         components_to_update = [
             ("configure", lambda: app.configure(fg_color=bg_color)),
             ("parent_frame", lambda: app.parent_frame.configure(fg_color=bg_color)),
@@ -381,9 +295,6 @@ def _apply_theme_colors_efficiently(app, theme_config: Dict[str, Any]) -> None:
 def _trigger_theme_callbacks(app, theme_name: str) -> None:
     """
     Notify other parts of the application about theme changes.
-    
-    This function calls registered callback functions when the theme changes,
-    allowing different parts of the app to update their appearance accordingly.
     
     Args:
         app: The main application object
@@ -412,19 +323,11 @@ def _detect_system_theme() -> str:
     """
     Detect the operating system's current theme preference.
     
-    This function attempts to determine if the user's OS is using light or dark theme.
-    It provides a way to make the app automatically match the system appearance.
-    
     Returns:
         str: "light" or "dark" based on system theme, defaults to "light"
-        
-    Example:
-        >>> system_theme = _detect_system_theme()
-        >>> print(f"OS is using {system_theme} theme")
     """
     try:
         # Use CustomTkinter's built-in system theme detection
-        # This handles the OS-specific details for us
         appearance = ctk.get_appearance_mode()
         
         # Convert CustomTkinter's result to our theme constants
@@ -441,9 +344,7 @@ def _detect_system_theme() -> str:
         return THEME_LIGHT
 
 
-# ────────────────────────────────────────────────────────────────────────────── 
 # ADVANCED THEME MANAGEMENT FEATURES
-# ────────────────────────────────────────────────────────────────────────────── 
 
 def register_theme_callback(callback_function: Callable[[str], None]) -> None:
     """
@@ -454,15 +355,6 @@ def register_theme_callback(callback_function: Callable[[str], None]) -> None:
     
     Args:
         callback_function: Function that takes theme name as parameter
-        
-    Example:
-        >>> def update_my_component(theme_name):
-        >>>     if theme_name == "dark":
-        >>>         my_component.set_dark_colors()
-        >>>     else:
-        >>>         my_component.set_light_colors()
-        >>> 
-        >>> register_theme_callback(update_my_component)
     """
     if callback_function not in _theme_change_callbacks:
         _theme_change_callbacks.append(callback_function)
@@ -485,19 +377,11 @@ def validate_theme_config(theme_config: Dict[str, Any]) -> bool:
     """
     Validate that a theme configuration dictionary is properly formatted.
     
-    This function checks if a theme configuration has all the required
-    properties and valid values, helping prevent theme-related errors.
-    
     Args:
         theme_config: Dictionary containing theme configuration
         
     Returns:
         bool: True if configuration is valid, False otherwise
-        
-    Example:
-        >>> my_theme = {"bg": "#FFFFFF", "fg": "#000000"}
-        >>> if validate_theme_config(my_theme):
-        >>>     apply_custom_theme(my_theme)
     """
     try:
         # Define required properties that every theme must have
@@ -557,18 +441,11 @@ def get_theme_info(theme_name: str) -> Dict[str, Any]:
     """
     Get detailed information about a specific theme.
     
-    This function returns theme configuration and metadata for
-    display in theme selection interfaces or debugging.
-    
     Args:
         theme_name: Name of the theme to get info for
         
     Returns:
-        Dictionary containing theme information
-        
-    Example:
-        >>> info = get_theme_info("dark")
-        >>> print(f"Dark theme background: {info['config']['bg']}")
+        Dictionary containing theme information        
     """
     try:
         if theme_name == THEME_LIGHT:
@@ -599,86 +476,7 @@ def get_theme_info(theme_name: str) -> Dict[str, Any]:
 
 
 def clear_theme_cache() -> None:
-    """
-    Clear the theme performance cache.
-    
-    This function resets the internal theme cache, which can be useful
-    for debugging or ensuring fresh theme detection.
-    """
+    """Clear the theme performance cache."""
     global _current_theme_cache
     _current_theme_cache = None
     logger.info("Theme cache cleared")
-
-
-# ────────────────────────────────────────────────────────────────────────────── 
-# THEME UTILITIES FOR DEVELOPERS
-# ────────────────────────────────────────────────────────────────────────────── 
-
-def get_available_themes() -> list[str]:
-    """
-    Get a list of all available theme names.
-    
-    Returns:
-        List of theme names that can be used with apply_theme()
-        
-    Example:
-        >>> themes = get_available_themes()
-        >>> for theme in themes:
-        >>>     print(f"Available theme: {theme}")
-    """
-    return list(VALID_THEMES)
-
-
-def is_valid_theme(theme_name: str) -> bool:
-    """
-    Check if a theme name is valid.
-    
-    Args:
-        theme_name: Theme name to validate
-        
-    Returns:
-        bool: True if theme name is valid, False otherwise
-        
-    Example:
-        >>> if is_valid_theme(user_input):
-        >>>     apply_theme(app, user_input)
-        >>> else:
-        >>>     print("Invalid theme name")
-    """
-    return theme_name in VALID_THEMES
-
-
-def create_custom_theme(bg_color: str, name: str = "custom") -> Dict[str, Any]:
-    """
-    Create a custom theme configuration.
-    
-    This allows developers to create new themes programmatically.
-    
-    Args:
-        bg_color: Background color for the theme (hex color like "#FF0000")
-        name: Name for the custom theme
-        
-    Returns:
-        Dictionary containing the custom theme configuration
-        
-    Example:
-        >>> purple_theme = create_custom_theme("#663399", "purple")
-        >>> # Apply custom theme using the configuration
-    """
-    try:
-        custom_theme_config = {
-            "bg": bg_color,
-            "name": name,
-            "custom": True
-        }
-        
-        # Validate the custom theme
-        if validate_theme_config(custom_theme_config):
-            logger.info(f"Created custom theme: {name}")
-            return custom_theme_config
-        else:
-            raise ValueError("Invalid custom theme configuration")
-            
-    except Exception as e:
-        logger.error(f"Error creating custom theme: {e}")
-        raise

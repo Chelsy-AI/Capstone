@@ -8,14 +8,12 @@ __all__ = [
 
 import customtkinter as ctk
 
-# ──────────────────────────────────────────────────────────────────────────────
 # Main function that draws weather icons on a canvas based on weather conditions
-# ──────────────────────────────────────────────────────────────────────────────
+
 def draw_weather_icon(canvas, condition):
     """
     Creates visual weather icons by drawing shapes on a canvas.
     Takes a canvas widget and a weather condition string.
-    Supports conditions like 'sunny', 'rain', 'cloudy', 'snow', 'storm'.
 
     """
     
@@ -61,9 +59,8 @@ def draw_weather_icon(canvas, condition):
     else:
         canvas.create_text(w*0.5, h*0.5, text="?", font=("Arial", 32), fill="red")
 
-# ──────────────────────────────────────────────────────────────────────────────
 # Utility function to clear all drawings from the canvas
-# ──────────────────────────────────────────────────────────────────────────────
+
 def clear_icon_canvas(canvas):
     """
     Removes all drawings from the canvas to prepare for new icon.
@@ -72,9 +69,7 @@ def clear_icon_canvas(canvas):
     """
     canvas.delete("all")
 
-# ──────────────────────────────────────────────────────────────────────────────
 # Placeholder function for future animation features
-# ──────────────────────────────────────────────────────────────────────────────
 def animate_weather_icon(canvas, condition):
     """
     Future function to add animations to weather icons.

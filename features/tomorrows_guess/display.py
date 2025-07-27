@@ -1,14 +1,12 @@
 """
-Tomorrow's Weather Guess Display - Optimized with Beginner Comments
+Tomorrow's Weather Guess Display
 ================================================================
 
 This file creates a visual table showing our prediction for tomorrow's weather.
-Think of it like a weather forecast, but presented in a simple table format that shows:
+Presented in a simple table format that shows:
 - What temperature we think it will be tomorrow
 - How accurate our predictions usually are
 - How confident we are in this specific prediction
-
-The display uses a clean table layout with icons to make it easy to understand at a glance.
 """
 
 import tkinter as tk
@@ -75,7 +73,6 @@ def create_tomorrow_guess_frame(parent, theme):
         emoji_label.grid(row=1, column=col, sticky="nsew", padx=1, pady=1)
     
     # Row 3: Create value labels that will be updated with actual data
-    # These start with "--" placeholder text until real data arrives
     
     # Temperature value label
     temp_label = tk.Label(
@@ -120,7 +117,6 @@ def create_tomorrow_guess_frame(parent, theme):
     confidence_label.grid(row=2, column=2, sticky="nsew", padx=1, pady=1)
     
     # Store references to the value labels on the frame object itself
-    # This makes it easy to find and update them later
     frame.temp_label = temp_label
     frame.accuracy_label = accuracy_label  
     frame.confidence_label = confidence_label
@@ -176,9 +172,6 @@ def get_table_dimensions():
     """
     Get the standard dimensions for the prediction table.
     
-    This helper function returns consistent sizing information
-    that can be used by other parts of the application for layout planning.
-    
     Returns:
         dict: Dictionary with width, height, and other dimension info
     """
@@ -195,9 +188,6 @@ def get_table_dimensions():
 def validate_prediction_data(predicted_temp, confidence, accuracy):
     """
     Check if prediction data is valid and reasonable.
-    
-    This function helps ensure we only display sensible values
-    and can catch obvious errors in the prediction data.
     
     Args:
         predicted_temp: Temperature prediction to validate
@@ -242,8 +232,6 @@ def format_temperature_for_display(temp_value, unit="F"):
     """
     Format a temperature value for display in the table.
     
-    This handles various input formats and ensures consistent output.
-    
     Args:
         temp_value: Temperature to format (number, string, or None)
         unit: Temperature unit ("F" for Fahrenheit, "C" for Celsius)
@@ -280,9 +268,7 @@ def format_temperature_for_display(temp_value, unit="F"):
 def format_percentage_for_display(percent_value):
     """
     Format a percentage value for display in the table.
-    
-    This handles various input formats and ensures consistent output.
-    
+        
     Args:
         percent_value: Percentage to format (number, string, or None)
         
@@ -318,9 +304,6 @@ def format_percentage_for_display(percent_value):
 def create_enhanced_tomorrow_frame(parent, theme, show_details=False):
     """
     Create an enhanced version of the tomorrow's guess frame with optional details.
-    
-    This is an alternative version that can show additional information
-    like prediction method, data sources, or historical trends.
     
     Args:
         parent: Parent widget for the frame

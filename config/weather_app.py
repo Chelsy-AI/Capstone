@@ -1,33 +1,29 @@
 """
-Main Weather Application Class - Complete Fixed Version
+Main Weather Application Class
 =======================================================
 
-This is the heart of the weather app! It creates the main window and
+It creates the main window and
 coordinates all the different features like:
 - Getting weather data from the internet
 - Showing weather animations
-- Managing different pages (main, history, predictions, etc.)
-- Handling user interactions (button clicks, city searches)
+- Managing different pages
+- Handling user interactions
 - Supporting multiple languages for weather descriptions and UI text
 - Comprehensive translation management with consistent updates
-
-Think of this as the "brain" that controls everything in the app.
 """
 
-import tkinter as tk  # For creating the window and interface
-import threading      # For doing tasks in the background
-import traceback     # For showing detailed error messages
+import tkinter as tk
+import threading
+import traceback
 import sys
 import os
-from dotenv import load_dotenv  # For loading API keys from .env file
+from dotenv import load_dotenv
 
-# Load environment variables (like API keys) from .env file
 load_dotenv()
 
 # Add the project root to Python path so we can import our modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Import our custom weather app modules
 from features.tomorrows_guess.predictor import get_tomorrows_prediction
 from config.themes import LIGHT_THEME, DARK_THEME
 from config.api import get_current_weather
@@ -40,13 +36,12 @@ class WeatherApp(tk.Tk):
     Main Weather Application Class with Comprehensive Translation Support
     
     This class creates the main window and manages all the weather app features.
-    It inherits from tk.Tk, which means it IS a window that can display things.
     
     Key responsibilities:
     - Create and manage the main window
     - Store weather data and user settings
     - Coordinate between different app features
-    - Handle background tasks (like downloading weather data)
+    - Handle background tasks
     - Support multiple languages for weather descriptions and UI text
     - Manage language changes and UI updates consistently
     - Ensure ALL text elements are properly translated
@@ -64,7 +59,7 @@ class WeatherApp(tk.Tk):
         super().__init__()
 
         # Set up the main window properties
-        self.title("Smart Weather App with Sun & Moon Phases")
+        self.title("Smart Weather App")
         self.geometry("800x700")      # Width x Height in pixels
         self.minsize(700, 600)        # Minimum size user can resize to
 
@@ -105,8 +100,10 @@ class WeatherApp(tk.Tk):
         Returns:
             str: Language code (en, es, hi) for OpenWeatherMap API
         """
-        if hasattr(self.gui, 'language_controller'):
-            return self.gui.language_controller.get_language_code()
+        if hasattr(self.gui, 'language_controller') and self.gui.language_controller:
+            code = self.gui.language_controller.get_language_code()
+            return code
+        
         return "en"  # Default to English
 
     def refresh_ui_language(self):
@@ -143,7 +140,6 @@ class WeatherApp(tk.Tk):
                 self.gui.update_tomorrow_prediction_direct(predicted_temp, confidence, accuracy)
             
             # Fetch fresh weather data in the new language
-            # This will get weather descriptions from the API in the selected language
             self.fetch_and_display()
             
         except Exception as e:
@@ -202,10 +198,6 @@ class WeatherApp(tk.Tk):
         
         Enhanced version that ensures ALL labels get updated consistently.
         
-        When weather animations change the background color (like blue for rain,
-        white for snow), we need to update all text labels so they don't look
-        like ugly blue boxes on top of the new background.
-        
         Args:
             new_bg_color (str): The new background color (like "#87CEEB" for sky blue)
         """
@@ -251,31 +243,19 @@ class WeatherApp(tk.Tk):
             pass
 
     def fetch_and_display(self):
-        """
-        Get weather data and update the display.
-        
-        This starts a background task to download weather information
-        so the app doesn't freeze while waiting for the internet.
-        """
+        """Get weather data and update the display."""
         # Start the actual work in a background thread
         threading.Thread(target=self._fetch_weather, daemon=True).start()
 
     def _fetch_weather(self):
-        """
-        Background task to download weather data with comprehensive language support.
-        
-        This runs in a separate thread so the app stays responsive.
-        It downloads weather data, saves it, and then updates the display.
-        
-        Note: This is a "private" method (starts with _) meaning it's only
-        used internally by this class.
-        """
+        """Background task to download weather data with comprehensive language support."""
         try:
             # Get the city name from the input field (or use default)
             city = self.city_var.get().strip() or "New York"
             
             # Get current language code for API request
             language_code = self.get_current_language_code()
+            print(f"🔄 Fetching weather for {city} in language: {language_code}")
             
             # Download current weather data from the internet with language support
             weather_data = get_current_weather(city, language_code)
@@ -301,7 +281,7 @@ class WeatherApp(tk.Tk):
             self.after(0, lambda: self.gui.update_background_animation(weather_data))
             self.after(0, lambda: self.gui.update_sun_moon_display(city))
 
-        except Exception:
+        except Exception as e:
             # Show network error in current language
             self.after(0, lambda: self._show_weather_error("network error"))
 
@@ -316,7 +296,7 @@ class WeatherApp(tk.Tk):
             city (str): Name of the city to predict weather for
         """
         try:
-            # Get prediction data (temperature, confidence level, accuracy)
+            # Get prediction data
             predicted_temp, confidence, accuracy = get_tomorrows_prediction(city)
             
             # Store the prediction data
@@ -364,14 +344,9 @@ class WeatherApp(tk.Tk):
                 predicted_temp, confidence, accuracy = self.current_prediction_data
                 self.gui.update_tomorrow_prediction_direct(predicted_temp, confidence, accuracy)
         
-        # Don't fetch new data, just update the display with existing data
-
     def get_current_sun_moon_data(self):
         """
         Get the current sun and moon information.
-        
-        This is used by other parts of the app that need to know
-        about sunrise/sunset times or moon phases.
         
         Returns:
             dict: Sun and moon data, or empty dict if none available
@@ -383,9 +358,6 @@ class WeatherApp(tk.Tk):
     def is_currently_daytime(self):
         """
         Check if it's currently daytime.
-        
-        This can be used to automatically switch themes or change
-        the behavior of animations based on time of day.
         
         Returns:
             bool: True if it's daytime, False if it's nighttime
@@ -414,9 +386,6 @@ class WeatherApp(tk.Tk):
         """
         Get translated text for a specific key with proper fallback handling.
         
-        This is a convenience method that other parts of the app can use
-        to get translated text without directly accessing the language controller.
-        
         Args:
             key (str): Translation key
             fallback_to_english (bool): Whether to fallback to English if translation missing
@@ -431,9 +400,6 @@ class WeatherApp(tk.Tk):
     def set_language(self, language_name):
         """
         Programmatically set the language with complete UI refresh.
-        
-        This allows other parts of the app to change the language
-        without going through the language selection page.
         
         Args:
             language_name (str): Language name ("English", "Spanish", "Hindi")
@@ -474,12 +440,7 @@ class WeatherApp(tk.Tk):
         }
 
     def force_language_refresh(self):
-        """
-        Force a complete refresh of all language-dependent elements.
-        
-        This is useful if translation issues occur or if you want to
-        ensure everything is properly updated.
-        """
+        """Force a complete refresh of all language-dependent elements."""
         try:
             if hasattr(self.gui, 'language_controller'):
                 self.gui.language_controller.update_all_translatable_widgets()
@@ -488,12 +449,7 @@ class WeatherApp(tk.Tk):
             self.refresh_ui_language()
 
     def on_close(self):
-        """
-        Clean up when the user closes the app.
-        
-        This makes sure all background tasks are stopped and
-        resources are freed up properly before the app closes.
-        """
+        """Clean up when the user closes the app."""
         # Stop animations and clean up resources
         self.gui.cleanup_animation()
         
@@ -514,34 +470,24 @@ def run_app():
     Create and run the weather application.
     
     This is the main entry point that creates the app window
-    and starts the main program loop. It includes error handling
-    to show helpful messages if something goes wrong.
+    and starts the main program loop.
     """
     try:
-        print("🌤️ Starting Weather Application...")
-        
         # Create the main application window
         app = WeatherApp()
         
-        # Start automatic sun/moon data updates (every 30 minutes)
+        # Start automatic sun/moon data updates
         if hasattr(app.gui, 'sun_moon_controller'):
             app.gui.sun_moon_controller.start_auto_refresh(interval_minutes=30)
         
         # Display current language info on startup
         lang_info = app.get_language_info()
-        print(f"📱 Language: {lang_info['current_language']} ({lang_info['current_language_code']})")
-        print(f"🔤 Available languages: {', '.join(lang_info['available_languages'])}")
-        print(f"🔧 Translation coverage: {lang_info['translation_coverage']}")
-        
-        print("✓ Weather app initialized successfully")
-        print("💡 Tip: All UI text will translate when you change languages!")
-        
+
         # Start the main event loop (this keeps the app running until closed)
         app.mainloop()
         
     except Exception as e:
-        # If something goes wrong, show a detailed error message
-        print(f"❌ Error starting weather app: {e}")
+        # If something goes wrong
         traceback.print_exc()
 
 

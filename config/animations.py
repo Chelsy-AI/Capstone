@@ -3,8 +3,6 @@ Weather Animation System with Dynamic Background Updates
 ========================================================
 
 This module creates beautiful animated weather effects that match the current weather conditions.
-It's like having a live window showing the weather - when it's raining in real life,
-you see animated raindrops on screen!
 
 Features:
 - Animated raindrops for rainy weather
@@ -28,7 +26,7 @@ class AnimationParticle:
     """
     Base class for all weather particles (rain, snow, clouds, etc.)
     
-    This is like a template that defines common properties and behaviors
+    This is a template that defines common properties and behaviors
     that all weather particles share, such as position, movement, and cleanup.
     """
     
@@ -501,7 +499,7 @@ class WeatherAnimation:
 
     def _create_cloud_particles(self):
         """Create clouds for cloudy weather."""
-        count = min(6, max(2, self.width // 200))
+        count = min(7, max(3, self.width // 200))
         for _ in range(count):
             x = random.randint(-200, self.width)
             y = random.randint(50, self.height // 2)
@@ -520,7 +518,7 @@ class WeatherAnimation:
     def _create_clear_particles(self):
         """Create minimal particles for clear weather."""
         # Just a few gentle clouds for atmosphere
-        for _ in range(2):
+        for _ in range(3):
             x = random.randint(-200, self.width)
             y = random.randint(50, self.height // 3)
             particle = CloudParticle(x, y, self.width, self.height)
@@ -534,16 +532,16 @@ class WeatherAnimation:
             "rain": min(100, max(30, self.width // 10)),
             "snow": min(80, max(20, self.width // 15)),
             "storm": min(120, max(40, self.width // 8)),
-            "cloudy": min(6, max(2, self.width // 200)),
+            "cloudy": min(7, max(3, self.width // 200)),
             "mist": min(15, max(5, self.width // 80)),
-            "sunny": 2,
-            "clear": 2
+            "sunny": 3,
+            "clear": 3
         }
         
         target = target_counts.get(self.current_weather, 10)
         current = len(self.particles)
         
-        # Add particles if we're below the target (but don't add too many at once)
+        # Add particles if we're below the target
         if current < target and current < self.max_particles:
             needed = min(target - current, 5)  # Add maximum 5 per frame for smooth performance
             for _ in range(needed):
@@ -595,7 +593,6 @@ class WeatherAnimation:
             self.canvas.configure(bg=bg_color)
             
             # Notify the main app to update all label backgrounds
-            # This prevents ugly blue boxes around text labels
             if self.app and hasattr(self.app, 'update_all_label_backgrounds'):
                 self.app.update_all_label_backgrounds(bg_color)
             
@@ -659,7 +656,7 @@ class WeatherAnimation:
                 current_x, current_y = start_x, start_y
                 
                 # Create 3-6 segments for the lightning bolt
-                for _ in range(random.randint(3, 6)):
+                for _ in range(random.randint(4, 6)):
                     # Add random jagged movement
                     current_x += random.randint(-40, 40)
                     current_y += random.randint(40, 80)  # Always move downward
@@ -726,6 +723,6 @@ class WeatherAnimation:
         Get the current weather type being animated.
         
         Returns:
-            str: Current weather type ("rain", "snow", "clear", etc.)
+            str: Current weather type
         """
         return self.current_weather

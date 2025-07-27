@@ -18,9 +18,6 @@ The prediction algorithm:
 - Considers data quality (more data = higher confidence)
 - Provides realistic accuracy estimates
 - Handles missing or invalid data gracefully
-
-Think of this as a "smart average" that looks at recent weather patterns
-to guess what tomorrow might bring!
 """
 
 from features.history_tracker.api import fetch_world_history
@@ -30,10 +27,6 @@ def get_tomorrows_prediction(city):
     """
     Predict tomorrow's temperature based on recent historical data.
     
-    This is the main function that analyzes recent weather patterns
-    and returns a prediction for tomorrow's weather. It's used by
-    the GUI to display prediction information to users.
-    
     Args:
         city (str): Name of the city to predict weather for
         
@@ -42,14 +35,9 @@ def get_tomorrows_prediction(city):
                - predicted_temperature: Tomorrow's predicted temp in Celsius
                - confidence_percentage: How confident we are (like "85%")
                - accuracy_percentage: Historical accuracy of our predictions
-               
-    Example:
-        temp, confidence, accuracy = get_tomorrows_prediction("London")
-        # Returns: (22.5, "85%", 87)
-        # Meaning: 22.5°C tomorrow, 85% confidence, 87% historical accuracy
     """
     
-    # Step 1: Validate input - make sure we have a valid city name
+    # Step 1: Validate input
     if not isinstance(city, str):
         # If input is not a string, return "no prediction available"
         return None, "0%", 85
@@ -73,7 +61,7 @@ def get_tomorrows_prediction(city):
     
     # Go through each day and collect the data we need
     for i in range(len(times)):
-        # Get the average temperature for this day (most important for prediction)
+        # Get the average temperature for this day
         avg_temp = mean_temps[i] if i < len(mean_temps) else None
         
         # Skip days where we don't have average temperature data
@@ -96,10 +84,7 @@ def get_tomorrows_prediction(city):
         return None, "0%", 85
 
     # Step 7: Get the most recent days for trend analysis
-    # We use the last 3 days because:
-    # - Too few days = not enough pattern data
-    # - Too many days = old data might not reflect current patterns
-    last_three_days = days[-3:]
+    last_three_days = days[-5:]
     
     # Step 8: Extract just the average temperatures from these recent days
     recent_avg_temps = []
@@ -115,21 +100,15 @@ def get_tomorrows_prediction(city):
         return None, "0%", 85
 
     # Step 10: Calculate the prediction using simple averaging
-    # This is our core prediction algorithm - we assume tomorrow will be
-    # similar to the average of the last 3 days
     predicted_temp = sum(recent_avg_temps) / len(recent_avg_temps)
     predicted_temp = round(predicted_temp, 1)  # Round to 1 decimal place
     
     # Step 11: Calculate confidence level based on data quality
-    # More data points = higher confidence in our prediction
-    # This gives users an idea of how reliable the prediction is
     base_confidence = 30                           # Start with 30% base confidence
     data_bonus = len(recent_avg_temps) * 20        # Add 20% for each valid data point
     confidence = min(100, base_confidence + data_bonus)  # Cap at 100%
     
     # Step 12: Set historical accuracy percentage
-    # This represents how accurate our prediction algorithm has been in the past
-    # In a real system, this would be calculated from actual prediction vs reality
     accuracy = 85  # Our algorithm is about 85% accurate historically
     
     # Step 13: Return all three values for the GUI to display
@@ -149,10 +128,6 @@ def _analyze_temperature_trend(temperature_list):
         
     Returns:
         str: Trend description ("rising", "falling", "stable")
-        
-    Example:
-        trend = _analyze_temperature_trend([20, 22, 24])
-        # Returns: "rising"
     """
     if len(temperature_list) < 2:
         return "stable"
@@ -179,29 +154,21 @@ def _calculate_temperature_consistency(temperature_list):
     """
     Calculate how consistent recent temperatures have been.
     
-    This measures how much temperatures have varied recently.
-    More consistent temperatures = more reliable predictions.
-    
     Args:
         temperature_list (list): List of recent temperatures
         
     Returns:
         float: Consistency score from 0 (very inconsistent) to 1 (very consistent)
-        
-    Example:
-        consistency = _calculate_temperature_consistency([20, 21, 20])
-        # Returns: 0.95 (very consistent)
     """
     if len(temperature_list) < 2:
-        return 1.0  # Single data point is perfectly "consistent"
+        return 1.0
     
     # Calculate standard deviation (measure of variation)
     mean_temp = sum(temperature_list) / len(temperature_list)
     variance = sum((temp - mean_temp) ** 2 for temp in temperature_list) / len(temperature_list)
     std_deviation = variance ** 0.5
     
-    # Convert to consistency score (lower deviation = higher consistency)
-    # We use 5°C as the reference - if std dev is 5°C, consistency is 0.5
+    # Convert to consistency score
     max_reasonable_deviation = 5.0
     consistency = max(0, 1 - (std_deviation / max_reasonable_deviation))
     
@@ -220,16 +187,6 @@ def get_extended_prediction_info(city):
         
     Returns:
         dict: Extended prediction information including trends, consistency, etc.
-        
-    Example:
-        info = get_extended_prediction_info("Paris")
-        # Returns: {
-        #     "prediction": 23.1,
-        #     "confidence": "78%", 
-        #     "trend": "rising",
-        #     "consistency": 0.82,
-        #     "data_points": 5
-        # }
     """
     try:
         # Get basic prediction
@@ -300,15 +257,6 @@ def validate_prediction_quality(city):
         
     Returns:
         dict: Quality assessment with recommendations
-        
-    Example:
-        quality = validate_prediction_quality("Tokyo")
-        # Returns: {
-        #     "quality": "good",
-        #     "data_days": 6,
-        #     "missing_days": 1,
-        #     "recommendation": "Predictions should be reliable"
-        # }
     """
     try:
         # Get historical data
@@ -359,43 +307,3 @@ def validate_prediction_quality(city):
             "missing_days": 7,
             "recommendation": f"Error analyzing data: {str(e)}"
         }
-
-
-# Testing and example usage
-if __name__ == "__main__":
-    """
-    This section runs when you execute this file directly.
-    It's useful for testing the prediction functions.
-    """
-    
-    print("Testing Tomorrow's Weather Prediction System")
-    print("=" * 50)
-    
-    # Test cities
-    test_cities = ["London", "New York", "Tokyo", "Sydney"]
-    
-    for city in test_cities:
-        print(f"\n🌤️ Testing predictions for {city}:")
-        
-        # Test basic prediction
-        temp, confidence, accuracy = get_tomorrows_prediction(city)
-        print(f"  Prediction: {temp}°C")
-        print(f"  Confidence: {confidence}")
-        print(f"  Accuracy: {accuracy}%")
-        
-        # Test extended prediction info
-        extended = get_extended_prediction_info(city)
-        print(f"  Trend: {extended['trend']}")
-        print(f"  Consistency: {extended['consistency']}")
-        print(f"  Data points: {extended['data_points']}")
-        
-        # Test prediction quality
-        quality = validate_prediction_quality(city)
-        print(f"  Data quality: {quality['quality']}")
-        print(f"  Recommendation: {quality['recommendation']}")
-    
-    print("\n✅ Prediction testing completed!")
-    print("\nNote: This is a simple prediction algorithm for demonstration.")
-    print("In a real weather app, you'd want more sophisticated algorithms")
-    print("that consider weather patterns, seasonal trends, and atmospheric data.")
-    

@@ -1,9 +1,8 @@
 """
-Updated Language Translations Data with Graph Support
-====================================================
+Language Translations Data
+========================================================================
 
-Contains all translation data for the weather application including 
-comprehensive translations for the graphs page and all UI elements.
+Contains all translation data for the weather application.
 """
 
 TRANSLATIONS = {
@@ -35,7 +34,18 @@ TRANSLATIONS = {
         "map_view": "Map View",
         "sun_moon": "Sun & Moon",
         "language": "Language",
-        
+        "city_comparison": "City Comparison",
+
+        # City Comparison Page
+        "city_comparison_title": "City Weather Comparison",
+        "comparison_instructions": "Compare weather conditions between two cities",
+        "city_1": "City 1",
+        "city_2": "City 2",
+        "compare_cities": "Compare Cities",
+        "comparison_placeholder": "Enter two cities above and click Compare to see side-by-side weather data",
+        "loading_comparison": "📊 Loading comparison data...\nPlease wait while we fetch weather for both cities.",
+        "comparison_error": "Unable to compare cities. Please check city names and try again.",
+
         # Graphs Page - Main Elements
         "weather_graphs_title": "Weather Graphs",
         "select_graph_type": "Select Graph Type:",
@@ -255,7 +265,18 @@ TRANSLATIONS = {
         "map_view": "Vista del Mapa",
         "sun_moon": "Sol y Luna",
         "language": "Idioma",
+        "city_comparison": "Comparación de Ciudades",
         
+        # City Comparison Page - CORRECTED
+        "city_comparison_title": "Comparación del Clima entre Ciudades",
+        "comparison_instructions": "Compara las condiciones meteorológicas entre dos ciudades",
+        "city_1": "Ciudad 1",
+        "city_2": "Ciudad 2",
+        "compare_cities": "Comparar Ciudades",
+        "comparison_placeholder": "Ingresa dos ciudades arriba y haz clic en Comparar para ver los datos meteorológicos lado a lado",
+        "loading_comparison": "📊 Cargando datos de comparación...\nPor favor espera mientras obtenemos el clima de ambas ciudades.",
+        "comparison_error": "No se pueden comparar las ciudades. Por favor verifica los nombres de las ciudades e intenta de nuevo.",
+
         # Graphs Page - Main Elements
         "weather_graphs_title": "Gráficos del Clima",
         "select_graph_type": "Seleccionar tipo de gráfico:",
@@ -425,16 +446,23 @@ TRANSLATIONS = {
         "error_loading_data": "Error al cargar datos",
         "please_try_refreshing": "Por favor, intente actualizar",
         
-        # Weather Conditions
+        # Weather Conditions - CORRECTED
         "clear_sky": "Cielo despejado",
         "few_clouds": "Pocas nubes",
         "scattered_clouds": "Nubes dispersas",
         "broken_clouds": "Nubes fragmentadas",
+        "overcast_clouds": "Cielo nublado",
         "shower_rain": "Lluvia ligera",
         "rain": "Lluvia",
+        "light_rain": "Lluvia ligera",
+        "moderate_rain": "Lluvia moderada",
+        "heavy_rain": "Lluvia intensa",
         "thunderstorm": "Tormenta",
         "snow": "Nieve",
+        "light_snow": "Nevada ligera",
         "mist": "Neblina",
+        "fog": "Niebla",
+        "haze": "Bruma",
         
         # Units
         "celsius": "°C",
@@ -475,7 +503,18 @@ TRANSLATIONS = {
         "map_view": "मानचित्र दृश्य",
         "sun_moon": "सूर्य और चंद्रमा",
         "language": "भाषा",
+        "city_comparison": "शहर तुलना",
         
+        # City Comparison Page - CORRECTED
+        "city_comparison_title": "शहरों की मौसम तुलना",
+        "comparison_instructions": "दो शहरों के बीच मौसम की स्थिति की तुलना करें",
+        "city_1": "शहर 1",
+        "city_2": "शहर 2",
+        "compare_cities": "शहरों की तुलना करें",
+        "comparison_placeholder": "ऊपर दो शहर दर्ज करें और साइड-बाई-साइड मौसम डेटा देखने के लिए तुलना पर क्लिक करें",
+        "loading_comparison": "📊 तुलना डेटा लोड हो रहा है...\nकृपया प्रतीक्षा करें जब तक हम दोनों शहरों का मौसम प्राप्त करते हैं।",
+        "comparison_error": "शहरों की तुलना करने में असमर्थ। कृपया शहर के नाम जांचें और पुनः प्रयास करें।",
+
         # Graphs Page - Main Elements
         "weather_graphs_title": "मौसम चार्ट",
         "select_graph_type": "चार्ट प्रकार चुनें:",
@@ -645,20 +684,53 @@ TRANSLATIONS = {
         "error_loading_data": "डेटा लोड करने में त्रुटि",
         "please_try_refreshing": "कृपया रीफ्रेश करने का प्रयास करें",
         
-        # Weather Conditions
+        # Weather Conditions - CORRECTED AND COMPLETE
         "clear_sky": "साफ आकाश",
+        "clear": "साफ",
         "few_clouds": "कुछ बादल",
         "scattered_clouds": "बिखरे हुए बादल",
         "broken_clouds": "टूटे हुए बादल",
+        "overcast_clouds": "घने बादल",
+        "overcast": "बादल छाए हुए",
         "shower_rain": "हल्की बारिश",
         "rain": "बारिश",
+        "light_rain": "हल्की बारिश",
+        "moderate_rain": "मध्यम बारिश",
+        "heavy_rain": "भारी बारिश",
+        "drizzle": "फुहार",
+        "light_intensity_drizzle": "हल्की फुहार",
         "thunderstorm": "तूफान",
+        "thunderstorm_with_light_rain": "हल्की बारिश के साथ तूफान",
+        "thunderstorm_with_rain": "बारिश के साथ तूफान",
+        "thunderstorm_with_heavy_rain": "भारी बारिश के साथ तूफान",
         "snow": "बर्फ",
+        "light_snow": "हल्की बर्फबारी",
+        "heavy_snow": "भारी बर्फबारी",
+        "sleet": "ओलावृष्टि",
         "mist": "कोहरा",
+        "fog": "धुंध",
+        "haze": "धुंध",
+        "smoke": "धुआं",
+        "sand": "रेत की आंधी",
+        "dust": "धूल",
+        "tornado": "बवंडर",
+        "squall": "तेज हवा",
+        
+        # Detailed weather descriptions that might come from API
+        "light_intensity_shower_rain": "हल्की बारिश की बौछार",
+        "shower_rain": "बारिश की बौछार",
+        "heavy_intensity_shower_rain": "भारी बारिश की बौछार",
+        "ragged_shower_rain": "अनियमित बारिश",
+        "light_intensity_drizzle_rain": "हल्की फुहार के साथ बारिश",
+        "drizzle_rain": "फुहार के साथ बारिश",
+        "heavy_intensity_drizzle_rain": "भारी फुहार के साथ बारिश",
+        "shower_rain_and_drizzle": "बौछार और फुहार",
+        "heavy_shower_rain_and_drizzle": "भारी बौछार और फुहार",
+        "shower_drizzle": "फुहार की बौछार",
         
         # Units
         "celsius": "°से",
-        "fahrenheit": "°फा",
+        "fahrenheit": "°फा", 
         "kmh": "किमी/घं",
         "ms": "मी/से",
         "hpa": "एचपीए",

@@ -1,9 +1,6 @@
 """
-Sun and Moon Phases Display Module - Fixed Translation System
+Sun and Moon Phases Display Module
 ===========================================================
-
-Fixed the translation system to properly update all text elements
-when language changes, including directional labels and degree markers.
 """
 
 import tkinter as tk
@@ -20,7 +17,7 @@ class SunMoonDisplay:
     - Creating organized text sections with detailed information
     - Updating the display when new data arrives
     - Managing simple animations like twinkling stars
-    - Properly handling language changes for ALL text elements
+    - Properly handling language changes for text elements
     """
     
     def __init__(self, app, gui_controller):
@@ -94,9 +91,6 @@ class SunMoonDisplay:
         """
         Build the page header with title and day/night indicator.
         
-        This creates a clean, simple header without cluttering it with
-        too much information like city names or exact times.
-        
         Args:
             window_width (int): Current window width for positioning
         """
@@ -128,7 +122,7 @@ class SunMoonDisplay:
         - Blue sky background
         - Clear horizon line
         - Ground area
-        - Directional labels (East, West, Zenith) - NOW TRANSLATABLE
+        - Directional labels (East, West, Zenith)
         - Elevation angle markers (30°, 60°) 
         - Sun and moon position indicators
         
@@ -188,7 +182,6 @@ class SunMoonDisplay:
     def _add_direction_labels(self, center_x, horizon_y, viz_y):
         """
         Add directional labels (East, West, Zenith) to help orient users.
-        NOW USES TRANSLATION SYSTEM!
         
         Args:
             center_x (int): Center X coordinate
@@ -205,7 +198,7 @@ class SunMoonDisplay:
         self.gui.widgets.append(east_label)
         self.direction_labels["east"] = east_label
         
-        # West label (right side) - NOW TRANSLATABLE
+        # West label (right side)
         west_label = self._create_label(
             text=self.get_translated_text("west"), 
             font=("Arial", 12, "bold"),
@@ -215,7 +208,7 @@ class SunMoonDisplay:
         self.gui.widgets.append(west_label)
         self.direction_labels["west"] = west_label
         
-        # Zenith label (top center - highest point in sky) - NOW TRANSLATABLE
+        # Zenith label (top center - highest point in sky)
         zenith_label = self._create_label(
             text=self.get_translated_text("zenith"),
             font=("Arial", 12, "bold"),
@@ -247,7 +240,7 @@ class SunMoonDisplay:
         grid_60_line.place(x=100, y=grid_60_y, width=sky_width - 40)
         self.gui.widgets.append(grid_60_line)
         
-        # 60° label (degrees are universal, but store reference)
+        # 60° label
         deg_60_label = self._create_label(
             text="60°",
             font=("Arial", 10),
@@ -268,7 +261,7 @@ class SunMoonDisplay:
         grid_30_line.place(x=100, y=grid_30_y, width=sky_width - 40)
         self.gui.widgets.append(grid_30_line)
         
-        # 30° label (degrees are universal, but store reference)
+        # 30° label 
         deg_30_label = self._create_label(
             text="30°",
             font=("Arial", 10),
@@ -334,7 +327,7 @@ class SunMoonDisplay:
         row1_y = sections_start_y
         row2_y = sections_start_y + 120  # Space rows apart
         
-        # Define the information sections to create - ALL TITLES NOW TRANSLATABLE
+        # Define the information sections to create
         sections_config = [
             ("sun_section", "☀️ " + self.get_translated_text("solar_data"), left_x, row1_y),
             ("moon_section", "🌙 " + self.get_translated_text("moon_phase"), right_x, row1_y),
@@ -390,9 +383,6 @@ class SunMoonDisplay:
         """
         Create a text label with consistent styling.
         
-        This helper method ensures all labels use consistent colors
-        and styling that works with our theme.
-        
         Args:
             text (str): Text to display
             font (tuple): Font specification (family, size, style)
@@ -426,11 +416,6 @@ class SunMoonDisplay:
     def update_sun_moon_display(self, sun_moon_data):
         """
         Update the entire display with new sun/moon data.
-        
-        This is called when fresh astronomical data arrives and updates:
-        - Day/night status indicator
-        - Sun and moon positions in the sky
-        - All text information sections
         
         Args:
             sun_moon_data (dict): Dictionary containing astronomical data
@@ -626,7 +611,7 @@ class SunMoonDisplay:
             data (dict): Sun/moon data with position information
         """
         try:
-            # Get current window width (may have changed since initialization)
+            # Get current window width
             window_width = self.app.winfo_width()
             if window_width <= 1:  # Window not ready yet
                 return
@@ -644,7 +629,7 @@ class SunMoonDisplay:
             horizon_y = 290  # Fixed Y coordinate of horizon line
             sky_height = 120  # Available vertical space in sky area
             
-            # Convert elevation angle to Y position (higher elevation = higher on screen)
+            # Convert elevation angle to Y position
             sun_y = horizon_y - (sun_elevation / 90) * sky_height
             moon_y = horizon_y - (moon_elevation / 90) * sky_height
             
@@ -687,11 +672,11 @@ class SunMoonDisplay:
             error_msg (str): Error message to display
         """
         try:
-            # Update day/night label to show error - USING TRANSLATIONS
+            # Update day/night label to show error
             if self.day_night_label:
                 self.day_night_label.configure(text="❌ " + self.get_translated_text("error_loading_data"))
             
-            # Update all information sections to show error - USING TRANSLATIONS
+            # Update all information sections to show error
             error_text = (self.get_translated_text("error_loading_data") + "\n" + 
                          self.get_translated_text("please_try_refreshing"))
             
@@ -700,7 +685,7 @@ class SunMoonDisplay:
                     section_data['content'].configure(text=error_text)
                     
         except Exception as e:
-            pass  # Even error handling can fail, so be defensive
+            pass  # Even error handling can fail
     
     def update_for_theme_change(self):
         """
@@ -738,8 +723,6 @@ class SunMoonDisplay:
     
     def update_for_language_change(self):
         """
-        MAJOR FIX: Update ALL translatable text elements when language changes.
-        
         This method updates every text element that should change with language,
         including direction labels, section titles, and content.
         """
@@ -936,12 +919,7 @@ class SunMoonDisplay:
             pass  # Animation failures shouldn't affect main functionality
     
     def cleanup(self):
-        """
-        Clean up resources when the display is no longer needed.
-        
-        This should be called when switching to a different page or closing the app
-        to prevent memory leaks and stop background animations.
-        """
+        """Clean up resources when the display is no longer needed."""
         try:
             # Stop any running animations
             self.stop_celestial_animation()

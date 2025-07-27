@@ -1,9 +1,8 @@
 """
-Weather Graph Generator - Fixed Version with Font Handling
+Weather Graph Generator
 =========================================================
 
 This file creates different types of graphs to show weather data visually.
-Fixed to handle font issues and provide better error handling.
 
 Key Features:
 - Temperature trends (line graphs)
@@ -18,7 +17,7 @@ Key Features:
 # Import required libraries for making graphs and handling data
 try:
     import matplotlib
-    matplotlib.use('TkAgg')  # Tell matplotlib to work with Tkinter (our GUI system)
+    matplotlib.use('TkAgg')
     import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
     from matplotlib.figure import Figure
@@ -32,24 +31,19 @@ except ImportError:
     # If matplotlib isn't installed, we'll show an error message later
     MATPLOTLIB_AVAILABLE = False
 
-# Import our own modules for getting weather data
 from features.history_tracker.api import fetch_world_history
 from config.storage import load_weather_history
 
 
 class WeatherGraphGenerator:
-    """
-    Main class that creates different types of weather graphs.
-    
-    Fixed to handle font issues and provide better error handling.
-    """
+    """Main class that creates different types of weather graphs."""
     
     def __init__(self, app):
         """
         Initialize the graph generator.
         
         Args:
-            app: The main weather application (so we can access its data)
+            app: The main weather application
         """
         self.app = app
         
@@ -81,7 +75,7 @@ class WeatherGraphGenerator:
             plt.rcParams['legend.fontsize'] = 9
             
         except Exception as e:
-            print(f"Font setup warning: {e}")
+            pass
     
     def _suppress_font_warnings(self):
         """
@@ -325,7 +319,6 @@ class WeatherGraphGenerator:
     def _generate_conditions_distribution(self, city):
         """
         Create a pie chart showing the distribution of different weather conditions.
-        Fixed to use proper English condition names and realistic data.
         """
         try:
             # Get weather history from our local storage

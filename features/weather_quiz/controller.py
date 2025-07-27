@@ -1,5 +1,5 @@
 """
-Minimal Weather Quiz Controller - Simplified for debugging
+Weather Quiz Controller
 This version focuses on basic functionality to ensure the database works correctly.
 """
 
@@ -12,9 +12,7 @@ from typing import List, Dict, Any, Optional
 try:
     from .questions_database import get_all_questions, get_random_questions
     DATABASE_AVAILABLE = True
-    print("✓ Database import successful")
 except ImportError as e:
-    print(f"❌ Database import failed: {e}")
     DATABASE_AVAILABLE = False
 
 
@@ -40,27 +38,20 @@ class WeatherQuizController:
         
     def _test_database(self):
         """Test if the database is working."""
-        print("Testing database...")
-        
+
         if not DATABASE_AVAILABLE:
-            print("❌ Database module not available")
             return
         
         try:
             all_questions = get_all_questions()
-            print(f"✓ Database has {len(all_questions)} questions")
             
             if len(all_questions) > 0:
-                print(f"✓ First question: {all_questions[0]['question'][:50]}...")
-                
                 # Test random selection
                 random_questions = get_random_questions(3)
-                print(f"✓ Random selection works: {len(random_questions)} questions selected")
             else:
-                print("❌ Database is empty")
+                pass
                 
         except Exception as e:
-            print(f"❌ Database test failed: {e}")
             traceback.print_exc()
     
     def _get_text(self, key):
@@ -97,7 +88,6 @@ class WeatherQuizController:
             return fallback_translations.get(key, key)
             
         except Exception as e:
-            print(f"Translation error for key '{key}': {e}")
             # Return English fallback
             fallback_translations = {
                 'weather_quiz_title': 'Weather Quiz',
@@ -112,8 +102,6 @@ class WeatherQuizController:
     def build_page(self, window_width: int, window_height: int):
         """Build a simplified quiz page for testing."""
         try:
-            print(f"Building quiz page: {window_width}x{window_height}")
-            
             # Add back button
             self._add_back_button()
             
@@ -136,7 +124,6 @@ class WeatherQuizController:
             self._load_quiz_questions()
             
         except Exception as e:
-            print(f"❌ Error building page: {e}")
             traceback.print_exc()
             self._show_error(f"Page build error: {str(e)}")
     
@@ -177,18 +164,13 @@ class WeatherQuizController:
                 height=quiz_height
             )
             self.gui.widgets.append(self.quiz_frame)
-            
-            print(f"✓ Quiz frame created: {quiz_width}x{quiz_height} at ({quiz_x}, {quiz_start_y})")
-            
+                        
         except Exception as e:
-            print(f"❌ Error creating quiz area: {e}")
             traceback.print_exc()
     
     def _load_quiz_questions(self):
         """Load and test quiz questions."""
-        try:
-            print("Loading quiz questions...")
-            
+        try:            
             if not DATABASE_AVAILABLE:
                 self._show_message("❌ Database Not Available", 
                                    "The questions database could not be imported.\n"
@@ -209,14 +191,11 @@ class WeatherQuizController:
                 self._show_message("❌ Random Selection Failed", 
                                    "Could not select random questions from database.")
                 return
-            
-            print(f"✓ Loaded {len(self.current_questions)} questions successfully")
-            
+                        
             # Show success message with start option
             self._show_quiz_ready()
             
         except Exception as e:
-            print(f"❌ Error loading questions: {e}")
             traceback.print_exc()
             self._show_message("❌ Loading Error", f"Error loading questions: {str(e)}")
     
@@ -237,9 +216,7 @@ class WeatherQuizController:
                 frame_width = 600
             if frame_height < 200:
                 frame_height = 400
-            
-            print(f"Frame dimensions: {frame_width}x{frame_height}")
-            
+                        
             # Success message with language support
             success_text = f"✅ {self._get_text('quiz_ready')}"
             success_label = tk.Label(
@@ -291,7 +268,6 @@ class WeatherQuizController:
             start_button.pack(pady=20)
             
         except Exception as e:
-            print(f"❌ Error showing quiz ready: {e}")
             traceback.print_exc()
     
     def _start_quiz(self):
@@ -306,7 +282,6 @@ class WeatherQuizController:
             self._display_current_question()
             
         except Exception as e:
-            print(f"❌ Error starting quiz: {e}")
             traceback.print_exc()
             self._show_message("❌ Start Error", f"Error starting quiz: {str(e)}")
     
@@ -392,7 +367,6 @@ class WeatherQuizController:
             next_button.pack(pady=30)
             
         except Exception as e:
-            print(f"❌ Error displaying question: {e}")
             traceback.print_exc()
             self._show_message("❌ Display Error", f"Error displaying question: {str(e)}")
     
@@ -421,7 +395,6 @@ class WeatherQuizController:
             self._display_current_question()
             
         except Exception as e:
-            print(f"❌ Error processing answer: {e}")
             traceback.print_exc()
             self._show_message("❌ Answer Error", f"Error processing answer: {str(e)}")
     
@@ -460,7 +433,6 @@ class WeatherQuizController:
             restart_button.pack(pady=20)
             
         except Exception as e:
-            print(f"❌ Error showing results: {e}")
             traceback.print_exc()
     
     def _restart_quiz(self):
@@ -475,7 +447,6 @@ class WeatherQuizController:
             self._load_quiz_questions()
             
         except Exception as e:
-            print(f"❌ Error restarting quiz: {e}")
             traceback.print_exc()
     
     def _show_message(self, title: str, message: str):
@@ -508,7 +479,6 @@ class WeatherQuizController:
             message_label.pack(pady=20)
             
         except Exception as e:
-            print(f"❌ Error showing message: {e}")
             messagebox.showerror("Error", f"{title}\n\n{message}")
     
     def _show_error(self, error_msg: str):

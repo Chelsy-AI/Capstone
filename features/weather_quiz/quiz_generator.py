@@ -1,8 +1,7 @@
 """
-Weather Quiz Generator - Uses static questions database only
+Weather Quiz Generator
 
 This module randomly selects questions from the pre-computed questions database.
-No CSV processing or data analysis - all questions are pre-defined and ready to use.
 """
 
 import random
@@ -19,29 +18,18 @@ from .questions_database import (
 class WeatherQuizGenerator:
     """
     Quiz generator that randomly selects questions from a static database.
-    
-    This class provides pre-computed questions based on comprehensive weather data analysis.
-    No real-time CSV processing is performed.
     """
     
     def __init__(self):
-        """
-        Initialize the quiz generator.
-        
-        Loads the static question database and verifies questions are available.
-        """
+        """Initialize the quiz generator."""
         # Load all available questions from the database
         self.all_questions = get_all_questions()
         self.data_loaded = len(self.all_questions) > 0
         
         # Cache for performance
         self._categories = None
-        
-        if self.data_loaded:
-            print(f"✓ Loaded {len(self.all_questions)} pre-computed questions from database")
-        else:
-            print("❌ No questions available in database")
-    
+
+
     def generate_quiz(self, num_questions: int = 5) -> List[Dict[str, Any]]:
         """
         Generate random quiz questions from the database.
@@ -53,17 +41,13 @@ class WeatherQuizGenerator:
             List[Dict]: List of quiz question dictionaries
         """
         if not self.data_loaded:
-            print("❌ No questions available in database")
             return []
         
         # Ensure we don't try to select more questions than available
         available_questions = len(self.all_questions)
         if num_questions > available_questions:
-            print(f"⚠ Only {available_questions} questions available, selecting all")
             num_questions = available_questions
-        
-        print(f"Generating {num_questions} random questions from {available_questions} available questions")
-        
+                
         # Use the database function to get random questions
         selected_questions = get_random_questions(num_questions)
         
@@ -80,7 +64,6 @@ class WeatherQuizGenerator:
             quiz_questions.append(quiz_question)
         
         # Log the selected questions for debugging
-        print("Selected questions:")
         for i, q in enumerate(quiz_questions, 1):
             print(f"  {i}. [{q['category']}] {q['question'][:60]}...")
         

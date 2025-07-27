@@ -1,19 +1,15 @@
 """
-Interactive Graph Hover Tooltip System - Optimized with Beginner Comments
+Interactive Graph Hover Tooltip System
 ========================================================================
 
 This file creates interactive tooltips that appear when you hover your mouse over graphs.
-Think of it like having a helpful assistant that pops up to tell you exact values
-when you point at any part of a weather chart.
 
 Key Features:
 - Shows exact data values when you hover over graph points
 - Automatically positions tooltips so they don't go off-screen
-- Works with different types of graphs (lines, bars, pie charts)
+- Works with different types of graphs
 - Smoothly appears and disappears as you move your mouse
 - Shows formatted dates, temperatures, and other weather data
-
-This makes graphs much more interactive and informative!
 """
 
 import matplotlib
@@ -36,13 +32,13 @@ class HoverTooltip:
         Initialize the hover tooltip system.
         
         Args:
-            ax: The matplotlib axes object (the actual graph area)
+            ax: The matplotlib axes object
             canvas: The canvas widget that displays the graph
         """
         self.ax = ax  # Store reference to the graph
         self.canvas = canvas  # Store reference to the display canvas
         
-        # Create the tooltip annotation (this is the popup box)
+        # Create the tooltip annotation 
         self.annotation = self.ax.annotate(
             '',  # Start with empty text
             xy=(0, 0),  # Position on the graph (will be updated)
@@ -162,7 +158,6 @@ class HoverTooltip:
                 }
         
         # Only return the point if it's close enough to the mouse
-        # (threshold in data units - adjust based on your graph scale)
         if nearest_point and nearest_point['distance'] < 0.1:
             return nearest_point
         
@@ -220,8 +215,6 @@ class HoverTooltip:
         """
         Adjust tooltip position so it stays visible on screen.
         
-        This prevents tooltips from being cut off at the edges of the graph.
-        
         Args:
             event: Mouse event for reference positioning
         """
@@ -259,8 +252,6 @@ class HoverTooltip:
     def clear_lines(self):
         """
         Remove all lines from hover monitoring.
-        
-        Call this when creating a new graph to start fresh.
         """
         self.lines.clear()
         self.labels.clear()

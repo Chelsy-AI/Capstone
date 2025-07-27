@@ -4,7 +4,7 @@ Comprehensive Error Handler Module
 
 This module handles all errors that might occur in the weather app gracefully.
 Instead of crashing when something goes wrong, the app shows helpful error messages
-and continues working. It's like having a safety net for the entire application!
+and continues working.
 
 Key features:
 - Catches API errors (when internet is down or weather service is unavailable)
@@ -13,11 +13,9 @@ Key features:
 - Logs errors to console for debugging
 - Shows user-friendly error messages
 - Prevents app crashes by providing safe fallback values
-
-Think of this as the app's "immune system" that keeps it healthy even when things go wrong!
 """
 
-import logging      # For recording error messages
+import logging      
 import tkinter as tk
 from tkinter import messagebox
 from datetime import datetime
@@ -85,12 +83,6 @@ def handle_api_errors(func):
         
     Returns:
         Function that handles API errors safely
-        
-    Example:
-        @handle_api_errors
-        def get_weather_data(city):
-            # If this fails, the decorator catches it and returns safe data
-            return requests.get(f"weather-api.com/{city}").json()
     """
     def wrapper(*args, **kwargs):
         try:
@@ -125,12 +117,6 @@ def handle_gui_errors(show_user_message=True):
         
     Returns:
         Decorator function
-        
-    Example:
-        @handle_gui_errors(show_user_message=False)
-        def update_temperature_display(temp):
-            # If updating the display fails, just log it and continue
-            temperature_label.configure(text=f"{temp}°C")
     """
     def decorator(func):
         def wrapper(*args, **kwargs):
@@ -171,12 +157,6 @@ def handle_data_errors(func):
         
     Returns:
         Function that handles data errors safely
-        
-    Example:
-        @handle_data_errors
-        def calculate_average_temperature(weather_list):
-            # If calculation fails, return empty dict instead of crashing
-            return sum(w['temp'] for w in weather_list) / len(weather_list)
     """
     def wrapper(*args, **kwargs):
         try:
@@ -207,12 +187,6 @@ def show_error_message(title: str, message: str, error_type: str = "error"):
         title (str): Title for the error popup window
         message (str): User-friendly explanation of what went wrong
         error_type (str): Type of error ("error", "warning", "info")
-        
-    Example:
-        show_error_message(
-            "Internet Connection",
-            "Could not connect to weather service. Please check your internet connection."
-        )
     """
     try:
         # Try to show a popup message box
@@ -248,9 +222,6 @@ def initialize_error_handling():
         def handle_exception(exc_type, exc_value, exc_traceback):
             """
             Handle any uncaught exceptions in the app.
-            
-            This is the "last resort" error handler that catches errors
-            that slip through all other error handling.
             """
             # Let KeyboardInterrupt (Ctrl+C) work normally
             if issubclass(exc_type, KeyboardInterrupt):

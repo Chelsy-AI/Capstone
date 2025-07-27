@@ -3,54 +3,43 @@ Sun and Moon Phases API Module
 ==============================
 
 This module fetches astronomical data about the sun and moon for any city.
-It's like having a personal astronomer that tells you when the sun rises,
-when it sets, what phase the moon is in, and where celestial objects are in the sky!
 
 Key features:
 - Sunrise and sunset times for any city
 - Current moon phase and illumination percentage
-- Sun and moon positions in the sky (elevation and azimuth)
+- Sun and moon positions in the sky
 - Daytime/nighttime detection
-- Golden hour calculations (best photography lighting)
+- Golden hour calculations
 - All calculations work worldwide with any city name
 
 Data sources:
-- Sunrise-Sunset API (free, no API key required)
+- Sunrise-Sunset API
 - Mathematical calculations for moon phases
 - Astronomical formulas for celestial positions
-
-Think of this as your pocket planetarium that knows about the sky above any city!
 """
 
-import requests  # For making HTTP requests to astronomy APIs
-import math      # For astronomical calculations
-import datetime  # For working with dates and times
-from typing import Dict, Tuple, Optional  # For type hints to make code clearer
+import requests
+import math
+import datetime
+from typing import Dict, Tuple, Optional
 
 
 def get_coordinates_for_city(city: str) -> Tuple[Optional[float], Optional[float]]:
     """
     Get latitude and longitude coordinates for any city.
     
-    This function acts like a GPS system to find where a city is located
-    on Earth, which we need for astronomical calculations.
-    
     Args:
         city (str): Name of the city (like "London", "Tokyo", "New York")
         
     Returns:
         tuple: (latitude, longitude) as numbers, or (None, None) if city not found
-        
-    Example:
-        lat, lon = get_coordinates_for_city("Paris")
-        # Returns: (48.8566, 2.3522) - Paris coordinates
     """
-    # Validate input - make sure we have a valid city name
+    # Validate input
     if not isinstance(city, str) or not city.strip():
         return None, None
     
     try:
-        # Use the free Open-Meteo geocoding API to find city coordinates
+        # Use the Open-Meteo geocoding API to find city coordinates
         url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1&language=en&format=json"
         response = requests.get(url, timeout=10)  # 10 second timeout
         
@@ -59,7 +48,7 @@ def get_coordinates_for_city(city: str) -> Tuple[Optional[float], Optional[float
             data = response.json()
             results = data.get("results", [])
             
-            # Extract coordinates from the first (best) result
+            # Extract coordinates from the first result
             if results:
                 lat = results[0].get("latitude")
                 lon = results[0].get("longitude")
@@ -69,7 +58,7 @@ def get_coordinates_for_city(city: str) -> Tuple[Optional[float], Optional[float
         return None, None
         
     except Exception as e:
-        # If anything goes wrong (network error, etc.), return None
+        # If anything goes wrong, return None
         return None, None
 
 
@@ -90,13 +79,7 @@ def fetch_sun_moon_data(city: str) -> Dict:
             - moon phase and illumination
             - moon position
             - whether it's currently daytime
-            - error information if something went wrong
-            
-    Example:
-        data = fetch_sun_moon_data("London")
-        print(f"Sunrise: {data['sunrise']}")
-        print(f"Moon phase: {data['moon_phase_name']}")
-        print(f"Currently daytime: {data['is_daytime']}")
+            - error information if something went wrong            
     """
     # Step 1: Get city coordinates
     lat, lon = get_coordinates_for_city(city)
@@ -106,7 +89,7 @@ def fetch_sun_moon_data(city: str) -> Dict:
         return get_fallback_data()
     
     try:
-        # Step 3: Get sunrise/sunset data from the free Sunrise-Sunset API
+        # Step 3: Get sunrise/sunset data from the Sunrise-Sunset API
         url = f"https://api.sunrise-sunset.org/json?lat={lat}&lng={lon}&formatted=0"
         response = requests.get(url, timeout=10)
         
@@ -164,11 +147,6 @@ def calculate_sun_position(lat: float, lon: float) -> Dict:
             - azimuth: Direction of the sun (0° = North, 90° = East, 180° = South, 270° = West)
             - hour_angle: Technical angle used in calculations
             - declination: Sun's seasonal position
-            
-    Example:
-        position = calculate_sun_position(40.7128, -74.0060)  # New York
-        print(f"Sun elevation: {position['elevation']}°")
-        print(f"Sun direction: {position['azimuth']}°")
     """
     try:
         # Get current UTC time for calculations
@@ -210,7 +188,7 @@ def calculate_sun_position(lat: float, lon: float) -> Dict:
             azimuth += 360
         
         return {
-            "elevation": round(max(elevation, -90), 2),  # Clamp to realistic values
+            "elevation": round(max(elevation, -90), 2),
             "azimuth": round(azimuth, 2),
             "hour_angle": round(hour_angle, 2),
             "declination": round(declination, 2)
@@ -235,13 +213,6 @@ def calculate_moon_phase() -> float:
                0.5 = Full Moon (completely illuminated)
                0.75 = Last Quarter (half illuminated, waning)
                1.0 = Back to New Moon
-               
-    Example:
-        phase = calculate_moon_phase()
-        if phase < 0.1:
-            print("It's a new moon!")
-        elif 0.4 < phase < 0.6:
-            print("It's nearly a full moon!")
     """
     try:
         # Use a known new moon date as reference point
@@ -270,8 +241,7 @@ def calculate_moon_position(lat: float, lon: float) -> Dict:
     Calculate the approximate position of the moon in the sky.
     
     This provides a simplified calculation of where the moon appears
-    from a specific location. Note: Real moon position calculations
-    are extremely complex, so this is an approximation.
+    from a specific location. 
     
     Args:
         lat (float): Latitude of the location
@@ -334,13 +304,6 @@ def get_moon_phase_name(phase: float) -> str:
         
     Returns:
         str: Descriptive moon phase name
-        
-    Example:
-        name = get_moon_phase_name(0.5)
-        # Returns: "Full Moon"
-        
-        name = get_moon_phase_name(0.25)
-        # Returns: "First Quarter"
     """
     # Define phase ranges and their corresponding names
     if phase < 0.0625 or phase >= 0.9375:
@@ -373,10 +336,6 @@ def get_moon_phase_emoji(phase: float) -> str:
         
     Returns:
         str: Moon emoji corresponding to the phase
-        
-    Example:
-        emoji = get_moon_phase_emoji(0.5)
-        # Returns: "🌕" (full moon emoji)
     """
     # Map phase ranges to appropriate moon emojis
     if phase < 0.0625 or phase >= 0.9375:
@@ -402,20 +361,13 @@ def calculate_moon_illumination(phase: float) -> float:
     Calculate what percentage of the moon is illuminated.
     
     This converts the phase value into a percentage that tells
-    you how much of the moon is visible (bright).
+    you how much of the moon is visible.
     
     Args:
         phase (float): Moon phase value from 0 to 1
         
     Returns:
         float: Illumination percentage from 0 to 100
-        
-    Example:
-        illumination = calculate_moon_illumination(0.5)
-        # Returns: 100.0 (full moon is 100% illuminated)
-        
-        illumination = calculate_moon_illumination(0.0)
-        # Returns: 0.0 (new moon is 0% illuminated)
     """
     try:
         # Calculate illumination based on phase
@@ -450,10 +402,6 @@ def is_currently_daytime(sunrise_str: Optional[str], sunset_str: Optional[str]) 
         
     Returns:
         bool: True if it's currently daytime, False if nighttime
-        
-    Example:
-        is_day = is_currently_daytime("2024-01-15T07:30:00Z", "2024-01-15T17:45:00Z")
-        # Returns True if current time is between 7:30 AM and 5:45 PM
     """
     try:
         # If we don't have sunrise/sunset data, use simple time-based guess
@@ -478,9 +426,6 @@ def is_currently_daytime(sunrise_str: Optional[str], sunset_str: Optional[str]) 
 def get_fallback_data(error_msg: str = "No data available") -> Dict:
     """
     Return reasonable fallback data when API calls fail.
-    
-    This ensures the app continues working even when we can't get
-    real astronomical data from the internet.
     
     Args:
         error_msg (str): Description of what went wrong
@@ -513,18 +458,11 @@ def format_time_for_display(time_str: Optional[str]) -> str:
     """
     Format ISO time string for user-friendly display.
     
-    This converts technical time formats into times that
-    are easy for users to read and understand.
-    
     Args:
         time_str (str): ISO time string from API
         
     Returns:
         str: User-friendly time string
-        
-    Example:
-        formatted = format_time_for_display("2024-01-15T07:30:00Z")
-        # Returns: "7:30 AM"
     """
     try:
         if not time_str:
@@ -554,11 +492,6 @@ def calculate_golden_hour(sunrise_str: Optional[str], sunset_str: Optional[str])
         
     Returns:
         dict: Golden hour timing information
-        
-    Example:
-        golden = calculate_golden_hour(sunrise, sunset)
-        print(f"Morning golden hour: {golden['morning_start']} - {golden['morning_end']}")
-        print(f"Evening golden hour: {golden['evening_start']} - {golden['evening_end']}")
     """
     try:
         if not sunrise_str or not sunset_str:
@@ -600,10 +533,6 @@ def get_astronomical_season(date: datetime.date = None) -> str:
         
     Returns:
         str: Season translation key ("spring", "summer", "fall", "winter")
-        
-    Example:
-        season = get_astronomical_season()
-        print(f"Current season: {season}")
     """
     if date is None:
         date = datetime.date.today()
@@ -626,9 +555,6 @@ def get_astronomical_season(date: datetime.date = None) -> str:
 def get_daylight_info(sunrise_str: Optional[str], sunset_str: Optional[str]) -> Dict:
     """
     Calculate detailed daylight information.
-    
-    This provides comprehensive information about daylight duration,
-    solar timing, and day/night characteristics.
     
     Args:
         sunrise_str (str): Sunrise time in ISO format
@@ -685,56 +611,3 @@ def get_daylight_info(sunrise_str: Optional[str], sunset_str: Optional[str]) -> 
         
     except Exception as e:
         return {"error": str(e)}
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TESTING AND EXAMPLE USAGE
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-if __name__ == "__main__":
-    """
-    This section runs when you execute this file directly.
-    It's useful for testing the sun and moon calculation functions.
-    """
-    
-    print("Testing Sun and Moon Phases API")
-    print("=" * 35)
-    
-    # Test cities from different time zones
-    test_cities = ["London", "New York", "Tokyo", "Sydney", "Cairo"]
-    
-    print("\n🌍 Testing astronomical data for multiple cities:")
-    
-    for city in test_cities:
-        print(f"\n📍 Testing {city}:")
-        
-        # Test main sun/moon data function
-        data = fetch_sun_moon_data(city)
-        
-        if not data.get("error"):
-            print(f"  🌅 Sunrise: {format_time_for_display(data.get('sunrise'))}")
-            print(f"  🌇 Sunset: {format_time_for_display(data.get('sunset'))}")
-            print(f"  🌙 Moon phase: {data.get('moon_phase_name')} ({data.get('moon_illumination')}% lit)")
-            print(f"  ☀️ Sun elevation: {data.get('sun_position', {}).get('elevation', 'N/A')}°")
-            print(f"  🌞 Currently: {'Daytime' if data.get('is_daytime') else 'Nighttime'}")
-            
-            # Test golden hour calculation
-            golden = calculate_golden_hour(data.get('sunrise'), data.get('sunset'))
-            if golden.get('morning_start') != 'N/A':
-                print(f"  📸 Golden hours: {golden['morning_start']}-{golden['morning_end']}, {golden['evening_start']}-{golden['evening_end']}")
-            
-        else:
-            print(f"  ❌ Error: {data.get('error')}")
-    
-    # Test individual calculation functions
-    print(f"\n🔬 Testing individual calculations:")
-    
-    # Test moon phase calculation
-    moon_phase = calculate_moon_phase()
-    moon_name = get_moon_phase_name(moon_phase)
-    moon_emoji = get_moon_phase_emoji(moon_phase)
-    moon_illumination = calculate_moon_illumination(moon_phase)
-    
-    print(f"  🌙 Current moon phase: {moon_name} {moon_emoji}")
-    print(f"  💡 Moon illumination: {moon_illumination}%")
-    print(f"  📊 Phase value: {moon_phase}")

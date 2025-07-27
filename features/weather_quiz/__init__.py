@@ -1,9 +1,8 @@
 """
-Weather Quiz Module - Static Questions Database Version
+Weather Quiz Module
 ========================================================
 
 This module provides a weather quiz feature using a pre-computed static questions database.
-No CSV processing or real-time data analysis is performed.
 
 Features:
 - 40 pre-computed quiz questions from comprehensive weather data analysis
@@ -14,7 +13,7 @@ Features:
 - Instant quiz generation with no loading delays
 
 Data Sources:
-- Static database of pre-computed questions based on weather analysis
+- Static database of questions based on weather analysis
 - Questions derived from temperature, rainfall, humidity, and wind patterns
 - Historical weather patterns and seasonal variations
 - Comparative analysis across different global climates
@@ -28,19 +27,6 @@ Question Categories:
 - Weather Trends: Temperature stability and variability analysis
 - Atmospheric Conditions: Wind, humidity, and pressure patterns
 - Fun Weather Facts: Interesting meteorological trivia
-
-Educational Value:
-Each question teaches meteorological concepts through real-world data patterns,
-helping users understand weather systems, climate differences, and
-atmospheric science principles. All questions include detailed explanations
-that provide context and learning opportunities.
-
-Performance Benefits:
-- Instant quiz generation - no data processing delays
-- Consistent question quality and difficulty
-- Reliable quiz experience with no external dependencies
-- Pre-validated questions with accurate answers and explanations
-- No CSV file requirements or data loading concerns
 """
 
 from .controller import WeatherQuizController

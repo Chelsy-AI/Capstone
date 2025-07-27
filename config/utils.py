@@ -25,24 +25,15 @@ def toggle_unit(current_unit: str) -> str:
         
     Returns:
         str: The opposite temperature unit
-        
-    Example:
-        >>> toggle_unit("°C")
-        "°F"
-        >>> toggle_unit("°F")
-        "°C"
     """
-    # Use a ternary operator (shorthand if/else) to toggle between units
+    # Use a ternary operator to toggle between units
     return "°F" if current_unit == "°C" else "°C"
 
 
 def kelvin_to_celsius(kelvin: Optional[Union[int, float]]) -> Optional[float]:
     """
     Convert temperature from Kelvin to Celsius.
-    
-    Kelvin is the scientific temperature scale where 0K = absolute zero.
-    Many weather APIs return temperatures in Kelvin.
-    
+        
     Formula: Celsius = Kelvin - 273.15
     
     Args:
@@ -50,12 +41,6 @@ def kelvin_to_celsius(kelvin: Optional[Union[int, float]]) -> Optional[float]:
         
     Returns:
         float: Temperature in Celsius rounded to 1 decimal place, or None if invalid input
-        
-    Example:
-        >>> kelvin_to_celsius(273.15)
-        0.0
-        >>> kelvin_to_celsius(None)
-        None
     """
     # Quick check for invalid input - return None immediately if bad data
     if kelvin is None or not isinstance(kelvin, (int, float)):
@@ -63,7 +48,6 @@ def kelvin_to_celsius(kelvin: Optional[Union[int, float]]) -> Optional[float]:
     
     try:
         # Apply the conversion formula and round to 1 decimal place
-        # Subtract 273.15 to convert from Kelvin to Celsius
         celsius = kelvin - 273.15
         return round(celsius, 1)
     except (TypeError, ValueError):
@@ -93,7 +77,6 @@ def kelvin_to_fahrenheit(kelvin: Optional[Union[int, float]]) -> Optional[float]
     
     try:
         # More efficient: do conversion in one step instead of calling kelvin_to_celsius first
-        # Formula combines both conversions: (K - 273.15) * 9/5 + 32
         fahrenheit = (kelvin - 273.15) * 9 / 5 + 32
         return round(fahrenheit, 1)
     except (TypeError, ValueError):
@@ -104,9 +87,7 @@ def kelvin_to_fahrenheit(kelvin: Optional[Union[int, float]]) -> Optional[float]
 def celsius_to_fahrenheit(celsius: Optional[Union[int, float]]) -> Optional[float]:
     """
     Convert temperature from Celsius to Fahrenheit.
-    
-    This is useful when you already have Celsius and need Fahrenheit.
-    
+        
     Formula: Fahrenheit = (Celsius × 9/5) + 32
     
     Args:
@@ -114,12 +95,6 @@ def celsius_to_fahrenheit(celsius: Optional[Union[int, float]]) -> Optional[floa
         
     Returns:
         float: Temperature in Fahrenheit rounded to 1 decimal place, or None if invalid input
-        
-    Example:
-        >>> celsius_to_fahrenheit(0)
-        32.0
-        >>> celsius_to_fahrenheit(100)
-        212.0
     """
     # Check for invalid input first
     if celsius is None or not isinstance(celsius, (int, float)):
@@ -144,12 +119,6 @@ def fahrenheit_to_celsius(fahrenheit: Optional[Union[int, float]]) -> Optional[f
         
     Returns:
         float: Temperature in Celsius rounded to 1 decimal place, or None if invalid input
-        
-    Example:
-        >>> fahrenheit_to_celsius(32)
-        0.0
-        >>> fahrenheit_to_celsius(212)
-        100.0
     """
     # Check for invalid input first
     if fahrenheit is None or not isinstance(fahrenheit, (int, float)):
@@ -176,12 +145,6 @@ def format_temperature(temp: Union[float, int, str, None], unit: str) -> str:
         
     Returns:
         str: Formatted temperature string like "25.5 °C" or "N/A" if invalid
-        
-    Example:
-        >>> format_temperature(25.5, "C")
-        "25.5 °C"
-        >>> format_temperature(None, "F")
-        "N/A"
     """
     # Handle missing or invalid temperature data quickly
     if temp is None:
@@ -222,12 +185,6 @@ def validate_city_name(city_name: str) -> Tuple[bool, str]:
         tuple: (is_valid: bool, error_message: str)
                If valid: (True, "")
                If invalid: (False, "Error description")
-               
-    Example:
-        >>> validate_city_name("New York")
-        (True, "")
-        >>> validate_city_name("")
-        (False, "City name cannot be empty")
     """
     # Check if city name exists and is not empty
     if not city_name:
@@ -246,7 +203,6 @@ def validate_city_name(city_name: str) -> Tuple[bool, str]:
     
     # Check for valid characters using regular expression
     # Allow: letters, spaces, hyphens, apostrophes, commas, periods
-    # This covers most international city names like "São Paulo", "Al-Qāhirah", "St. John's"
     if not re.match(r"^[a-zA-Z\s\-'.,]+$", city_name):
         return False, "City name contains invalid characters"
     
@@ -258,9 +214,6 @@ def safe_get_nested_value(data: dict, keys: list, default=None):
     """
     Safely get a value from nested dictionaries without crashing.
     
-    This is like doing data["key1"]["key2"]["key3"] but won't crash
-    if any of the keys don't exist. Very useful for API responses.
-    
     Args:
         data (dict): The dictionary to search in
         keys (list): List of keys to traverse (like ["weather", "main", "temp"])
@@ -268,13 +221,6 @@ def safe_get_nested_value(data: dict, keys: list, default=None):
         
     Returns:
         The value if found, otherwise the default value
-        
-    Example:
-        >>> data = {"weather": {"main": {"temp": 25}}}
-        >>> safe_get_nested_value(data, ["weather", "main", "temp"])
-        25
-        >>> safe_get_nested_value(data, ["weather", "missing", "temp"], "N/A")
-        "N/A"
     """
     try:
         # Start at the top level of the data
@@ -303,20 +249,11 @@ def capitalize_words(text: str) -> str:
     """
     Capitalize each word in a string properly.
     
-    Better than .title() because it handles apostrophes and hyphens correctly.
-    For example: "new york" -> "New York", "father's-day" -> "Father's-Day"
-    
     Args:
         text (str): The text to capitalize
         
     Returns:
         str: Text with each word capitalized, empty string if input is empty
-        
-    Example:
-        >>> capitalize_words("new york city")
-        "New York City"
-        >>> capitalize_words("st. john's")
-        "St. John's"
     """
     # Handle empty or None input
     if not text:
@@ -328,14 +265,13 @@ def capitalize_words(text: str) -> str:
     
     # Process each word individually
     for word in words:
-        # Handle hyphenated words (like "father-in-law")
+        # Handle hyphenated words 
         if '-' in word:
             # Split on hyphens, capitalize each part, then rejoin with hyphens
             parts = word.split('-')
             capitalized_parts = [part.capitalize() for part in parts]
             capitalized_words.append('-'.join(capitalized_parts))
         else:
-            # Simple word, just capitalize it
             # .capitalize() makes first letter uppercase, rest lowercase
             capitalized_words.append(word.capitalize())
     
@@ -386,8 +322,8 @@ def cached_temperature_conversion(temp: float, from_unit: str, to_unit: str) -> 
     elif from_unit == to_unit:
         result = temp  # No conversion needed
     
-    # Store result in cache for future use (limit cache size to prevent memory issues)
-    if len(_temp_conversion_cache) < 1000:  # Limit cache to 1000 entries
+    # Store result in cache for future use
+    if len(_temp_conversion_cache) < 100:  # Limit cache to 100 entries
         _temp_conversion_cache[cache_key] = result
     
     return result

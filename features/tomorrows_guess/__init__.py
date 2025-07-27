@@ -1,4 +1,3 @@
-# This file makes Python treat the folder as a package and controls what gets imported
 
 from .predictor import get_tomorrows_prediction
 from .display import create_tomorrow_guess_frame, update_tomorrow_guess_display

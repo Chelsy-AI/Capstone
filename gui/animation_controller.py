@@ -3,7 +3,6 @@ Animation Controller Module
 ===========================
 
 This module acts as the "conductor" for weather animations. It's like having
-a movie director who decides what weather effects to show based on current conditions.
 
 Key responsibilities:
 - Map weather descriptions to appropriate animations (rain → raindrops, snow → snowflakes)
@@ -11,9 +10,6 @@ Key responsibilities:
 - Handle animation settings and performance
 - Coordinate with the main app for background color changes
 - Provide animation status information
-
-Think of this as the "animation brain" that decides what visual effects
-should be playing and manages them throughout the app's lifetime.
 
 Weather Animation Mapping:
 - Rain/Drizzle → Animated raindrops falling
@@ -50,7 +46,6 @@ class AnimationController:
         self.smart_bg = None        # The animation system (will be created later)
         
         # Weather condition mapping - this dictionary tells us which animations
-        # to show for different weather descriptions from the API
         self.weather_mapping = {
             # Keywords that indicate rain
             'rain_keywords': ["rain", "drizzle", "shower"],
@@ -85,17 +80,15 @@ class AnimationController:
             # Create the main weather animation system
             self.smart_bg = WeatherAnimation(canvas)
             
-            # IMPORTANT: Give the animation system access to the main app
+            # Give the animation system access to the main app
             # This allows animations to update label backgrounds automatically
             self.smart_bg.app = self.app
             
             # Start with a default animation after a short delay
-            # The delay ensures the window is fully loaded before starting animations
             self.app.after(500, lambda: self.smart_bg.start_animation("clear"))
             
         except Exception as e:
             # If animation setup fails, just continue without animations
-            # The app will still work, just without pretty weather effects
             self.smart_bg = None
 
     def update_background_animation(self, weather_data):
@@ -104,7 +97,7 @@ class AnimationController:
         
         This is the main function that changes animations when weather conditions
         change. It looks at the weather description and starts the appropriate
-        animation (rain, snow, sunshine, etc.).
+        animation.
         
         Args:
             weather_data (dict): Weather information containing description and conditions
@@ -133,30 +126,21 @@ class AnimationController:
             
         except Exception as e:
             # If animation update fails, print error details for debugging
-            # but don't crash the app
             traceback.print_exc()
 
     def _map_weather_to_animation(self, description):
         """
         Map a weather description to the appropriate animation type.
         
-        This is the "translation" function that looks at weather descriptions
-        like "light rain" or "partly cloudy" and decides what animation to show.
-        
         Args:
             description (str): Weather description from API (lowercase)
             
         Returns:
             str: Animation type ("rain", "snow", "storm", etc.)
-            
-        Example:
-            animation = self._map_weather_to_animation("heavy rain")
-            # Returns: "rain"
         """
         description_lower = description.lower()
         
         # Check each weather category to find the best match
-        # We check in order of priority (storms before rain, etc.)
         
         # Check for rain conditions
         if any(word in description_lower for word in self.weather_mapping['rain_keywords']):
@@ -204,12 +188,7 @@ class AnimationController:
                 pass
 
     def stop_animation(self):
-        """
-        Stop all weather animations.
-        
-        This completely stops the animation system, useful when closing
-        the app or switching to a mode where animations aren't needed.
-        """
+        """Stop all weather animations."""
         if self.smart_bg:
             try:
                 self.smart_bg.stop_animation()
@@ -240,10 +219,6 @@ class AnimationController:
         
         Returns:
             bool: True if animations are running, False otherwise
-            
-        Example:
-            if controller.is_animation_running():
-                print("Animations are active!")
         """
         if self.smart_bg:
             try:
@@ -261,12 +236,6 @@ class AnimationController:
         
         Returns:
             dict: Animation status information
-            
-        Example:
-            info = controller.get_animation_info()
-            print(f"Running: {info['running']}")
-            print(f"Weather: {info['weather_type']}")
-            print(f"Particles: {info['particle_count']}")
         """
         # Return basic info if animation system isn't initialized
         if not self.smart_bg:
@@ -295,12 +264,7 @@ class AnimationController:
             }
 
     def restart_animation(self):
-        """
-        Restart the animation system.
-        
-        This stops and restarts animations, useful if something goes wrong
-        or if you want to refresh the animation system.
-        """
+        """Restart the animation system."""
         try:
             if self.smart_bg:
                 # Remember current weather type
@@ -314,12 +278,7 @@ class AnimationController:
             pass
 
     def cleanup_animation(self):
-        """
-        Clean up animation resources when closing the app.
-        
-        This properly shuts down the animation system and frees up
-        memory when the app is closing.
-        """
+        """Clean up animation resources when closing the app."""
         if self.smart_bg:
             try:
                 self.smart_bg.stop_animation()
@@ -331,9 +290,6 @@ class AnimationController:
     def update_animation_size(self, width, height):
         """
         Update animation canvas size when window is resized.
-        
-        This ensures animations look good when the user resizes the window
-        by updating the animation boundaries.
         
         Args:
             width (int): New canvas width
@@ -349,16 +305,9 @@ class AnimationController:
     def get_available_weather_types(self):
         """
         Get a list of all available weather animation types.
-        
-        This is useful for testing, debugging, or creating animation
-        selection interfaces.
-        
+
         Returns:
             list: Available animation types
-            
-        Example:
-            types = controller.get_available_weather_types()
-            # Returns: ["clear", "sunny", "rain", "snow", "storm", "cloudy", "mist"]
         """
         return ["clear", "sunny", "rain", "snow", "storm", "cloudy", "mist"]
 
@@ -372,9 +321,6 @@ class AnimationController:
         Args:
             weather_type (str): Animation type to preview
             duration (int): How long to show preview in milliseconds (default 3 seconds)
-            
-        Example:
-            controller.preview_weather_type("storm", 5000)  # Show storm for 5 seconds
         """
         # Only preview if we have a valid animation system and weather type
         if self.smart_bg and weather_type in self.get_available_weather_types():
@@ -408,67 +354,3 @@ class AnimationController:
             "total_keywords": sum(len(keywords) for keywords in self.weather_mapping.values()),
             "animation_types": self.get_available_weather_types()
         }
-
-
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# TESTING AND EXAMPLE USAGE
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-if __name__ == "__main__":
-    """
-    This section runs when you execute this file directly.
-    It's useful for testing the animation controller functionality.
-    """
-    
-    print("Testing Animation Controller")
-    print("=" * 30)
-    
-    # Create a mock app and GUI for testing
-    class MockApp:
-        def after(self, delay, func):
-            print(f"Scheduled function to run after {delay}ms")
-    
-    class MockGUI:
-        pass
-    
-    # Test animation controller creation
-    app = MockApp()
-    gui = MockGUI()
-    controller = AnimationController(app, gui)
-    
-    print("\n🎬 Testing animation controller features:")
-    
-    # Test available weather types
-    weather_types = controller.get_available_weather_types()
-    print(f"  Available weather types: {', '.join(weather_types)}")
-    
-    # Test weather description mapping
-    test_descriptions = [
-        "light rain",
-        "heavy snow",
-        "thunderstorm",
-        "partly cloudy",
-        "clear sky",
-        "morning mist"
-    ]
-    
-    print(f"\n🗺️  Testing weather description mapping:")
-    for description in test_descriptions:
-        animation_type = controller._map_weather_to_animation(description)
-        print(f"  '{description}' → {animation_type}")
-    
-    # Test animation info (without actual animation system)
-    print(f"\n📊 Testing animation info:")
-    info = controller.get_animation_info()
-    print(f"  Running: {info['running']}")
-    print(f"  Error: {info['error']}")
-    
-    # Test weather mapping info
-    print(f"\n🔗 Testing weather mapping info:")
-    mapping_info = controller.get_weather_mapping_info()
-    print(f"  Total keywords: {mapping_info['total_keywords']}")
-    print(f"  Animation types: {len(mapping_info['animation_types'])}")
-    
-    print(f"\n✅ Animation controller testing completed!")
-    print(f"\nNote: Full animation testing requires a tkinter Canvas.")
-    print(f"This controller manages weather animations based on API descriptions.")

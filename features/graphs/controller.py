@@ -1,9 +1,6 @@
 """
-Graphs Controller - Simple Fix with Direct Translation
+Graphs Controller
 ====================================================
-
-Simple logical fix: check if language controller exists, get current language,
-and directly translate the text without overcomplicating.
 """
 
 import tkinter as tk
@@ -27,14 +24,10 @@ except ImportError:
 
 
 class GraphsController:
-    """
-    Controller for the Weather Graphs feature with simple direct translation.
-    """
+    """Controller for the Weather Graphs feature."""
     
     def __init__(self, app, gui_controller):
-        """
-        Initialize the graphs controller.
-        """
+        """Initialize the graphs controller."""
         self.app = app
         self.gui = gui_controller
         
@@ -44,12 +37,10 @@ class GraphsController:
         # Initialize graph generator if matplotlib is available
         if MATPLOTLIB_AVAILABLE:
             self.graph_generator = WeatherGraphGenerator(app)
-            print("✓ Graph generator initialized with matplotlib support")
         else:
             self.graph_generator = None
-            print("❌ Matplotlib not available - graph features disabled")
         
-        # Original graph options (keep this unchanged)
+        # Original graph options
         self.graph_options = {
             "7-Day Temperature Trend": "temperature_trend",
             "Temperature Range Chart": "temperature_range", 
@@ -71,47 +62,39 @@ class GraphsController:
 
     def _get_current_language(self):
         """Get current language from app."""
-        print("=== DEBUG: Getting current language ===")
         
         # Try multiple ways to get the language
         try:
             # Method 1: Direct from app
             if hasattr(self.app, 'language_controller'):
-                print(f"App has language_controller: {self.app.language_controller}")
                 if self.app.language_controller:
                     lang = self.app.language_controller.current_language
-                    print(f"Language from controller: {lang}")
                     return lang
         except Exception as e:
-            print(f"Method 1 failed: {e}")
+            pass
         
         try:
             # Method 2: Check if there's a language variable on app
             if hasattr(self.app, 'current_language'):
                 lang = self.app.current_language
-                print(f"Language from app.current_language: {lang}")
                 return lang
         except Exception as e:
-            print(f"Method 2 failed: {e}")
+            pass
             
         try:
             # Method 3: Check GUI controller
             if hasattr(self.gui, 'language_controller'):
-                print(f"GUI has language_controller: {self.gui.language_controller}")
                 if self.gui.language_controller:
                     lang = self.gui.language_controller.current_language
-                    print(f"Language from GUI controller: {lang}")
                     return lang
         except Exception as e:
-            print(f"Method 3 failed: {e}")
+            pass
         
-        print("All methods failed, defaulting to English")
         return "English"
 
     def _translate_text(self, english_text):
         """Simple direct translation function."""
         current_lang = self._get_current_language()
-        print(f"=== TRANSLATING: '{english_text}' in language '{current_lang}' ===")
         
         # Direct translation mappings
         translations = {
@@ -141,10 +124,8 @@ class GraphsController:
         
         if current_lang in translations and english_text in translations[current_lang]:
             translated = translations[current_lang][english_text]
-            print(f"FOUND TRANSLATION: '{english_text}' -> '{translated}'")
             return translated
         
-        print(f"NO TRANSLATION FOUND, returning original: '{english_text}'")
         return english_text  # Return original if no translation
     
     def _suppress_warnings(self):
@@ -176,7 +157,6 @@ class GraphsController:
             self.app.after(500, self._load_selected_graph)
             
         except Exception as e:
-            print(f"Error building graphs page: {e}")
             traceback.print_exc()
     
     def _show_dependency_error(self, window_width: int, window_height: int):
@@ -331,7 +311,6 @@ class GraphsController:
     
     def _on_graph_selection_changed(self, event=None):
         """Handle user selecting a different graph type."""
-        print(f"Graph selection changed to: {self.selected_graph.get()}")
         self._load_selected_graph()
     
     def _find_english_key_from_translated(self, translated_text):
@@ -339,27 +318,23 @@ class GraphsController:
         for english_key in self.graph_options.keys():
             if self._translate_text(english_key) == translated_text:
                 return english_key
-        return "7-Day Temperature Trend"  # fallback
+        return "7-Day Temperature Trend"
     
     def _load_selected_graph(self):
         """Load and display the currently selected graph type."""
         if not self.graph_generator:
-            print("❌ Graph generator not available")
             return
         
         # Convert translated selection back to English key
         selected_translated = self.selected_graph.get()
         selected_english = self._find_english_key_from_translated(selected_translated)
         graph_type = self.graph_options[selected_english]
-        
-        print(f"Loading graph: {selected_translated} -> {selected_english} -> {graph_type}")
-        
+                
         # Check cache first
         cache_key = f"{graph_type}_{self.app.city_var.get().strip()}"
         cached_result = self._get_cached_graph(cache_key)
         
         if cached_result:
-            print(f"Cached graph result for {cache_key}")
             fig, success, error_msg = cached_result
             self._display_graph_result(fig, success, error_msg, selected_translated)
             return
@@ -378,7 +353,6 @@ class GraphsController:
         """Generate graph in background thread."""
         try:
             city = self.app.city_var.get().strip() or "New York"
-            print(f"Generating {graph_type} graph for {city}")
             
             # Suppress warnings during graph generation
             with warnings.catch_warnings():
@@ -394,7 +368,6 @@ class GraphsController:
             
         except Exception as e:
             error_message = f"Error generating graph: {str(e)}"
-            print(f"Graph generation error: {e}")
             traceback.print_exc()
             
             self.app.after(0, lambda: self._display_graph_result(None, False, error_message, graph_name))
@@ -407,14 +380,11 @@ class GraphsController:
                 widget.destroy()
             
             if success and fig:
-                print(f"✓ Displaying {graph_name} graph")
                 self._display_matplotlib_graph(fig)
             else:
-                print(f"❌ Error displaying {graph_name}: {error_msg}")
                 self._display_graph_error(graph_name, error_msg)
                 
         except Exception as e:
-            print(f"Error in display_graph_result: {e}")
             self._display_fallback_error(str(e))
     
     def _display_matplotlib_graph(self, fig):
@@ -429,11 +399,8 @@ class GraphsController:
                 canvas.draw()
             
             canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-            
-            print("✓ Matplotlib graph displayed successfully")
-            
+                        
         except Exception as e:
-            print(f"Error displaying matplotlib graph: {e}")
             self._display_fallback_error(f"Error displaying graph: {str(e)}")
     
     def _display_graph_error(self, graph_name: str, error_msg: Optional[str]):
@@ -486,7 +453,7 @@ class GraphsController:
             )
             
         except Exception as e:
-            print(f"Error showing loading message: {e}")
+            pass
     
     def _show_graph_info(self):
         """Show information about the currently selected graph."""
@@ -754,12 +721,10 @@ Select a specific graph type to see detailed information about that visualizatio
             del self._graph_cache[oldest_key]
         
         self._graph_cache[cache_key] = (graph_data, time.time())
-        print(f"Cached graph result for {cache_key}")
     
     def clear_graph_cache(self):
         """Clear the graph cache."""
         self._graph_cache.clear()
-        print("Graph cache cleared")
     
     def _create_black_label(self, parent, text: str, font: tuple, x: float, y: float, 
                            anchor: str = "center", **kwargs) -> tk.Label:
@@ -800,11 +765,9 @@ Select a specific graph type to see detailed information about that visualizatio
                 self.graph_frame.configure(bg=canvas_bg)
             
             self.clear_graph_cache()
-            
-            print("Graphs page updated for theme change")
-                
+                            
         except Exception as e:
-            print(f"Error handling theme change in graphs: {e}")
+            pass
     
     def cleanup(self):
         """Clean up resources."""
@@ -817,12 +780,10 @@ Select a specific graph type to see detailed information about that visualizatio
             
             self.dropdown = None
             self.graph_frame = None
-            
-            print("Graphs controller cleanup completed")
-            
+                        
         except Exception as e:
-            print(f"Error during graphs cleanup: {e}")
-    
+            pass
+
     def get_available_graph_types(self) -> list:
         """Get list of available graph types."""
         return list(self.graph_options.keys())
@@ -851,12 +812,11 @@ Select a specific graph type to see detailed information about that visualizatio
             
             if cache_key in self._graph_cache:
                 del self._graph_cache[cache_key]
-                print(f"Cleared cache for {cache_key}")
             
             self._load_selected_graph()
             
         except Exception as e:
-            print(f"Error forcing graph refresh: {e}")
+            pass
     
     def export_graph_info(self) -> Dict[str, Any]:
         """Export current graph information."""

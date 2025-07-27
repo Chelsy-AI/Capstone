@@ -1,4 +1,3 @@
-# Import the TkinterMapView widget for displaying maps
 from tkintermapview import TkinterMapView
 
 class MapDisplay:
@@ -21,14 +20,12 @@ class MapDisplay:
             return
 
         # Move the map to show the specified city
-        # This automatically looks up the city's coordinates
         self.map_widget.set_address(city_name)
 
         # Remove the old marker if one exists
         if self.marker:
             self.map_widget.delete(self.marker)
 
-        # Add a new marker (pin) at the city location
-        # This both sets the location AND adds a marker in one step
+        # Add a new marker at the city location
         self.marker = self.map_widget.set_address(city_name, marker=True)
         

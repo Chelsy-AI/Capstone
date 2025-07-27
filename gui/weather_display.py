@@ -3,8 +3,6 @@ Weather Display Manager
 =======================
 
 This module handles updating all the visual elements that show weather information.
-It's like the "painter" of the app - it takes weather data and puts it on screen
-in a beautiful, easy-to-read format.
 
 Key responsibilities:
 - Update temperature displays with proper units (°C or °F)
@@ -14,14 +12,12 @@ Key responsibilities:
 - Show historical weather data
 - Manage theme changes (light/dark mode)
 - Ensure all text has transparent backgrounds (no ugly blue boxes!)
-
-Think of this as the "artist" that makes all the weather data look good on screen.
 """
 
 import tkinter as tk
-from PIL import Image, ImageTk  # For handling weather icons from the internet
-from io import BytesIO          # For processing downloaded images
-import requests                 # For downloading weather icons
+from PIL import Image, ImageTk
+from io import BytesIO
+import requests
 
 
 class WeatherDisplay:
@@ -47,9 +43,6 @@ class WeatherDisplay:
     def _get_canvas_bg_color(self):
         """
         Get the current background color of the animated canvas.
-        
-        This is important because we need all text labels to match the
-        background color so they look transparent and don't show ugly boxes.
         
         Returns:
             str: Current background color (like "#87CEEB" for sky blue)
@@ -111,7 +104,7 @@ class WeatherDisplay:
         
         Args:
             weather_data (dict): Dictionary containing weather information
-                                like temperature, humidity, description, etc.
+            like temperature, humidity, description, etc.
         """
         try:
             # Update different parts of the weather display
@@ -163,9 +156,6 @@ class WeatherDisplay:
         """
         Update the weather description text.
         
-        This shows human-readable descriptions like "Clear sky",
-        "Light rain", "Partly cloudy", etc.
-        
         Args:
             weather_data (dict): Weather data containing description
         """
@@ -183,11 +173,8 @@ class WeatherDisplay:
 
     def _update_weather_metrics(self, weather_data):
         """
-        Update all the weather metrics display (humidity, wind, pressure, etc.).
-        
-        This updates the grid of weather measurements shown below the main
-        temperature display, formatting each value appropriately.
-        
+        Update all the weather metrics display.
+                
         Args:
             weather_data (dict): Weather data containing all metrics
         """
@@ -226,9 +213,6 @@ class WeatherDisplay:
     def _update_weather_icon(self, icon_code):
         """
         Update the weather icon display.
-        
-        This downloads the appropriate weather icon from the internet
-        and displays it, or shows an emoji fallback if download fails.
         
         Args:
             icon_code (str): Icon code from weather API (like "01d" for sunny)
@@ -269,9 +253,6 @@ class WeatherDisplay:
     def update_tomorrow_prediction_direct(self, predicted_temp, confidence, accuracy):
         """
         Update tomorrow's weather prediction display.
-        
-        This shows the predicted temperature for tomorrow along with
-        confidence and accuracy metrics from our prediction algorithm.
         
         Args:
             predicted_temp (float): Predicted temperature for tomorrow

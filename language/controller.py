@@ -1,9 +1,9 @@
 """
-Language Controller - Main Language Management System
+Language Controller
 ====================================================
 
 Main controller that manages language selection, translation, and coordination
-between different components of the weather application.
+between different components of the weather application with proper API integration.
 """
 
 import json
@@ -81,11 +81,22 @@ class LanguageController:
             # If anything goes wrong, return the key
             return key
 
+    def get_language_code(self):
+        """
+        Get the OpenWeatherMap API language code for current language.
+        
+        Returns:
+            str: Language code (en, es, hi) for API requests
+        """
+        # Debug print to see what language we're using
+        code = self.supported_languages.get(self.current_language, "en")
+        return code
+
     def update_all_translatable_widgets(self):
         """
         Update ALL widgets in the app that contain translatable text.
         
-        This is called when language changes to ensure EVERY text element
+        This is called when language changes to ensure every text element
         is properly updated throughout the entire application.
         """
         try:
@@ -285,6 +296,8 @@ class LanguageController:
             if self.language_var:
                 new_language = self.language_var.get()
                 if new_language != self.current_language:
+                    print(f"🔄 Changing language from {self.current_language} to {new_language}")
+                    
                     # Change language
                     self.current_language = new_language
                     self.save_settings()
@@ -295,7 +308,8 @@ class LanguageController:
                     # Update ALL translatable text throughout the app
                     self.update_all_translatable_widgets()
                     
-                    # Fetch weather data in new language
+                    # IMPORTANT: Fetch weather data in new language with proper API code
+                    print(f"🌍 Fetching weather data in {new_language} (API code: {self.get_language_code()})")
                     if hasattr(self.app, 'fetch_and_display'):
                         self.app.fetch_and_display()
                 else:
@@ -304,10 +318,6 @@ class LanguageController:
         except Exception as e:
             # If something goes wrong, just go back to main
             self._go_back_to_main()
-
-    def get_language_code(self):
-        """Get the OpenWeatherMap API language code for current language."""
-        return self.supported_languages.get(self.current_language, "en")
 
     def update_app_title(self):
         """Update the application window title."""
@@ -323,7 +333,7 @@ class LanguageController:
             settings = {"current_language": self.current_language}
             with open(self.settings_file, 'w', encoding='utf-8') as f:
                 json.dump(settings, f, ensure_ascii=False, indent=2)
-        except Exception:
+        except Exception as e:
             pass
 
     def load_settings(self):
@@ -332,8 +342,12 @@ class LanguageController:
             if os.path.exists(self.settings_file):
                 with open(self.settings_file, 'r', encoding='utf-8') as f:
                     settings = json.load(f)
-                    self.current_language = settings.get("current_language", "English")
-        except Exception:
+                    loaded_language = settings.get("current_language", "English")
+                    if loaded_language in self.supported_languages:
+                        self.current_language = loaded_language
+                    else:
+                        self.current_language = "English"
+        except Exception as e:
             self.current_language = "English"
 
     def cleanup(self):
@@ -469,9 +483,6 @@ class LanguageController:
         Returns:
             bool: True if RTL language, False otherwise
         """
-        # Hindi uses Devanagari script which is left-to-right
-        # Spanish and English are also left-to-right
-        # Add RTL languages here if needed in the future
         return False
 
     def get_font_family_for_language(self):

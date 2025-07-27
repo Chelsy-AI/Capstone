@@ -1,5 +1,5 @@
 """
-Weather Graphs Module - Fixed Version
+Weather Graphs Module
 ====================================
 
 This module provides comprehensive weather data visualization including:
@@ -9,8 +9,6 @@ This module provides comprehensive weather data visualization including:
 - Multi-city comparisons
 - Interactive charts with working hover tooltips
 - Enhanced error handling and font management
-
-Fixed to eliminate matplotlib font warnings and improve stability.
 """
 
 import warnings

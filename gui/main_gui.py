@@ -1,5 +1,5 @@
 """
-Main GUI Controller - Complete Fixed Version
+Main GUI Controller
 ===========================================
 
 This is the "director" of the user interface with comprehensive translation support.
@@ -17,7 +17,6 @@ Key responsibilities:
 import tkinter as tk
 from tkinter import ttk
 
-# Import our specialized controllers for different features
 from .weather_display import WeatherDisplay
 from .animation_controller import AnimationController
 from features.sun_moon_phases.controller import SunMoonController
@@ -68,7 +67,6 @@ class WeatherGUI:
         self.bg_canvas = None  # The animated background canvas
         
         # References to main weather display widgets
-        # These will be set when we build the interface
         self.humidity_value = None
         self.wind_value = None
         self.pressure_value = None
@@ -195,6 +193,8 @@ class WeatherGUI:
             self._build_quiz_page()
         elif page_name == "language":
             self._build_language_page()
+        elif page_name == "comparison":
+            self._build_comparison_page()
         
         # Restore any data that should be shown on the new page
         self._restore_current_data()
@@ -212,6 +212,13 @@ class WeatherGUI:
         if hasattr(self, 'language_controller'):
             try:
                 self.language_controller._clear_widgets()
+            except:
+                pass
+
+        # Clean up city comparison controller when switching pages
+        if hasattr(self, 'city_comparison_controller'):
+            try:
+                self.city_comparison_controller.cleanup()
             except:
                 pass
 
@@ -295,7 +302,6 @@ class WeatherGUI:
         - Current weather display
         - Weather metrics (humidity, wind, etc.)
         - Navigation buttons to other pages
-        All text is properly translated based on current language.
         """
         # Get current window size for responsive design
         window_width = self.app.winfo_width()
@@ -326,7 +332,7 @@ class WeatherGUI:
         # Build different sections of the main page
         self._build_weather_metrics_section(window_width, y_start=70)
         self._build_main_weather_display(window_width, y_start=170)
-        self._build_navigation_buttons(window_width, y_start=350)
+        self._build_navigation_buttons(window_width, y_start=370)
 
     def _build_weather_metrics_section(self, window_width, y_start):
         """
@@ -498,8 +504,8 @@ class WeatherGUI:
         # Button layout configuration
         button_width = 140
         button_height = 35
-        button_spacing_x = 20  # Horizontal spacing between buttons
-        button_spacing_y = 15  # Vertical spacing between buttons
+        button_spacing_x = 40  # Increased horizontal spacing from 20 to 40
+        button_spacing_y = 35  # Increased vertical spacing from 15 to 35
     
         # Calculate positions for 3-column layout
         total_button_width = (button_width * 3) + (button_spacing_x * 2)
@@ -510,16 +516,13 @@ class WeatherGUI:
         col2_x = start_x + button_width + button_spacing_x + (button_width / 2)
         col3_x = start_x + (button_width * 2) + (button_spacing_x * 2) + (button_width / 2)
 
-        # Calculate row positions
-        y_start += 60
+        # Calculate row positions (pushed down by 20 pixels)
+        y_start += 80  # Increased from 60 to 80 (20 additional pixels down)
         row1_y = y_start
         row2_y = y_start + button_height + button_spacing_y
         row3_y = y_start + (button_height + button_spacing_y) * 2
 
         # Define all buttons with translated text, commands, and positions in 3x3 grid
-        # Row 1: Core weather features
-        # Row 2: Analysis and visualization features  
-        # Row 3: Settings and utility features
         buttons = [
             # Row 1: Core Weather Features
             (self.language_controller.get_text("toggle_theme"), 
@@ -595,9 +598,6 @@ class WeatherGUI:
     def _build_prediction_grid(self, window_width, y_start):
         """
         Build the prediction display grid with translated labels.
-        
-        This creates a 3-column grid showing predicted temperature,
-        prediction accuracy, and confidence level.
         """
         # Calculate layout for 3 columns
         available_width = window_width - 40
@@ -682,6 +682,14 @@ class WeatherGUI:
         # Update history display when page is built
         city = self.app.city_var.get()
         self.app.after(100, lambda: self.update_history_display(city))
+
+    def _build_comparison_page(self):
+        """Build the city comparison page."""
+        window_width = self.app.winfo_width()
+        window_height = self.app.winfo_height()
+        
+        # Use the specialized controller to build this page
+        self.city_comparison_controller.build_page(window_width, window_height)
 
     def _build_map_page(self):
         """Build the interactive map page with translated text."""
@@ -859,8 +867,6 @@ class WeatherGUI:
             self.weather_display.update_tomorrow_prediction_direct(
                 predicted_temp, confidence, accuracy
             )
-
-    # Public interface methods for other parts of the app to use
     
     def update_weather_display(self, weather_data):
         """Update the weather display with new data."""

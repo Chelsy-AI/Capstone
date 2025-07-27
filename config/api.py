@@ -3,22 +3,21 @@ Weather API Integration Module
 ==============================
 
 This module handles all communication with weather APIs on the internet.
-It's like a translator that speaks to weather services and gets data for our app.
 
 Key functions:
-- Convert city names to map coordinates (latitude/longitude)
+- Convert city names to map coordinates
 - Get current weather from multiple sources
 - Combine data from different APIs for complete weather picture
 - Handle errors gracefully when internet is slow or APIs are down
 - Support multiple languages for weather descriptions
 
 APIs used:
-- Open-Meteo: Free weather data (no API key needed)
-- WeatherDB: Detailed current conditions (requires API key)
+- Open-Meteo: Free weather data
+- WeatherDB: Detailed current conditions
 - Geocoding: Convert city names to coordinates
 """
 
-import requests  # For making HTTP requests to APIs
+import requests
 import os
 from dotenv import load_dotenv
 
@@ -26,34 +25,27 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Get API credentials from environment variables
-# These are stored in a .env file so they're not visible in the code
 API_KEY = os.getenv("weatherdb_api_key")
 BASE_URL = os.getenv("weatherdb_base_url")
 
 
 def get_lat_lon(city):
     """
-    Convert a city name to map coordinates (latitude and longitude).
+    Convert a city name to map coordinates.
     
     This is needed because weather APIs use coordinates, not city names.
-    For example: "New York" becomes latitude 40.7128, longitude -74.0060
     
     Args:
-        city (str): Name of the city (like "London" or "Tokyo")
+        city (str): Name of the city
         
     Returns:
-        tuple: (latitude, longitude) as numbers, or (None, None) if city not found
-        
-    Example:
-        lat, lon = get_lat_lon("Paris")
-        # lat = 48.8566, lon = 2.3522
+        tuple: (latitude, longitude) as numbers, or (None, None) if city not found        
     """
     # Check if the input is valid
     if not isinstance(city, str):
         return None, None
     
     # Build the URL for the geocoding API
-    # This API is free and doesn't require an API key
     url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1&language=en&format=json"
     
     try:
@@ -72,7 +64,7 @@ def get_lat_lon(city):
         
         # Check if we found any matching cities
         if results and len(results) > 0:
-            # Get coordinates from the first (best) result
+            # Get coordinates from the first result
             lat = results[0].get("latitude")
             lon = results[0].get("longitude")
             
@@ -84,8 +76,7 @@ def get_lat_lon(city):
         return None, None
         
     except Exception:
-        # If anything goes wrong (network error, invalid response, etc.)
-        # just return None values - the app will handle this gracefully
+        # If anything goes wrong return None values
         return None, None
 
 
@@ -93,8 +84,7 @@ def resolve_coordinates_by_city(city_name):
     """
     Alternative function to get coordinates for a city.
     
-    This does the same thing as get_lat_lon() but with a different name
-    for backward compatibility with older code.
+    This does the same thing as get_lat_lon()
     
     Args:
         city_name (str): Name of the city
@@ -127,7 +117,7 @@ def get_basic_weather_from_weatherdb(city_name, language="en"):
     Get basic weather data from WeatherDB API with language support.
     
     This API provides current weather conditions like temperature,
-    humidity, wind speed, and weather descriptions. It requires an API key.
+    humidity, wind speed, and weather descriptions.
     
     Args:
         city_name (str): Name of the city to get weather for
@@ -152,10 +142,10 @@ def get_basic_weather_from_weatherdb(city_name, language="en"):
         
         # Check if the request was successful
         if response.status_code == 200:
-            # Success! Return the weather data and no error
+            # Success: Return the weather data and no error
             return response.json(), None
         else:
-            # Failed! Return no data and an error message
+            # Failed: Return no data and an error message
             return None, f"City '{city_name}' not found."
             
     except Exception as e:
@@ -168,7 +158,7 @@ def get_detailed_environmental_data(city):
     Get detailed environmental data from Open-Meteo API.
     
     This API provides additional data like UV index, visibility,
-    and precipitation that might not be available from other sources.
+    and precipitation.
     
     Args:
         city (str): Name of the city
@@ -215,19 +205,6 @@ def get_current_weather(city, language="en"):
     Returns:
         dict: Complete weather data with all available information
               Always returns a dict, even if some data is missing
-              
-    Example return data:
-        {
-            "temperature": 22.5,
-            "humidity": 65,
-            "wind_speed": 12.3,
-            "pressure": 1013,
-            "icon": "01d",
-            "description": "Clear sky",
-            "uv_index": 7,
-            "precipitation": 0.0,
-            "error": None
-        }
     """
     # Step 1: Get basic weather data from WeatherDB with language support
     weather_data, err = get_basic_weather_from_weatherdb(city, language)
@@ -248,13 +225,11 @@ def get_current_weather(city, language="en"):
         }
     
     # Step 4: Extract data from the basic weather response
-    # Use .get() method so we don't crash if a field is missing
     main = weather_data.get("main", {})      # Temperature, humidity, pressure
     wind = weather_data.get("wind", {})      # Wind information
     weather_list = weather_data.get("weather", [{}])  # Weather conditions
     
     # Step 5: Get weather icon and description
-    # Use the first weather condition, or defaults if none available
     icon = weather_list[0].get("icon", "01d")  # Default to clear day icon
     description = weather_list[0].get("description", "No description").capitalize()
     

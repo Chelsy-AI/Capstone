@@ -1,11 +1,9 @@
-# Import necessary libraries for GUI, mapping, web requests, and threading
 import tkinter as tk
 from tkinter import ttk
 from tkintermapview import TkinterMapView
 import requests
 import threading
 
-# Import our local tile server to combine map and weather data
 from .tile_server import start_tile_server
 
 class MapController:
@@ -14,7 +12,7 @@ class MapController:
         self.get_city_callback = get_city_callback
         # Store the API key for weather data
         self.api_key = api_key
-        # Store whether to show grid lines (not currently used)
+        # Store whether to show grid lines
         self.show_grid = show_grid
 
         # Set default map position (New York City coordinates)

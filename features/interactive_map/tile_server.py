@@ -1,4 +1,3 @@
-# Import libraries for web server, image processing, and environment variables
 from flask import Flask, send_file
 import requests
 from io import BytesIO
@@ -6,10 +5,10 @@ from PIL import Image, ImageEnhance
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file (contains API keys)
+# Load environment variables from .env file
 load_dotenv()
 
-# Create a Flask web application (our tile server)
+# Create a Flask web application
 app = Flask(__name__)
 
 # Get API configuration from environment variables
@@ -20,9 +19,9 @@ weatherdb_tile_url = os.getenv("weatherdb_tile_url")
 # URL template for getting basic map tiles from OpenStreetMap
 OSM_BASE_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
 
-# Headers to include with web requests (identifies our app)
+# Headers to include with web requests
 HEADERS = {
-    "User-Agent": "MyWeatherApp/1.0 (contact@example.com)"
+    "User-Agent": "MyWeatherApp/1.0"
 }
 
 @app.route('/tiles/<layer>/<int:z>/<int:x>/<int:y>.png')
@@ -63,18 +62,15 @@ def serve_tile(layer, z, x, y):
         # Step 3: Process the weather overlay to make it darker and more visible
         overlay_img = Image.open(BytesIO(overlay_resp.content)).convert("RGBA")
         
-        # Make the overlay much darker (0.3 = 30% of original brightness)
-        # This makes the weather data more visible against the map
+        # Make the overlay much darker (30% of original brightness)
         enhancer = ImageEnhance.Brightness(overlay_img)
         much_darker_overlay = enhancer.enhance(0.3)
         
-        # Also reduce contrast slightly for better visibility
-        # (0.8 = 80% of original contrast)
+        # Also reduce contrast slightly for better visibility(80% of original contrast)
         contrast_enhancer = ImageEnhance.Contrast(much_darker_overlay)
         final_overlay = contrast_enhancer.enhance(0.8)
 
         # Step 4: Combine the base map with the weather overlay
-        # The weather overlay is placed on top of the base map
         base_img.paste(final_overlay, (0, 0), final_overlay)
 
         # Step 5: Send the combined image back to the map widget
