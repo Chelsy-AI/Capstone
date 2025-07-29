@@ -1,3 +1,22 @@
+"""
+Weather Overlay Tile Server
+===========================
+
+Local Flask server that combines OpenStreetMap base tiles with weather overlay data.
+
+Features:
+- Real-time tile composition merging base maps with weather layers
+- Support for multiple weather data types (temperature, wind, precipitation, etc.)
+- Dynamic image processing with brightness and contrast adjustments
+- Transparent overlay blending for optimal weather data visibility
+- Error handling for missing tiles or failed API requests
+- Configurable weather data source integration
+- High-performance image caching and processing
+
+The server runs locally to provide seamless weather overlay integration
+without external dependencies during map navigation.
+"""
+
 from flask import Flask, send_file
 import requests
 from io import BytesIO

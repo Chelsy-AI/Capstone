@@ -1,3 +1,20 @@
+"""
+Basic Map Display Widget
+=======================
+
+Simple map display component for showing city locations with interactive markers.
+
+Features:
+- Clean map widget with rounded corners
+- Automatic city location lookup and display
+- Interactive location markers with city labels
+- Default New York City positioning
+- Easy location updates via city name input
+
+This module provides the foundational map display functionality without
+weather overlays, perfect for basic location visualization needs.
+"""
+
 from tkintermapview import TkinterMapView
 
 class MapDisplay:

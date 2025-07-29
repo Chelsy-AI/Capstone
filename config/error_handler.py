@@ -1,3 +1,18 @@
+"""
+Weather App Error Handling & Validation Module
+===============================================
+
+This module provides city input validation and 
+error screen functionality for the weather application.
+
+Key functions:
+- Validate city names and block fake inputs
+- Display full-screen error messages when invalid cities are entered
+- Provide clean recovery with back button to return to main screen
+- Prevent API calls for obviously fake city names
+- Handle user feedback and input validation gracefully
+"""
+
 import tkinter as tk
 from tkinter import messagebox
 import time

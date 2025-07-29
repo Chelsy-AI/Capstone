@@ -1,3 +1,22 @@
+"""
+Animated Weather Icon System
+===========================
+
+Dynamic weather visualization system that creates beautiful animated icons matching current conditions.
+
+Features:
+- Hand-drawn weather icons using canvas graphics
+- Multiple weather condition support (sunny, rainy, cloudy, snowy, stormy)
+- Custom geometric shapes and artistic elements
+- Real-time icon updates based on weather changes
+- Canvas clearing and redraw functionality
+- Extensible design for future animation features
+- Fallback displays for unknown weather conditions
+
+The system creates visually appealing weather representations using
+mathematical drawing functions for crisp, scalable graphics.
+"""
+
 from .canvas_icons import draw_weather_icon
 
 __all__ = [

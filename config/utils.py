@@ -1,17 +1,15 @@
-# ────────────────────────────────────────────────────────────────────────────── 
-# UTILITY FUNCTIONS MODULE
-# 
-# This module contains helper functions used throughout the weather app.
-# Utility functions are small, focused functions that perform specific tasks
-# and can be reused in different parts of the application.
-# ────────────────────────────────────────────────────────────────────────────── 
+"""
+UTILITY FUNCTIONS MODULE
+ 
+This module contains helper functions used throughout the weather app.
+Utility functions are small, focused functions that perform specific tasks
+and can be reused in different parts of the application.
+"""
 
 import re
 from typing import Union, Tuple, Optional
 
-# ────────────────────────────────────────────────────────────────────────────── 
 # TEMPERATURE UTILITIES
-# ────────────────────────────────────────────────────────────────────────────── 
 
 def toggle_unit(current_unit: str) -> str:
     """
@@ -165,9 +163,7 @@ def format_temperature(temp: Union[float, int, str, None], unit: str) -> str:
     except (TypeError, ValueError):
         return "N/A"
 
-# ────────────────────────────────────────────────────────────────────────────── 
 # VALIDATION UTILITIES
-# ────────────────────────────────────────────────────────────────────────────── 
 
 def validate_city_name(city_name: str) -> Tuple[bool, str]:
     """
@@ -241,9 +237,7 @@ def safe_get_nested_value(data: dict, keys: list, default=None):
         # Handle any unexpected errors by returning default
         return default
 
-# ────────────────────────────────────────────────────────────────────────────── 
 # STRING UTILITIES
-# ────────────────────────────────────────────────────────────────────────────── 
 
 def capitalize_words(text: str) -> str:
     """
@@ -279,9 +273,7 @@ def capitalize_words(text: str) -> str:
     return ' '.join(capitalized_words)
 
 
-# ────────────────────────────────────────────────────────────────────────────── 
 # PERFORMANCE OPTIMIZATIONS
-# ────────────────────────────────────────────────────────────────────────────── 
 
 # Cache for repeated temperature conversions to improve performance
 _temp_conversion_cache = {}

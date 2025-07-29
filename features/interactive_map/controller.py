@@ -1,3 +1,23 @@
+"""
+Interactive Weather Map Controller
+=================================
+
+Advanced map control system with integrated weather overlays and real-time updates.
+
+Features:
+- Interactive map navigation with zoom and pan controls
+- Multiple weather overlay options (temperature, wind, precipitation, clouds, pressure, snow, dewpoint)
+- Real-time city location tracking with GPS coordinates
+- Custom tile server integration for weather data visualization
+- Automatic geocoding to convert city names to map coordinates
+- Dynamic marker placement for selected cities
+- Refresh functionality for live weather updates
+- Seamless integration with OpenStreetMap base tiles
+
+The controller manages all map interactions and coordinates between the UI,
+weather data services, and the custom tile server for optimal performance.
+"""
+
 import tkinter as tk
 from tkinter import ttk
 from tkintermapview import TkinterMapView
