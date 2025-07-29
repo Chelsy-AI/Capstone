@@ -1,0 +1,8 @@
+2025-07-27 15:37:02 - weather_debug - DEBUG - Optional dependency 'psutil' available: Memory monitoring
+2025-07-27 15:37:02 - weather_debug - DEBUG - Optional dependency 'requests' available: API communication
+2025-07-27 15:37:02 - weather_debug - DEBUG - Optional dependency 'matplotlib' available: Chart generation
+2025-07-27 15:37:02 - weather_debug - DEBUG - Optional dependency 'PIL' available: Image processing
+2025-07-27 15:43:29 - weather_debug - DEBUG - Optional dependency 'psutil' available: Memory monitoring
+2025-07-27 15:43:29 - weather_debug - DEBUG - Optional dependency 'requests' available: API communication
+2025-07-27 15:43:29 - weather_debug - DEBUG - Optional dependency 'matplotlib' available: Chart generation
+2025-07-27 15:43:29 - weather_debug - DEBUG - Optional dependency 'PIL' available: Image processing
