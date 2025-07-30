@@ -502,7 +502,7 @@ class WeatherGUI:
             y_start: Y position where buttons should start
         """
         # Button layout configuration
-        button_width = 140
+        button_width = 160
         button_height = 35
         button_spacing_x = 40  # Increased horizontal spacing from 20 to 40
         button_spacing_y = 35  # Increased vertical spacing from 15 to 35
@@ -525,7 +525,7 @@ class WeatherGUI:
         # Define all buttons with translated text, commands, and positions in 3x3 grid
         buttons = [
             # Row 1: Core Weather Features
-            (self.language_controller.get_text("toggle_theme"), 
+            (self.language_controller.get_text("Text Theme"), 
              lambda: self.app.toggle_theme(), col1_x, row1_y),
             (self.language_controller.get_text("tomorrow_prediction"), 
              lambda: self.show_page("prediction"), col2_x, row1_y),
@@ -560,10 +560,8 @@ class WeatherGUI:
                 font=("Arial", int(9 + window_width/150), "bold"),  # Slightly smaller font for 3x3 grid
                 relief="raised",
                 borderwidth=2,
-                width=14,  # Slightly narrower to fit 3 columns
+                width=16,  # Slightly narrower to fit 3 columns
                 height=2,
-                activeforeground="black",      # Color when clicked
-                activebackground="lightgrey",  # Background when clicked
                 highlightthickness=0,
                 cursor="hand2"  # Show hand cursor on hover
             )
