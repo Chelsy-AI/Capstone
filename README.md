@@ -1,308 +1,229 @@
-# Weather Dashboard Capstone Project
+# Weather Dashboard
 
-## Overview:
+A comprehensive desktop weather application built with Python and CustomTkinter, featuring real-time weather data, interactive visualizations, and multilingual support.
 
-- Desktop weather app using Python and CustomTkinter
-- Fetches real-time and 7-day historical weather data via Open-Meteo API 
-- Supports light/dark themes toggle with persistent preferences
-- Temperature toggle between Celsius and Fahrenheit by clicking temperature label
-- Shows detailed metrics: humidity, wind, pressure, visibility, UV index, precipitation
-- Predicts tomorrow's temperature with confidence and accuracy tracking
-- Saves weather history and prediction accuracy locally as CSV files
-- Interactive weather map with real-time city location updates and weather overlays
-- Dynamic weather animations that match current conditions (rain, snow, storms, clouds)
-- Custom canvas-based weather icons with API fallbacks
-- Scrollable interface supporting content expansion
-- Comprehensive error handling with user-friendly messages
-- Modular architecture with organized feature separation
+## Features
 
-## Installation:
+### Core Weather Information
 
-- Clone repo: `git clone https://github.com/yourusername/weather-dashboard.git`
-- `cd weather-dashboard`
-- Create and activate virtual environment:
-  ```
-  python -m venv venv
-  # Windows: venv\Scripts\activate
-  # Mac/Linux: source venv/bin/activate
-  ```
-- Install dependencies: `pip install -r requirements.txt`
-- Optional: Install `tkintermapview` for enhanced map features
+- **Real-time Weather Data**: Current conditions with detailed metrics including temperature, humidity, wind speed, pressure, visibility, UV index, and precipitation
+- **7-Day Historical Tracking**: Complete historical weather data with intelligent caching and CSV persistence
+- **Temperature Unit Toggle**: Switch between Celsius and Fahrenheit with a simple click
+- **Weather Prediction**: Tomorrow's temperature prediction with confidence scoring and accuracy tracking
 
-## Usage:
+### User Interface & Experience
 
-- Run app: `python main.py`
-- Enter city name in search box to get weather data for any global location
-- Click temperature label to toggle between °C and °F 
-- Toggle light/dark theme with button 
-- View tomorrow's prediction with confidence percentage and accuracy tracking
-- Scroll down to access 7-day historical weather data with max/min/average temperatures
-- Explore interactive map showing current city location with optional weather overlays
-- Watch background animations automatically change based on current weather conditions
+- **Dynamic Themes**: Light/dark mode toggle with persistent preferences
+- **Multilingual Support**: Full internationalization with English, Spanish, and Hindi translations
+- **Responsive Design**: Pagiated interface supporting content expansion across different screen sizes
+- **Weather Animations**: Real-time particle-based animations matching current conditions (rain, snow, storms, clouds)
 
-## Custom Features:
+### Advanced Features
 
-### 1. History Tracker 
+- **Interactive Weather Map**: Real-time city locations with weather overlays and OpenStreetMap integration
+- **City Comparison**: Side-by-side weather comparison between multiple cities
+- **Weather Graphs**: Interactive data visualizations with hover tooltips
+- **Sun & Moon Phases**: Detailed astronomical information including sunrise, sunset, and lunar phases
+- **Weather Quiz**: Educational quiz system with comprehensive question database
+- **Custom Weather Icons**: Multi-tier icon system with API, canvas, and emoji fallbacks
 
-- Comprehensive 7-day historical weather data tracking and display
-- Fetches historical data from Open-Meteo Archive API with intelligent caching
-- Responsive grid layout showing dates, max/min/average temperatures
-- Automatic data processing and unit conversion (°C ↔ °F)
-- CSV data persistence for long-term weather pattern analysis
-- Smart error handling for missing or incomplete historical data
+## Installation
 
-### 2. Theme Switcher
+### Prerequisites
 
-- Dynamic light/dark mode switching with smooth transitions
-- Persistent theme preferences saved between sessions in JSON format
-- Color scheme updates across all GUI components including animations
-- Professional UI design with accessibility considerations
-- Automatic background color adjustments for optimal contrast
+- Python 3.8 or higher
+- Internet connection for real-time weather data
 
-### 3. Weather Icons System
+### Setup
 
-- Multi-tier icon system with API, canvas, and emoji fallbacks
-- Real-time weather icon fetching from OpenWeatherMap API
-- Custom canvas-based weather icons with detailed graphics
-- Intelligent caching system to improve performance
-- Automatic fallback to emoji icons for maximum compatibility
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Chelsy-AI/Capstone.git
+   cd weather-dashboard
+   ```
 
-### 4. Tomorrow's Weather Prediction
+2. Create and activate a virtual environment:
+   ```bash
+   python -m venv venv
+   
+   # Windows
+   venv\Scripts\activate
+   
+   # macOS/Linux
+   source venv/bin/activate
+   ```
 
-- Statistical analysis of 7-day historical weather patterns
-- Tomorrow's temperature prediction with confidence metrics (0-100%)
-- Accuracy tracking based on previous prediction performance
-- Machine learning-inspired algorithms using moving averages
-- Real-time confidence scoring based on data quality and consistency
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### 5. Background Weather Animations
-
-- Particle-based background animations with realistic physics
-- Multiple weather types: rain drops with wind effects, snowflakes with drift patterns
-- Storm animations with lightning effects and dark clouds
-- Smooth 30fps performance with optimized particle management
-- Automatic animation switching based on current weather descriptions
-
-### 6. Interactive Weather Map
-
-- Real-time map integration using tkintermapview library
-- Automatic geocoding to show accurate city locations with markers
-- Weather overlay layers including temperature, precipitation, and cloud coverage
-- Graceful fallback interface for systems without map library installed
-- Integration with OpenStreetMap for reliable global coverage
-
-## Project Structure:
-
-```
-weather-dashboard/
-├── main.py                 # Application entry point
-├── config/                 # Core application modules
-│   ├── weather_app.py     # Main application class
-│   ├── api.py             # Weather API integration
-│   ├── storage.py         # CSV data persistence
-│   ├── gui/               # GUI components and layout
-│   └── animations.py      # Weather animation system
-├── features/              # Custom feature implementations
-│   ├── interactive_map/   # Map integration and controls
-│   ├── history_tracker/   # Historical data management
-│   ├── tomorrows_guess/   # Prediction algorithms
-│   └── theme_switcher/    # Theme management
-├── data/                  # Local data storage
-└── tests/                 # Comprehensive test suite
-```
-
-## API Integration:
-
-- **Open-Meteo API**: Primary weather data source 
-
-- **Open-Meteo Geocoding**: City name to coordinates conversion
-
-- **Open-Meteo Archive**: Historical weather data for 7-day tracking
-
-- **OpenStreetMap Nominatim**: Backup geocoding for map features
-
-- All APIs are free with no API keys required
-
-## Testing:
-
-- Run tests with: `pytest tests/`
-- Run animation tests: `python tests/test_animations.py`
-- Includes tests for API integration, GUI components, prediction logic, and utility functions
-- Coverage includes error handling, data validation, and feature functionality
-
-## Dependencies:
-
-- Python 3.8+
-- CustomTkinter (modern GUI framework)
-- requests (HTTP API calls)
-- tkintermapview (interactive maps - optional)
-- Pillow (image processing for weather icons)
-- pytest (testing framework)
-
-## Notes:
-
-- Internet connection required for real-time weather data
-- Application works with or without tkintermapview 
-- All weather data automatically saved to CSV files in data/ directory
-- Supports responsive layout for different screen sizes and resolutions
-
-# Weather App Language System
-
-A modular, comprehensive language management system for the weather application, broken down into logical components for maintainability and extensibility.
-
-## File Structure
-
-### 1. `language_translations.py`
-**Purpose**: Contains all translation data and language configuration.
-
-**Contents**:
-- `TRANSLATIONS`: Complete dictionary of all text translations for English, Spanish, and Hindi
-- `SUPPORTED_LANGUAGES`: Mapping of language names to API codes
-- All translatable text organized by categories (UI elements, weather terms, moon phases, etc.)
-
-**Why separate**: Pure data file that can be easily maintained, exported, or replaced without affecting logic.
-
-### 2. `language_ui.py`
-**Purpose**: Handles all user interface components for language selection.
-
-**Contents**:
-- `LanguageUI` class managing the language selection page
-- Widget creation and management for dropdowns, buttons, labels
-- UI event handling and user interactions
-- Page layout and styling for language selection
-
-**Why separate**: Separates UI concerns from business logic, making it easier to modify the interface without affecting translation logic.
-
-### 3. `language_controller.py`
-**Purpose**: Main controller coordinating all language operations.
-
-**Contents**:
-- `LanguageController` class as the central language manager
-- Core translation methods (`get_text`, `update_all_translatable_widgets`)
-- Language switching logic and settings persistence
-- Integration points with the main application
-- Specialized translation methods for weather terms, moon phases, etc.
-
-**Why separate**: Central coordination point that other parts of the app interact with, keeping the API simple and consistent.
-
-### 4. `language_utils.py`
-**Purpose**: Advanced utilities and analytics for translation management.
-
-**Contents**:
-- `LanguageUtils` class with advanced features
-- Translation completeness analysis and reporting
-- Import/export functionality for translations
-- Validation and optimization tools
-- Search and diff capabilities for translation management
-
-**Why separate**: Advanced features that aren't needed for basic operation, keeping the core system lightweight while providing powerful tools for maintenance.
+4. (Optional) Install enhanced map features:
+   ```bash
+   pip install tkintermapview
+   ```
 
 ## Usage
 
-### Basic Integration
-```python
-# In your main application
-from language_controller import LanguageController
+### Quick Start
 
-# Initialize
-lang_ctrl = LanguageController(app, gui_controller)
-
-# Get translated text
-text = lang_ctrl.get_text("weather_app_title")
-
-# Show language selection page
-lang_ctrl.build_page(window_width, window_height)
+```bash
+python main.py
 ```
 
-### Advanced Features
-```python
-# For advanced translation management
-from language_utils import LanguageUtils
+### Basic Operations
 
-utils = LanguageUtils(lang_ctrl)
+- **Search Weather**: Enter any city name in the search box
+- **Toggle Units**: Click the temperature label to switch between °C and °F
+- **Change Text Theme**: Use the text theme toggle button for light/dark mode
+- **View History**: Scroll down to access 7-day historical data
+- **Compare Cities**: Use the city comparison feature for side-by-side analysis
+- **Interactive Map**: Explore the weather map with real-time location markers
 
-# Get translation completeness report
-stats = utils.get_translation_completeness()
+### Language Selection
 
-# Export translations
-utils.export_translations("backup.json")
+On first launch, select your preferred language from English, Spanish, or Hindi. The selection is saved and applied to all interface elements.
 
-# Validate translations
-validation = utils.validate_translations()
-```
-
-## Key Benefits
-
-### 1. **Modularity**
-- Each file has a single, clear responsibility
-- Components can be modified independently
-- Easy to test individual components
-
-### 2. **Maintainability**
-- Translation data separated from logic
-- UI components isolated from business logic
-- Advanced features don't complicate basic usage
-
-### 3. **Extensibility**
-- Easy to add new languages by updating `language_translations.py`
-- UI can be enhanced without affecting core functionality
-- New advanced features can be added to utils without breaking existing code
-
-### 4. **Scalability**
-- Translation data can be moved to external files or databases
-- UI components can be replaced with different frameworks
-- Advanced features provide tools for managing large translation sets
-
-## Import Structure
-
-The system is designed to minimize dependencies:
+## Project Architecture
 
 ```
-language_controller.py
-├── language_translations.py (data only)
-└── language_ui.py
-    └── language_translations.py (for supported languages list)
-
-language_utils.py
-├── language_translations.py (data only)
-└── language_controller.py (for integration)
+weather-dashboard/
+├── config/                 # Core application configuration
+│   ├── animations.py      # Weather animation system
+│   ├── api.py             # Weather API integration
+│   ├── error_handler.py   # Comprehensive error handling
+│   ├── storage.py         # CSV data persistence
+│   ├── themes.py          # Theme management
+│   ├── utils.py           # Utility functions
+│   └── weather_app.py     # Main application class
+├── features/              # Modular feature implementations
+│   ├── city_comparison/   # Multi-city weather comparison
+│   ├── graphs/            # Interactive data visualizations
+│   ├── history_tracker/   # Historical data management
+│   ├── interactive_map/   # Map integration and controls
+│   ├── sun_moon_phases/   # Astronomical data and calculations
+│   ├── theme_switcher/    # Dynamic theme switching
+│   ├── tomorrows_guess/   # Weather prediction algorithms
+│   ├── weather_icons/     # Custom icon system
+│   └── weather_quiz/      # Educational quiz system
+├── gui/                   # User interface components
+│   ├── animation_controller.py
+│   ├── main_gui.py
+│   └── weather_display.py
+├── language/              # Internationalization system
+│   ├── controller.py      # Language management
+│   ├── translations.py    # Translation data
+│   └── utils.py           # Language utilities
+├── data/                  # Local data storage
+├── docs/                  # Project documentation
+└── tests/                 # Comprehensive test suite
 ```
 
-## Migration from Original File
+## API Integration
 
-To migrate from the original single file:
+The application integrates with multiple free APIs:
 
-1. Replace the original import:
-   ```python
-   # Old
-   from language_selection_controller import LanguageController
-   
-   # New
-   from language_controller import LanguageController
-   ```
+- **OpenWeatherMap API**: Current weather data and weather icons
+- **Open-Meteo API**: Primary weather data source
+- **Open-Meteo Geocoding**: City name to coordinates conversion
+- **Open-Meteo Archive**: Historical weather data
+- **OpenStreetMap Nominatim**: Backup geocoding for map features
+- **Sunrise-Sunset API**: Astronomical data for sun and moon phases
 
-2. All existing API calls remain the same - no code changes needed in the main application.
+## Technical Highlights
 
-3. For advanced features, optionally add:
-   ```python
-   from language_utils import LanguageUtils
-   utils = LanguageUtils(lang_ctrl)
-   ```
+### Modular Design
 
-## Adding New Languages
+- Feature-based architecture with clear separation of concerns
+- Each feature is self-contained and independently testable
+- Plugin-style architecture allows easy addition of new features
 
-1. Add language to `SUPPORTED_LANGUAGES` in `language_translations.py`
-2. Add complete translation dictionary to `TRANSLATIONS`
-3. No code changes needed - the system automatically supports the new language
+### Data Management
 
-## Translation Management
+- CSV-based persistence for weather history and user preferences
+- Intelligent caching system to minimize API calls
+- Data validation and error recovery mechanisms
 
-The system provides comprehensive tools for managing translations:
+### Performance Optimizations
 
-- **Completeness tracking**: See which translations are missing
-- **Validation**: Check for empty or invalid translations
-- **Import/Export**: Backup and restore translation data
-- **Search**: Find specific translations across languages
-- **Optimization**: Clean up and optimize translation data
+- Efficient particle system for smooth 30fps animations
+- Lazy loading of non-essential components
+- Memory-conscious data structures for historical data
 
-This modular approach ensures the language system can grow with the application while maintaining clean, maintainable code.
+### Error Handling
+
+- Comprehensive error handling with user-friendly messages
+- Graceful degradation when optional features are unavailable
+- Network failure recovery and retry mechanisms
+
+## Testing
+
+Run the complete test suite:
+```bash
+pytest tests/
+```
+
+## Dependencies
+
+### Core Dependencies
+
+- `customtkinter>=5.2.0` - Modern GUI framework
+- `requests>=2.31.0` - HTTP API communication
+- `Pillow>=10.0.0` - Image processing for weather icons
+
+### Optional Dependencies
+
+- `tkintermapview>=1.29` - Interactive map functionality
+- `pytest>=7.4.0` - Testing framework
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/new-feature`)
+3. Commit your changes (`git commit -am 'Add new feature'`)
+4. Push to the branch (`git push origin feature/new-feature`)
+5. Create a Pull Request
+
+### Development Guidelines
+
+- Follow PEP 8 style guidelines
+- Add tests for new features
+- Update documentation for API changes
+- Ensure cross-platform compatibility
+
+## Troubleshooting
+
+### Common Issues
+
+**Map not displaying**: Install `tkintermapview` or the app will use a fallback interface.
+
+**No weather data**: Check internet connection and verify city name spelling.
+
+**Animation performance**: Disable animations in settings if experiencing performance issues.
+
+**Language not switching**: Restart the application after changing language preferences.
+
+## System Requirements
+
+- **Operating System**: Windows 10+, macOS 10.14+, or Linux with GUI support
+- **Python**: Version 3.8 or higher
+- **RAM**: Minimum 4GB (8GB recommended for optimal performance)
+- **Storage**: 100MB free space for application and data files
+- **Network**: Internet connection required for real-time weather data
+
+## Acknowledgments
+
+- Weather data provided by [Open-Meteo](https://open-meteo.com/)
+- Map services powered by [OpenStreetMap](https://www.openstreetmap.org/)
+- Icons and animations inspired by modern weather applications
+- Built with [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter)
+
+## Version History
+
+- **v2.0.0** - Complete rewrite with modular architecture, multilingual support, and advanced features
+- **v1.5.0** - Added interactive maps and weather animations
+- **v1.0.0** - Initial release with basic weather functionality
+
+---
+
+For more information, bug reports, or feature requests, please visit our [GitHub repository](https://github.com/Chelsy-AI/Capstone.git) or contact the development team.
