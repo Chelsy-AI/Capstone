@@ -15,6 +15,8 @@ Key Features:
 """
 
 # Import required libraries for making graphs and handling data
+import warnings
+
 try:
     import matplotlib
     matplotlib.use('TkAgg')
@@ -25,7 +27,6 @@ try:
     import numpy as np
     from datetime import datetime, timedelta
     import random
-    import warnings
     MATPLOTLIB_AVAILABLE = True
 except ImportError:
     # If matplotlib isn't installed, we'll show an error message later
@@ -81,6 +82,9 @@ class WeatherGraphGenerator:
         """
         Suppress specific matplotlib font warnings that clutter output.
         """
+        if not MATPLOTLIB_AVAILABLE:
+            return
+
         # Filter out Devanagari font warnings specifically
         warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
         warnings.filterwarnings('ignore', message='.*Glyph.*missing from font.*')

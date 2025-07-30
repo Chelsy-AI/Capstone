@@ -1,2 +1,14 @@
 venv/
 .env
+
+# Build artifacts
+build/
+dist/
+*.spec
+version_info.txt
+install.bat
+install.sh
+
+# IDE
+.vscode/
+.idea/
