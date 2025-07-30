@@ -123,7 +123,6 @@ class WeatherAPI:
         try:
             # STRICT VALIDATION FIRST - Block fake cities before API call
             if not self.validator.is_valid_city(city):
-                print(f"❌ Blocked fake city: {city}")
                 return None
             
             params = {
@@ -136,7 +135,6 @@ class WeatherAPI:
             
             if response.status_code == 200:
                 data = response.json()
-                print(f"✅ Valid weather data for: {data['name']}")
                 return {
                     'city': data['name'],
                     'country': data['sys']['country'],
@@ -151,11 +149,9 @@ class WeatherAPI:
                     'precipitation': 0
                 }
             else:
-                print(f"❌ API returned error for: {city}")
                 return None
                 
         except Exception as e:
-            print(f"❌ Exception for {city}: {str(e)}")
             return None
 
 class WeatherApp:
@@ -325,7 +321,6 @@ class WeatherApp:
     
     def show_error_screen(self, city_input: str):
         """Show full-screen error when city is invalid."""
-        print(f"🚫 Showing error screen for: {city_input}")
         
         # COMPLETELY CLEAR THE SCREEN
         self.clear_screen()
@@ -427,11 +422,8 @@ class WeatherApp:
     def search_weather(self):
         """Search for weather with strict validation."""
         city_input = self.city_entry.get().strip()
-        
-        print(f"\n🔍 Searching for: '{city_input}'")
-        
+                
         if not city_input:
-            print("❌ Empty input")
             return
         
         # Clear any previous key bindings
@@ -443,26 +435,16 @@ class WeatherApp:
             
             if weather_data is None:
                 # City is invalid - show error screen
-                print(f"🚫 Invalid city, showing error screen")
                 self.show_error_screen(city_input)
             else:
                 # Valid city - show weather data
-                print(f"✅ Showing weather data")
                 self.show_weather_data(weather_data)
                 
         except Exception as e:
-            print(f"❌ Exception occurred: {str(e)}")
             self.show_error_screen(city_input)
     
     def run(self):
-        """Start the application."""
-        print("🌤️ Smart Weather App Started")
-        print("=" * 50)
-        print("• Invalid cities will show error screen")
-        print("• Use back button to return and try again")
-        print("• Fake inputs like 'khjl;' will be blocked")
-        print("=" * 50)
-        
+        """Start the application."""        
         self.root.mainloop()
 
 if __name__ == "__main__":
@@ -470,6 +452,5 @@ if __name__ == "__main__":
         app = WeatherApp()
         app.run()
     except Exception as e:
-        print(f"❌ Failed to start app: {e}")
         messagebox.showerror("Startup Error", f"Could not start weather app:\n\n{e}")
         

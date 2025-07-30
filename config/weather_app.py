@@ -35,7 +35,6 @@ except ImportError:
         try:
             return func(*args, **kwargs)
         except Exception as e:
-            print(f"Error in {func.__name__}: {e}")
             return fallback_result
 
 class CityValidator:
@@ -238,9 +237,7 @@ class WeatherApp(tk.Tk):
         """Show full-screen error when city is invalid."""
         if error_handling_available:
             app_logger.log_error("ui", f"Showing error screen for invalid input: {city_input}", severity="INFO")
-        
-        print(f"🚫 Showing error screen for: {city_input}")
-        
+                
         # Clear the current screen
         self.clear_screen()
         self.current_screen = "error"
@@ -520,7 +517,6 @@ class WeatherApp(tk.Tk):
             if not self.city_validator.is_valid_city(city):
                 if error_handling_available:
                     app_logger.log_error("validation", f"Blocked fake city in fetch: {city}", severity="INFO")
-                print(f"❌ Blocked fake city in fetch: {city}")
                 
                 # Show error screen on main thread
                 self.after(0, lambda: self.show_error_screen(city))
@@ -528,7 +524,6 @@ class WeatherApp(tk.Tk):
             
             # Get current language code for API request
             language_code = self.get_current_language_code()
-            print(f"🔄 Fetching weather for {city} in language: {language_code}")
             
             # Download current weather data from the internet with language support
             weather_data = get_current_weather(city, language_code)

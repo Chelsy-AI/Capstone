@@ -43,20 +43,15 @@ try:
     error_handling_available = True
     app_logger.log_error("startup", "Comprehensive error handling system loaded successfully", severity="INFO")
 except ImportError as e:
-    print(f"Note: Advanced error handling not available: {e}")
-    print("Application will run with basic error handling.")
+    pass
     
     # Create basic fallback functions
     def safe_function_call(func, *args, fallback_result=None, **kwargs):
         try:
             return func(*args, **kwargs)
         except Exception as e:
-            print(f"Error in {func.__name__}: {e}")
             return fallback_result
-    
-    def safe_show_error_message(title, message, error_type="error"):
-        print(f"[{error_type.upper()}] {title}: {message}")
-    
+        
     # Create dummy decorators
     def handle_library_errors(*args, **kwargs):
         def decorator(func):
@@ -104,14 +99,10 @@ def configure_matplotlib():
     except ImportError:
         if error_handling_available:
             app_logger.log_error("startup", "Matplotlib not available - graphs will be disabled", severity="WARNING")
-        else:
-            print("Warning: Matplotlib not available - graphs will be disabled")
         return False
     except Exception as e:
         if error_handling_available:
             app_logger.log_error("startup", f"Matplotlib configuration failed: {e}", e, severity="WARNING")
-        else:
-            print(f"Warning: Matplotlib configuration failed: {e}")
         return False
 
 
@@ -167,24 +158,13 @@ def check_dependencies():
         error_msg = f"Missing required modules: {', '.join(missing_required)}"
         if error_handling_available:
             app_logger.log_error("startup", error_msg, severity="ERROR")
-        else:
-            print(f"❌ {error_msg}")
-        
-        print("\nTo install missing modules, run:")
-        for module in missing_required:
-            if module == 'PIL':
-                print("  pip install Pillow")
-            else:
-                print(f"  pip install {module}")
-        
+                
         return False, missing_required, missing_optional
     
     if missing_optional:
         warning_msg = f"Missing optional modules: {', '.join(missing_optional)} (reduced functionality)"
         if error_handling_available:
             app_logger.log_error("startup", warning_msg, severity="WARNING")
-        else:
-            print(f"⚠️  {warning_msg}")
     
     return True, [], missing_optional
 
@@ -217,8 +197,6 @@ def create_data_directory():
         error_msg = f"Could not create data directory: {e}"
         if error_handling_available:
             app_logger.log_error("startup", error_msg, e, severity="ERROR")
-        else:
-            print(f"❌ {error_msg}")
         return False
 
 
@@ -350,8 +328,6 @@ help diagnose and recover from any application errors.
     except Exception as e:
         if error_handling_available:
             app_logger.log_error("fallback", f"Simple app creation failed: {e}", e, severity="ERROR")
-        else:
-            print(f"❌ Could not create fallback application: {e}")
         return False
 
 
@@ -389,8 +365,6 @@ def run_weather_app():
         if not data_dir_ok:
             if error_handling_available:
                 app_logger.log_error("startup", "Data directory creation failed", severity="WARNING")
-            else:
-                print("⚠️ Warning: Could not create data directory")
         
         # Step 4: Try to import and start the actual weather app
         try:
@@ -411,9 +385,6 @@ def run_weather_app():
             if error_handling_available:
                 app_logger.log_error("startup", error_msg, e, severity="WARNING")
                 app_logger.log_error("startup", "Starting fallback simple weather app", severity="INFO")
-            else:
-                print(f"⚠️ {error_msg}")
-                print("Starting simplified version...")
             
             # Start the simple fallback app
             return safe_function_call(create_simple_weather_app, fallback_result=False)
@@ -424,9 +395,6 @@ def run_weather_app():
             if error_handling_available:
                 app_logger.log_error("startup", error_msg, e, severity="ERROR")
                 app_logger.log_error("startup", "Attempting fallback to simple weather app", severity="WARNING")
-            else:
-                print(f"❌ {error_msg}")
-                print("Attempting to start simplified version...")
             
             # Try fallback app
             fallback_success = safe_function_call(create_simple_weather_app, fallback_result=False)
@@ -441,8 +409,6 @@ def run_weather_app():
         # User pressed Ctrl+C to stop the app
         if error_handling_available:
             app_logger.log_error("startup", "Application stopped by user", severity="INFO")
-        else:
-            print("\nApplication stopped by user.")
         return True
         
     except Exception as e:
@@ -451,7 +417,6 @@ def run_weather_app():
         if error_handling_available:
             app_logger.log_error("startup", error_msg, e, severity="CRITICAL")
         else:
-            print(f"❌ {error_msg}")
             import traceback
             traceback.print_exc()  # Show detailed error information
         
@@ -470,16 +435,9 @@ def main():
     or run "python main.py", this function is what actually gets called.
     """
     
-    print("🚀 Starting Weather Dashboard...")
-    print("=" * 50)
     
     if error_handling_available:
-        print("✅ Comprehensive error handling system loaded")
         app_logger.log_error("main", "Weather Dashboard starting with comprehensive error handling", severity="INFO")
-    else:
-        print("⚠️  Running with basic error handling only")
-    
-    print("=" * 50)
         
     # Try to run the application
     success = safe_function_call(run_weather_app, fallback_result=False)
@@ -488,13 +446,9 @@ def main():
     if success:
         if error_handling_available:
             app_logger.log_error("main", "Weather Dashboard completed successfully", severity="INFO")
-        else:
-            print("\n✅ Application completed successfully")
     else:
         if error_handling_available:
             app_logger.log_error("main", "Weather Dashboard failed to start properly", severity="ERROR")
-        else:
-            print("\n❌ Application failed to start properly")
     
     # On Windows, keep the console window open so user can read any messages
     if os.name == 'nt':  # 'nt' means Windows
