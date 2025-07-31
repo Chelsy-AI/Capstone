@@ -234,7 +234,92 @@ TRANSLATIONS = {
         "hpa": "hPa",
         "meters": "m",
         "mm": "mm",
-        "percent": "%"
+        "percent": "%",
+
+        # Map Controls and Interface
+        "weather_overlay": "Weather Overlay:",
+        "weather_overlay_select": "Select Weather Overlay",
+        "map_controls": "Map Controls",
+        "zoom_in": "Zoom In",
+        "zoom_out": "Zoom Out",
+        "reset_view": "Reset View",
+        "current_location": "Current Location",
+        
+        # Weather Overlay Types
+        "overlay_none": "No Overlay",
+        "overlay_temperature": "Temperature",
+        "overlay_wind": "Wind Speed",
+        "overlay_precipitation": "Precipitation",
+        "overlay_clouds": "Cloud Cover",
+        "overlay_pressure": "Atmospheric Pressure",
+        "overlay_snow": "Snow Cover",
+        "overlay_dewpoint": "Dew Point",
+        
+        # Map Information Panel
+        "map_information": "Map Information",
+        "base_map_info": "Base Map Information",
+        "base_map_description": "Interactive map with city location markers and weather overlays",
+        "map_features": "Map Features:",
+        "feature_navigation": "• Interactive navigation with zoom and pan controls",
+        "feature_overlays": "• Multiple weather overlay options available",
+        "feature_tracking": "• Real-time city location tracking with GPS coordinates",
+        "feature_integration": "• Custom weather data visualization integration",
+        "feature_geocoding": "• Automatic city name to coordinates conversion",
+        "feature_markers": "• Dynamic location markers for selected cities",
+        "feature_updates": "• Live weather data refresh functionality",
+        "feature_basemap": "• High-quality OpenStreetMap base tiles",
+        
+        # Weather Overlay Information
+        "overlay_information": "Weather Overlay Information",
+        "current_overlay": "Current Overlay",
+        "overlay_description": "Overlay Description",
+        "no_overlay_selected": "No weather overlay currently selected",
+        "select_overlay_for_info": "Select a weather overlay to see detailed information about that data layer.",
+        
+        # Individual Overlay Descriptions
+        "temperature_overlay_info": "Temperature Overlay",
+        "temperature_overlay_desc": "Shows real-time temperature data across the map region. Warmer areas appear in red/orange, cooler areas in blue. Data refreshes automatically with weather updates.",
+        "temperature_overlay_features": "• Color-coded temperature visualization\n• Real-time data from weather stations\n• Celsius/Fahrenheit display options\n• High-resolution thermal mapping",
+        
+        "wind_overlay_info": "Wind Speed Overlay",
+        "wind_overlay_desc": "Displays wind speed patterns and directions across the region. Shows both wind velocity and directional flow patterns for weather analysis.",
+        "wind_overlay_features": "• Wind speed intensity mapping\n• Directional flow indicators\n• Real-time wind pattern updates\n• Storm system tracking capabilities",
+        
+        "precipitation_overlay_info": "Precipitation Overlay",
+        "precipitation_overlay_desc": "Shows current and forecast precipitation including rain, snow, and other forms of moisture. Intensity levels are color-coded for easy interpretation.",
+        "precipitation_overlay_features": "• Real-time precipitation tracking\n• Intensity level color coding\n• Rain and snow differentiation\n• Forecast precipitation zones",
+        
+        "clouds_overlay_info": "Cloud Cover Overlay",
+        "clouds_overlay_desc": "Displays cloud coverage patterns and density across the map area. Shows both current conditions and cloud movement patterns.",
+        "clouds_overlay_features": "• Cloud density visualization\n• Coverage percentage mapping\n• Satellite-based cloud data\n• Clear sky identification zones",
+        
+        "pressure_overlay_info": "Atmospheric Pressure Overlay",
+        "pressure_overlay_desc": "Shows atmospheric pressure variations across the region. High and low pressure systems are clearly marked for weather pattern analysis.",
+        "pressure_overlay_features": "• Pressure system visualization\n• High/low pressure identification\n• Isobar mapping display\n• Weather front tracking",
+        
+        "snow_overlay_info": "Snow Cover Overlay",
+        "snow_overlay_desc": "Displays snow coverage and accumulation data. Shows both current snow depth and forecast snowfall patterns for winter weather planning.",
+        "snow_overlay_features": "• Snow depth visualization\n• Accumulation forecasting\n• Winter storm tracking\n• Ski condition monitoring",
+        
+        "dewpoint_overlay_info": "Dew Point Overlay",
+        "dewpoint_overlay_desc": "Shows dew point temperatures across the map region. Indicates humidity comfort levels and potential for fog or moisture formation.",
+        "dewpoint_overlay_features": "• Humidity comfort mapping\n• Fog formation prediction\n• Moisture level visualization\n• Air quality correlation data",
+        
+        # Map Error Messages
+        "map_loading_error": "Error loading map",
+        "overlay_loading_error": "Error loading weather overlay",
+        "location_not_found": "Location not found on map",
+        "geocoding_failed": "Failed to find city coordinates",
+        "tile_server_error": "Weather tile server unavailable",
+        "map_refresh_failed": "Failed to refresh map data",
+        
+        # Map Status Messages
+        "map_loading": "Loading interactive map...",
+        "overlay_loading": "Loading weather overlay...",
+        "geocoding_city": "Finding city location...",
+        "updating_location": "Updating map location...",
+        "refreshing_data": "Refreshing weather data...",
+
     },
     
     "Spanish": {
@@ -472,7 +557,92 @@ TRANSLATIONS = {
         "hpa": "hPa",
         "meters": "m",
         "mm": "mm",
-        "percent": "%"
+        "percent": "%",
+
+        # Map Controls and Interface
+        "weather_overlay": "Superposición del Clima:",
+        "weather_overlay_select": "Seleccionar Superposición del Clima",
+        "map_controls": "Controles del Mapa",
+        "zoom_in": "Acercar",
+        "zoom_out": "Alejar",
+        "reset_view": "Restablecer Vista",
+        "current_location": "Ubicación Actual",
+        
+        # Weather Overlay Types
+        "overlay_none": "Sin Superposición",
+        "overlay_temperature": "Temperatura",
+        "overlay_wind": "Velocidad del Viento",
+        "overlay_precipitation": "Precipitación",
+        "overlay_clouds": "Cobertura de Nubes",
+        "overlay_pressure": "Presión Atmosférica",
+        "overlay_snow": "Cobertura de Nieve",
+        "overlay_dewpoint": "Punto de Rocío",
+        
+        # Map Information Panel
+        "map_information": "Información del Mapa",
+        "base_map_info": "Información del Mapa Base",
+        "base_map_description": "Mapa interactivo con marcadores de ubicación de ciudades y superposiciones meteorológicas",
+        "map_features": "Características del Mapa:",
+        "feature_navigation": "• Navegación interactiva con controles de zoom y desplazamiento",
+        "feature_overlays": "• Múltiples opciones de superposición meteorológica disponibles",
+        "feature_tracking": "• Seguimiento de ubicación de ciudad en tiempo real con coordenadas GPS",
+        "feature_integration": "• Integración personalizada de visualización de datos meteorológicos",
+        "feature_geocoding": "• Conversión automática de nombre de ciudad a coordenadas",
+        "feature_markers": "• Marcadores de ubicación dinámicos para ciudades seleccionadas",
+        "feature_updates": "• Funcionalidad de actualización de datos meteorológicos en vivo",
+        "feature_basemap": "• Tiles base de OpenStreetMap de alta calidad",
+        
+        # Weather Overlay Information
+        "overlay_information": "Información de Superposición Meteorológica",
+        "current_overlay": "Superposición Actual",
+        "overlay_description": "Descripción de Superposición",
+        "no_overlay_selected": "No hay superposición meteorológica seleccionada actualmente",
+        "select_overlay_for_info": "Seleccione una superposición meteorológica para ver información detallada sobre esa capa de datos.",
+        
+        # Individual Overlay Descriptions
+        "temperature_overlay_info": "Superposición de Temperatura",
+        "temperature_overlay_desc": "Muestra datos de temperatura en tiempo real en toda la región del mapa. Las áreas más cálidas aparecen en rojo/naranja, las áreas más frías en azul. Los datos se actualizan automáticamente con las actualizaciones meteorológicas.",
+        "temperature_overlay_features": "• Visualización de temperatura codificada por colores\n• Datos en tiempo real de estaciones meteorológicas\n• Opciones de visualización Celsius/Fahrenheit\n• Mapeo térmico de alta resolución",
+        
+        "wind_overlay_info": "Superposición de Velocidad del Viento",
+        "wind_overlay_desc": "Muestra patrones de velocidad y dirección del viento en toda la región. Muestra tanto la velocidad del viento como los patrones de flujo direccional para análisis meteorológico.",
+        "wind_overlay_features": "• Mapeo de intensidad de velocidad del viento\n• Indicadores de flujo direccional\n• Actualizaciones de patrones de viento en tiempo real\n• Capacidades de seguimiento de sistemas de tormenta",
+        
+        "precipitation_overlay_info": "Superposición de Precipitación",
+        "precipitation_overlay_desc": "Muestra precipitación actual y pronosticada incluyendo lluvia, nieve y otras formas de humedad. Los niveles de intensidad están codificados por colores para fácil interpretación.",
+        "precipitation_overlay_features": "• Seguimiento de precipitación en tiempo real\n• Codificación de colores de nivel de intensidad\n• Diferenciación de lluvia y nieve\n• Zonas de precipitación pronosticada",
+        
+        "clouds_overlay_info": "Superposición de Cobertura de Nubes",
+        "clouds_overlay_desc": "Muestra patrones de cobertura de nubes y densidad en toda el área del mapa. Muestra tanto las condiciones actuales como los patrones de movimiento de nubes.",
+        "clouds_overlay_features": "• Visualización de densidad de nubes\n• Mapeo de porcentaje de cobertura\n• Datos de nubes basados en satélite\n• Zonas de identificación de cielo despejado",
+        
+        "pressure_overlay_info": "Superposición de Presión Atmosférica",
+        "pressure_overlay_desc": "Muestra variaciones de presión atmosférica en toda la región. Los sistemas de alta y baja presión están claramente marcados para análisis de patrones meteorológicos.",
+        "pressure_overlay_features": "• Visualización de sistemas de presión\n• Identificación de presión alta/baja\n• Visualización de mapeo de isobaras\n• Seguimiento de frentes meteorológicos",
+        
+        "snow_overlay_info": "Superposición de Cobertura de Nieve",
+        "snow_overlay_desc": "Muestra datos de cobertura y acumulación de nieve. Muestra tanto la profundidad actual de nieve como los patrones de nevada pronosticados para planificación meteorológica invernal.",
+        "snow_overlay_features": "• Visualización de profundidad de nieve\n• Pronóstico de acumulación\n• Seguimiento de tormentas invernales\n• Monitoreo de condiciones de esquí",
+        
+        "dewpoint_overlay_info": "Superposición de Punto de Rocío",
+        "dewpoint_overlay_desc": "Muestra temperaturas de punto de rocío en toda la región del mapa. Indica niveles de comodidad de humedad y potencial para formación de niebla o humedad.",
+        "dewpoint_overlay_features": "• Mapeo de comodidad de humedad\n• Predicción de formación de niebla\n• Visualización de nivel de humedad\n• Datos de correlación de calidad del aire",
+        
+        # Map Error Messages
+        "map_loading_error": "Error al cargar el mapa",
+        "overlay_loading_error": "Error al cargar la superposición meteorológica",
+        "location_not_found": "Ubicación no encontrada en el mapa",
+        "geocoding_failed": "Falló al encontrar coordenadas de la ciudad",
+        "tile_server_error": "Servidor de tiles meteorológicos no disponible",
+        "map_refresh_failed": "Falló al actualizar datos del mapa",
+        
+        # Map Status Messages
+        "map_loading": "Cargando mapa interactivo...",
+        "overlay_loading": "Cargando superposición meteorológica...",
+        "geocoding_city": "Encontrando ubicación de la ciudad...",
+        "updating_location": "Actualizando ubicación del mapa...",
+        "refreshing_data": "Actualizando datos meteorológicos...",
+
     },
     
     "Hindi": {
@@ -736,7 +906,92 @@ TRANSLATIONS = {
         "hpa": "एचपीए",
         "meters": "मी",
         "mm": "मिमी",
-        "percent": "%"
+        "percent": "%",
+
+        # Map Controls and Interface
+        "weather_overlay": "मौसम आवरण:",
+        "weather_overlay_select": "मौसम आवरण चुनें",
+        "map_controls": "मानचित्र नियंत्रण",
+        "zoom_in": "ज़ूम इन",
+        "zoom_out": "ज़ूम आउट",
+        "reset_view": "दृश्य रीसेट करें",
+        "current_location": "वर्तमान स्थान",
+        
+        # Weather Overlay Types
+        "overlay_none": "कोई आवरण नहीं",
+        "overlay_temperature": "तापमान",
+        "overlay_wind": "हवा की गति",
+        "overlay_precipitation": "वर्षा",
+        "overlay_clouds": "बादल आवरण",
+        "overlay_pressure": "वायुमंडलीय दबाव",
+        "overlay_snow": "बर्फ आवरण",
+        "overlay_dewpoint": "ओस बिंदु",
+        
+        # Map Information Panel
+        "map_information": "मानचित्र जानकारी",
+        "base_map_info": "बेस मानचित्र जानकारी",
+        "base_map_description": "शहर स्थान मार्कर और मौसम आवरण के साथ इंटरैक्टिव मानचित्र",
+        "map_features": "मानचित्र विशेषताएं:",
+        "feature_navigation": "• ज़ूम और पैन नियंत्रण के साथ इंटरैक्टिव नेवीगेशन",
+        "feature_overlays": "• कई मौसम आवरण विकल्प उपलब्ध",
+        "feature_tracking": "• GPS निर्देशांक के साथ रीयल-टाइम शहर स्थान ट्रैकिंग",
+        "feature_integration": "• कस्टम मौसम डेटा विज़ुअलाइज़ेशन एकीकरण",
+        "feature_geocoding": "• शहर के नाम से निर्देशांक में स्वचालित रूपांतरण",
+        "feature_markers": "• चयनित शहरों के लिए डायनामिक स्थान मार्कर",
+        "feature_updates": "• लाइव मौसम डेटा रिफ्रेश कार्यक्षमता",
+        "feature_basemap": "• उच्च गुणवत्ता OpenStreetMap बेस टाइल्स",
+        
+        # Weather Overlay Information
+        "overlay_information": "मौसम आवरण जानकारी",
+        "current_overlay": "वर्तमान आवरण",
+        "overlay_description": "आवरण विवरण",
+        "no_overlay_selected": "वर्तमान में कोई मौसम आवरण चयनित नहीं है",
+        "select_overlay_for_info": "उस डेटा परत के बारे में विस्तृत जानकारी देखने के लिए मौसम आवरण चुनें।",
+        
+        # Individual Overlay Descriptions
+        "temperature_overlay_info": "तापमान आवरण",
+        "temperature_overlay_desc": "मानचित्र क्षेत्र में रीयल-टाइम तापमान डेटा दिखाता है। गर्म क्षेत्र लाल/नारंगी में दिखाई देते हैं, ठंडे क्षेत्र नीले में। डेटा मौसम अपडेट के साथ स्वचालित रूप से रीफ्रेश होता है।",
+        "temperature_overlay_features": "• रंग-कोडित तापमान विज़ुअलाइज़ेशन\n• मौसम स्टेशनों से रीयल-टाइम डेटा\n• सेल्सियस/फारेनहाइट प्रदर्शन विकल्प\n• उच्च-रिज़ॉल्यूशन थर्मल मैपिंग",
+        
+        "wind_overlay_info": "हवा की गति आवरण",
+        "wind_overlay_desc": "क्षेत्र में हवा की गति पैटर्न और दिशा प्रदर्शित करता है। मौसम विश्लेषण के लिए हवा की गति और दिशात्मक प्रवाह पैटर्न दोनों दिखाता है।",
+        "wind_overlay_features": "• हवा की गति तीव्रता मैपिंग\n• दिशात्मक प्रवाह संकेतक\n• रीयल-टाइम हवा पैटर्न अपडेट\n• तूफान प्रणाली ट्रैकिंग क्षमताएं",
+        
+        "precipitation_overlay_info": "वर्षा आवरण",
+        "precipitation_overlay_desc": "वर्तमान और पूर्वानुमानित वर्षा दिखाता है जिसमें बारिश, बर्फ और नमी के अन्य रूप शामिल हैं। तीव्रता के स्तर आसान व्याख्या के लिए रंग-कोडित हैं।",
+        "precipitation_overlay_features": "• रीयल-टाइम वर्षा ट्रैकिंग\n• तीव्रता स्तर रंग कोडिंग\n• बारिश और बर्फ अंतर\n• पूर्वानुमानित वर्षा क्षेत्र",
+        
+        "clouds_overlay_info": "बादल आवरण आवरण",
+        "clouds_overlay_desc": "मानचित्र क्षेत्र में बादल आवरण पैटर्न और घनत्व प्रदर्शित करता है। वर्तमान स्थितियों और बादल गति पैटर्न दोनों दिखाता है।",
+        "clouds_overlay_features": "• बादल घनत्व विज़ुअलाइज़ेशन\n• कवरेज प्रतिशत मैपिंग\n• उपग्रह-आधारित बादल डेटा\n• साफ आकाश पहचान क्षेत्र",
+        
+        "pressure_overlay_info": "वायुमंडलीय दबाव आवरण",
+        "pressure_overlay_desc": "क्षेत्र में वायुमंडलीय दबाव भिन्नताएं दिखाता है। मौसम पैटर्न विश्लेषण के लिए उच्च और निम्न दबाव प्रणालियां स्पष्ट रूप से चिह्नित हैं।",
+        "pressure_overlay_features": "• दबाव प्रणाली विज़ुअलाइज़ेशन\n• उच्च/निम्न दबाव पहचान\n• आइसोबार मैपिंग प्रदर्शन\n• मौसम मोर्चा ट्रैकिंग",
+        
+        "snow_overlay_info": "बर्फ आवरण आवरण",
+        "snow_overlay_desc": "बर्फ कवरेज और संचय डेटा प्रदर्शित करता है। शीतकालीन मौसम योजना के लिए वर्तमान बर्फ की गहराई और पूर्वानुमानित हिमपात पैटर्न दोनों दिखाता है।",
+        "snow_overlay_features": "• बर्फ की गहराई विज़ुअलाइज़ेशन\n• संचय पूर्वानुमान\n• शीतकालीन तूफान ट्रैकिंग\n• स्की स्थिति मॉनिटरिंग",
+        
+        "dewpoint_overlay_info": "ओस बिंदु आवरण",
+        "dewpoint_overlay_desc": "मानचित्र क्षेत्र में ओस बिंदु तापमान दिखाता है। आर्द्रता आराम स्तर और कोहरे या नमी गठन की संभावना का संकेत देता है।",
+        "dewpoint_overlay_features": "• आर्द्रता आराम मैपिंग\n• कोहरा गठन भविष्यवाणी\n• नमी स्तर विज़ुअलाइज़ेशन\n• वायु गुणवत्ता सहसंबंध डेटा",
+        
+        # Map Error Messages
+        "map_loading_error": "मानचित्र लोड करने में त्रुटि",
+        "overlay_loading_error": "मौसम आवरण लोड करने में त्रुटि",
+        "location_not_found": "मानचित्र पर स्थान नहीं मिला",
+        "geocoding_failed": "शहर के निर्देशांक खोजने में विफल",
+        "tile_server_error": "मौसम टाइल सर्वर अनुपलब्ध",
+        "map_refresh_failed": "मानचित्र डेटा रिफ्रेश करने में विफल",
+        
+        # Map Status Messages
+        "map_loading": "इंटरैक्टिव मानचित्र लोड हो रहा है...",
+        "overlay_loading": "मौसम आवरण लोड हो रहा है...",
+        "geocoding_city": "शहर का स्थान खोज रहे हैं...",
+        "updating_location": "मानचित्र स्थान अपडेट कर रहे हैं...",
+        "refreshing_data": "मौसम डेटा रिफ्रेश कर रहे हैं...",
+    
     }
 }
 

@@ -29,15 +29,11 @@ sys.path.insert(0, project_root)
 # Import the comprehensive error handling system
 error_handling_available = False
 try:
-    from config.error_handler import (
-        handle_api_errors,
-        handle_gui_errors,
+    from weather_dashboard.config.error_handler import (
         handle_file_system_errors,
-        handle_data_validation_errors,
         handle_library_errors,
         app_logger,
         safe_function_call,
-        health_monitor,
         safe_show_error_message
     )
     error_handling_available = True
@@ -62,7 +58,6 @@ except ImportError as e:
         def decorator(func):
             return func
         return decorator
-
 
 @handle_library_errors(fallback_implementation=None, version_check=False)
 def configure_matplotlib():
@@ -200,137 +195,6 @@ def create_data_directory():
         return False
 
 
-def create_simple_weather_app():
-    """
-    Create a simple weather application if the main one isn't available.
-    This is a fallback that provides basic functionality.
-    """
-    try:
-        import tkinter as tk
-        from tkinter import ttk, messagebox
-        
-        class SimpleWeatherApp:
-            def __init__(self):
-                self.root = tk.Tk()
-                self.root.title("Simple Weather Dashboard")
-                self.root.geometry("600x400")
-                self.setup_ui()
-            
-            def setup_ui(self):
-                # Main frame
-                main_frame = ttk.Frame(self.root, padding="20")
-                main_frame.pack(fill=tk.BOTH, expand=True)
-                
-                # Title
-                title = ttk.Label(main_frame, text="🌤️ Weather Dashboard", 
-                                font=("Arial", 18, "bold"))
-                title.pack(pady=(0, 20))
-                
-                # Status
-                status_frame = ttk.LabelFrame(main_frame, text="System Status", padding="10")
-                status_frame.pack(fill=tk.X, pady=(0, 20))
-                
-                error_status = "✅ Active" if error_handling_available else "❌ Basic Mode"
-                ttk.Label(status_frame, text=f"Error Handling: {error_status}").pack(anchor=tk.W)
-                
-                # Info
-                info_text = """
-This is a simplified version of the Weather Dashboard.
-
-The main application module could not be loaded, but the error
-handling system is working correctly as shown in the logs.
-
-To restore full functionality:
-1. Check that all required files are present in the config/ directory
-2. Verify that config/weather_app.py exists and is properly formatted
-3. Check the error logs above for specific import issues
-
-The comprehensive error handling system is operational and will
-help diagnose and recover from any application errors.
-                """
-                
-                info_label = ttk.Label(main_frame, text=info_text.strip(), 
-                                     justify=tk.LEFT, wraplength=550)
-                info_label.pack(pady=(0, 20))
-                
-                # Buttons
-                button_frame = ttk.Frame(main_frame)
-                button_frame.pack(fill=tk.X)
-                
-                ttk.Button(button_frame, text="Show System Health", 
-                          command=self.show_health).pack(side=tk.LEFT, padx=(0, 10))
-                
-                ttk.Button(button_frame, text="Show Error Log", 
-                          command=self.show_error_log).pack(side=tk.LEFT, padx=(0, 10))
-                
-                ttk.Button(button_frame, text="Exit", 
-                          command=self.root.quit).pack(side=tk.RIGHT)
-            
-            def show_health(self):
-                if error_handling_available:
-                    try:
-                        health_result = health_monitor.run_health_check()
-                        health_summary = health_monitor.get_health_summary()
-                        
-                        # Create health window
-                        health_window = tk.Toplevel(self.root)
-                        health_window.title("System Health Check")
-                        health_window.geometry("600x400")
-                        
-                        text_widget = tk.Text(health_window, wrap=tk.WORD, padx=10, pady=10)
-                        scrollbar = ttk.Scrollbar(health_window, orient=tk.VERTICAL, command=text_widget.yview)
-                        text_widget.configure(yscrollcommand=scrollbar.set)
-                        
-                        text_widget.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-                        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-                        
-                        text_widget.insert(tk.END, health_summary)
-                        text_widget.configure(state=tk.DISABLED)
-                        
-                    except Exception as e:
-                        messagebox.showerror("Error", f"Could not generate health report: {e}")
-                else:
-                    messagebox.showinfo("Health Check", "Error handling system not available.\nBasic functionality only.")
-            
-            def show_error_log(self):
-                if error_handling_available:
-                    try:
-                        from config.error_handler import create_error_report
-                        error_report = create_error_report()
-                        
-                        # Create error log window
-                        log_window = tk.Toplevel(self.root)
-                        log_window.title("Error Report")
-                        log_window.geometry("700x500")
-                        
-                        text_widget = tk.Text(log_window, wrap=tk.WORD, padx=10, pady=10, font=("Courier", 10))
-                        scrollbar = ttk.Scrollbar(log_window, orient=tk.VERTICAL, command=text_widget.yview)
-                        text_widget.configure(yscrollcommand=scrollbar.set)
-                        
-                        text_widget.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-                        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-                        
-                        text_widget.insert(tk.END, error_report)
-                        text_widget.configure(state=tk.DISABLED)
-                        
-                    except Exception as e:
-                        messagebox.showerror("Error", f"Could not generate error report: {e}")
-                else:
-                    messagebox.showinfo("Error Log", "Error handling system not available.\nNo error logs to display.")
-            
-            def run(self):
-                self.root.mainloop()
-        
-        app = SimpleWeatherApp()
-        app.run()
-        return True
-        
-    except Exception as e:
-        if error_handling_available:
-            app_logger.log_error("fallback", f"Simple app creation failed: {e}", e, severity="ERROR")
-        return False
-
-
 def run_weather_app():
     """
     Actually start the weather application.
@@ -342,12 +206,13 @@ def run_weather_app():
     Returns:
         bool: True if app ran successfully, False if there was an error
     """
-    try:
+    try:        
         if error_handling_available:
             app_logger.log_error("startup", "Starting weather application", severity="INFO")
 
         # Step 1: Make sure all required libraries are installed
         deps_ok, missing_req, missing_opt = check_dependencies()
+        
         if not deps_ok:
             error_msg = f"Cannot start: missing required dependencies: {missing_req}"
             if error_handling_available:
@@ -356,6 +221,7 @@ def run_weather_app():
                                    f"Required modules not found: {', '.join(missing_req)}\n\n"
                                    "Please install missing dependencies and try again.")
             return False
+        
         
         # Step 2: Configure matplotlib to prevent font warnings
         matplotlib_ok = safe_function_call(configure_matplotlib, fallback_result=False)
@@ -371,7 +237,7 @@ def run_weather_app():
             if error_handling_available:
                 app_logger.log_error("startup", "Attempting to load main weather app module", severity="INFO")
             
-            from config.weather_app import run_app
+            from weather_dashboard.config.weather_app import run_app
             
             if error_handling_available:
                 app_logger.log_error("startup", "Main weather app module loaded successfully", severity="INFO")
@@ -380,30 +246,29 @@ def run_weather_app():
             return True
             
         except ImportError as e:
-            # Main weather app module not found - use fallback
+            # Main weather app module not found - this shouldn't happen now
             error_msg = f"Main weather app module not found: {e}"
             if error_handling_available:
-                app_logger.log_error("startup", error_msg, e, severity="WARNING")
-                app_logger.log_error("startup", "Starting fallback simple weather app", severity="INFO")
+                app_logger.log_error("startup", error_msg, e, severity="ERROR")
             
-            # Start the simple fallback app
-            return safe_function_call(create_simple_weather_app, fallback_result=False)
+            safe_show_error_message("Import Error", 
+                                   f"Could not import weather app module.\n\n"
+                                   f"Error: {str(e)}")
+            return False
             
         except Exception as e:
             # Main weather app module found but failed to start
             error_msg = f"Main weather app failed to start: {e}"
             if error_handling_available:
                 app_logger.log_error("startup", error_msg, e, severity="ERROR")
-                app_logger.log_error("startup", "Attempting fallback to simple weather app", severity="WARNING")
             
-            # Try fallback app
-            fallback_success = safe_function_call(create_simple_weather_app, fallback_result=False)
-            if not fallback_success:
-                safe_show_error_message("Application Error", 
-                                       f"Both main and fallback applications failed to start.\n\n"
-                                       f"Error: {str(e)}\n\n"
-                                       "Please check the error logs for more details.")
-            return fallback_success
+            import traceback
+            traceback.print_exc()
+            
+            safe_show_error_message("Application Error", 
+                                   f"Weather app failed to start.\n\n"
+                                   f"Error: {str(e)}")
+            return False
         
     except KeyboardInterrupt:
         # User pressed Ctrl+C to stop the app
@@ -422,8 +287,7 @@ def run_weather_app():
         
         safe_show_error_message("Critical Error", 
                                f"A critical error occurred during startup.\n\n"
-                               f"Error: {str(e)}\n\n"
-                               "Please check the console output for more details.")
+                               f"Error: {str(e)}")
         return False
 
 
@@ -434,7 +298,6 @@ def main():
     This is the "main" entry point - when you double-click the file
     or run "python main.py", this function is what actually gets called.
     """
-    
     
     if error_handling_available:
         app_logger.log_error("main", "Weather Dashboard starting with comprehensive error handling", severity="INFO")

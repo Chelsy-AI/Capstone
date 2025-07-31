@@ -17,13 +17,13 @@ Key responsibilities:
 import tkinter as tk
 from tkinter import ttk
 
-from .weather_display import WeatherDisplay
-from .animation_controller import AnimationController
-from features.sun_moon_phases.controller import SunMoonController
-from features.graphs.controller import GraphsController
-from features.weather_quiz.controller import WeatherQuizController
-from language.controller import LanguageController
-from features.city_comparison.controller import CityComparisonController
+from weather_dashboard.gui.weather_display import WeatherDisplay
+from weather_dashboard.gui.animation_controller import AnimationController
+from weather_dashboard.features.sun_moon_phases.controller import SunMoonController
+from weather_dashboard.features.graphs.controller import GraphsController
+from weather_dashboard.features.weather_quiz.controller import WeatherQuizController
+from weather_dashboard.language.controller import LanguageController
+from weather_dashboard.features.city_comparison.controller import CityComparisonController
 
 
 
@@ -753,7 +753,7 @@ class WeatherGUI:
         
         # Try to initialize map controller
         try:
-            from features.interactive_map.controller import MapController
+            from weather_dashboard.features.interactive_map.controller import MapController
             import os
             api_key = os.getenv("weatherdb_api_key")
             

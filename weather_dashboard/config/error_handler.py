@@ -2,15 +2,15 @@
 Weather App Error Handling & Validation Module
 ===============================================
 
-This module provides city input validation and 
+This module provides comprehensive city input validation and 
 error screen functionality for the weather application.
 
 Key functions:
-- Validate city names and block fake inputs
-- Display full-screen error messages when invalid cities are entered
+- Validate city names and handle all edge cases
+- Display full-screen error messages with specific error types
+- Handle network connectivity issues
+- Support international cities with proper characters
 - Provide clean recovery with back button to return to main screen
-- Prevent API calls for obviously fake city names
-- Handle user feedback and input validation gracefully
 """
 
 import tkinter as tk
@@ -20,12 +20,14 @@ import requests
 import os
 import re
 from dotenv import load_dotenv
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 from datetime import datetime
 import json
+import unicodedata
+import socket
 
 class CityValidator:
-    """Strict city validation to block all fake inputs."""
+    """Comprehensive city validation with detailed error handling."""
     
     def __init__(self):
         # Known real cities that should always be allowed
@@ -39,74 +41,157 @@ class CityValidator:
             'washington', 'portland', 'las vegas', 'baltimore', 'milwaukee',
             'oslo', 'bern', 'nice', 'cork', 'bath', 'york', 'hull', 'bonn',
             'linz', 'graz', 'lyon', 'metz', 'brest', 'tours', 'dijon', 'nancy',
-            'vancouver', 'calgary', 'ottawa', 'winnipeg', 'quebec', 'halifax'
+            'vancouver', 'calgary', 'ottawa', 'winnipeg', 'quebec', 'halifax',
+            'st. petersburg', 'saint-tropez', 'new delhi', 'kuala lumpur',
+            'buenos aires', 'rio de janeiro', 'são paulo', 'mexico city',
+            'saint john', 'st. louis', 'saint-étienne', 'coeur d\'alene'
+        }
+        
+        # Valid hyphenated and apostrophe cities
+        self.valid_special_cities = {
+            'saint-tropez', 'baden-baden', 'stratford-upon-avon', 'winston-salem',
+            'wilkes-barre', 'mineral wells', 'palm springs', 'crystal city',
+            'garden city', 'cedar falls', 'grand rapids', 'sioux falls',
+            'coeur d\'alene', 'martha\'s vineyard', 'queen\'s', 'king\'s lynn'
         }
         
         # Patterns that indicate fake/invalid input
         self.invalid_patterns = [
-            r'^[bcdfghjklmnpqrstvwxyz]{4,}$',  # Only consonants
-            r'^[aeiou]{3,}$',  # Only vowels
-            r'^(.)\1{3,}',  # Repeated characters
-            r'^(test|fake|dummy|random|error|null|none)',  # Test words
-            r'\d{2,}',  # Multiple numbers
-            r'^[qwerty]{4,}$',  # Keyboard patterns
-            r'^[asdf]{4,}$',
-            r'^[zxcv]{4,}$',
-            r'[;,!@#$%^&*()]+',  # Punctuation
-            r'^[a-z]{4}[;,]?$'  # 4 random letters with punctuation
+            r'^[bcdfghjklmnpqrstvwxyz]{5,}$',  # Only consonants (5+ chars)
+            r'^[aeiou]{4,}$',  # Only vowels (4+ chars)
+            r'^(.)\1{4,}',  # Repeated characters (5+ times)
+            r'^(test|fake|dummy|random|error|null|none|spam)',  # Test words
+            r'[;,!@#$%^&*()+=\[\]{}|\\:";\'<>?/~`]',  # Special characters except - and '
+            r'^[qwerty]{5,}$',  # Keyboard patterns
+            r'^[asdf]{5,}$',
+            r'^[zxcv]{5,}$'
         ]
         
         # Known fake inputs to block immediately
         self.fake_inputs = {
             'khjl', 'khjl;', 'fnjaelf', 'bhjlk', 'njkef', 'ifej', 'haaae',
-            'test', 'test123', 'asdf', 'qwer', 'hjkl', 'fake', 'dummy'
+            'test', 'test123', 'asdf', 'qwer', 'hjkl', 'fake', 'dummy',
+            'random', 'error', 'null', 'none', 'spam', 'invalid'
         }
     
-    def is_valid_city(self, city: str) -> bool:
-        """Strict validation to block fake cities."""
-        if not city or len(city.strip()) < 2:
-            return False
-        
-        # Clean the input
-        city_clean = city.strip().lower().replace(';', '').replace(',', '')
-        
-        # Block known fake inputs immediately
-        if city_clean in self.fake_inputs:
-            return False
-        
-        # Allow known valid cities
-        if city_clean in self.valid_cities:
+    def check_internet_connection(self) -> bool:
+        """Check if internet connection is available."""
+        try:
+            socket.create_connection(("8.8.8.8", 53), timeout=3)
             return True
+        except OSError:
+            return False
+    
+    def contains_emoji(self, text: str) -> bool:
+        """Check if text contains emojis using multiple detection methods."""
+        for char in text:
+            # Check for emoji categories
+            if unicodedata.category(char) in ['So', 'Sm', 'Sk', 'Sc']:
+                return True
+            # Check for common emoji unicode ranges
+            code_point = ord(char)
+            if (0x1F600 <= code_point <= 0x1F64F) or \
+               (0x1F300 <= code_point <= 0x1F5FF) or \
+               (0x1F680 <= code_point <= 0x1F6FF) or \
+               (0x1F1E0 <= code_point <= 0x1F1FF) or \
+               (0x2600 <= code_point <= 0x26FF) or \
+               (0x2700 <= code_point <= 0x27BF):
+                return True
+        return False
+    
+    def is_latin_script(self, text: str) -> bool:
+        """Check if text uses Latin script (English-like characters)."""
+        for char in text:
+            if char.isalpha():
+                script = unicodedata.name(char, '').split()[0]
+                if not script.startswith('LATIN'):
+                    return False
+        return True
+    
+    def validate_city_input(self, city: str) -> Tuple[bool, str]:
+        """
+        Comprehensive city validation with specific error messages.
+        Returns: (is_valid, error_message)
+        """
+        original_input = city
+        
+        # Check for empty input
+        if not city or not city.strip():
+            return False, "empty_input"
+        
+        # Check for very long input (over 50 characters)
+        if len(city) > 50:
+            return False, "too_long"
+        
+        # Check for emojis
+        if self.contains_emoji(city):
+            return False, "contains_emoji"
+        
+        # Check for numbers
+        if any(char.isdigit() for char in city):
+            return False, "contains_numbers"
+        
+        # Clean the input (handle leading/trailing spaces)
+        city_clean = city.strip()
+        
+        # Check for non-English characters
+        if not self.is_latin_script(city_clean):
+            return False, "non_english"
+        
+        # Convert to lowercase for validation
+        city_lower = city_clean.lower()
+        
+        # Check for known fake inputs
+        if city_lower in self.fake_inputs:
+            return False, "fake_input"
+        
+        # Allow known valid cities (including special characters)
+        if city_lower in self.valid_cities or city_lower in self.valid_special_cities:
+            return True, ""
+        
+        # Check for invalid special characters (except hyphens and apostrophes)
+        if re.search(r'[;,!@#$%^&*()+=\[\]{}|\\:";\'<>?/~`]', city_clean):
+            return False, "special_characters"
+        
+        # Validate hyphenated cities
+        if '-' in city_clean:
+            parts = city_clean.split('-')
+            if len(parts) != 2 or any(len(part.strip()) < 2 for part in parts):
+                return False, "invalid_hyphen"
+        
+        # Validate apostrophe cities
+        if '\'' in city_clean:
+            if city_clean.count('\'') > 1:
+                return False, "invalid_apostrophe"
+            parts = city_clean.split('\'')
+            if len(parts) != 2 or any(len(part.strip()) < 1 for part in parts):
+                return False, "invalid_apostrophe"
+        
+        # Check minimum length
+        if len(city_clean) < 2:
+            return False, "too_short"
         
         # Block obvious fake patterns
         for pattern in self.invalid_patterns:
-            if re.search(pattern, city_clean):
-                return False
+            if re.search(pattern, city_lower):
+                return False, "invalid_pattern"
         
-        # Additional strict checks
+        # Additional checks for suspicious patterns
         if len(city_clean) >= 4:
-            # Block if too many consonants in a row
-            if re.search(r'[bcdfghjklmnpqrstvwxyz]{4,}', city_clean):
-                return False
-            
-            # Block weird letter combinations
-            weird_combos = ['fnj', 'jae', 'aelf', 'hjl', 'bhjl', 'njk', 'kef', 'khjl']
-            for combo in weird_combos:
-                if combo in city_clean:
-                    return False
-            
             # Check consonant/vowel ratio
-            vowel_count = len(re.findall(r'[aeiou]', city_clean))
-            consonant_count = len(city_clean) - vowel_count
+            vowel_count = len(re.findall(r'[aeiou]', city_lower))
+            consonant_count = len(re.sub(r'[^a-z]', '', city_lower)) - vowel_count
             
-            # Block if mostly consonants (suspicious)
-            if consonant_count > vowel_count * 2.5:
-                return False
+            if consonant_count > 0 and vowel_count == 0:
+                return False, "no_vowels"
+            
+            if consonant_count > vowel_count * 3:
+                return False, "too_many_consonants"
         
-        return True
+        return True, ""
 
 class WeatherAPI:
-    """Handles weather API calls with strict validation."""
+    """Handles weather API calls with comprehensive error handling."""
     
     def __init__(self):
         load_dotenv()
@@ -118,15 +203,19 @@ class WeatherAPI:
         if not self.api_key or not self.base_url:
             raise Exception("Missing API key or base URL in .env file")
     
-    def get_weather(self, city: str) -> Optional[Dict[str, Any]]:
-        """Get weather data only for valid cities."""
+    def get_weather(self, city: str) -> Tuple[Optional[Dict[str, Any]], str]:
+        """
+        Get weather data with comprehensive error handling.
+        Returns: (weather_data, error_message)
+        """
         try:
-            # STRICT VALIDATION FIRST - Block fake cities before API call
-            if not self.validator.is_valid_city(city):
-                return None
+            # Check internet connection first
+            if not self.validator.check_internet_connection():
+                return None, "no_internet"
             
+            # Validation is now handled in search_weather, so we can proceed with API call
             params = {
-                'q': city,
+                'q': city.strip(),
                 'appid': self.api_key,
                 'units': 'imperial'
             }
@@ -147,20 +236,166 @@ class WeatherAPI:
                     'visibility': data.get('visibility', 0) / 1000,
                     'uv_index': data.get('uvi', 0),
                     'precipitation': 0
-                }
+                }, ""
+            elif response.status_code == 404:
+                return None, "city_not_found"
+            elif response.status_code == 401:
+                return None, "api_key_invalid"
+            elif response.status_code == 429:
+                return None, "api_limit_exceeded"
             else:
-                return None
+                return None, "api_error"
                 
+        except requests.exceptions.Timeout:
+            return None, "request_timeout"
+        except requests.exceptions.ConnectionError:
+            return None, "connection_error"
+        except requests.exceptions.RequestException:
+            return None, "request_error"
         except Exception as e:
-            return None
+            return None, "unknown_error"
 
 class WeatherApp:
-    """Weather app with strict validation and error screen."""
+    """Weather app with comprehensive error handling."""
     
     def __init__(self):
         self.weather_api = WeatherAPI()
         self.setup_gui()
         self.current_screen = "main"
+        self.error_messages = {
+            "empty_input": {
+                "title": "Empty Input",
+                "message": "Please enter a city name",
+                "icon": "❌",
+                "color": "#ff4444"
+            },
+            "too_long": {
+                "title": "Input Too Long",
+                "message": "City name is too long (max 50 characters)",
+                "icon": "📏",
+                "color": "#ff6600"
+            },
+            "contains_emoji": {
+                "title": "Invalid Characters",
+                "message": "City names cannot contain emojis",
+                "icon": "😵",
+                "color": "#ff4444"
+            },
+            "contains_numbers": {
+                "title": "Invalid Characters",
+                "message": "City names cannot contain numbers",
+                "icon": "🔢",
+                "color": "#ff4444"
+            },
+            "non_english": {
+                "title": "Language Not Supported",
+                "message": "Please use English alphabet characters only",
+                "icon": "🌐",
+                "color": "#ff6600"
+            },
+            "special_characters": {
+                "title": "Invalid Characters",
+                "message": "Only letters, spaces, hyphens, and apostrophes allowed",
+                "icon": "⚠️",
+                "color": "#ff4444"
+            },
+            "invalid_hyphen": {
+                "title": "Invalid Format",
+                "message": "Hyphenated cities must have valid parts (e.g., 'New-York')",
+                "icon": "➖",
+                "color": "#ff4444"
+            },
+            "invalid_apostrophe": {
+                "title": "Invalid Format",
+                "message": "Cities with apostrophes must be valid (e.g., 'Martha's Vineyard')",
+                "icon": "❜",
+                "color": "#ff4444"
+            },
+            "too_short": {
+                "title": "Input Too Short",
+                "message": "City name must be at least 2 characters long",
+                "icon": "📏",
+                "color": "#ff6600"
+            },
+            "fake_input": {
+                "title": "Invalid City",
+                "message": "This appears to be test input, not a real city",
+                "icon": "🚫",
+                "color": "#ff4444"
+            },
+            "invalid_pattern": {
+                "title": "Invalid City",
+                "message": "This doesn't appear to be a valid city name",
+                "icon": "❌",
+                "color": "#ff4444"
+            },
+            "no_vowels": {
+                "title": "Invalid City",
+                "message": "City names must contain vowels",
+                "icon": "🔤",
+                "color": "#ff4444"
+            },
+            "too_many_consonants": {
+                "title": "Invalid City",
+                "message": "This doesn't look like a real city name",
+                "icon": "❌",
+                "color": "#ff4444"
+            },
+            "no_internet": {
+                "title": "No Internet Connection",
+                "message": "Please check your internet connection and try again",
+                "icon": "📡",
+                "color": "#ff6600"
+            },
+            "city_not_found": {
+                "title": "City Not Found",
+                "message": "This city was not found in the weather database",
+                "icon": "🔍",
+                "color": "#ff6600"
+            },
+            "api_key_invalid": {
+                "title": "Service Error",
+                "message": "Weather service configuration error",
+                "icon": "🔑",
+                "color": "#ff4444"
+            },
+            "api_limit_exceeded": {
+                "title": "Service Limit Reached",
+                "message": "Too many requests. Please try again later",
+                "icon": "⏰",
+                "color": "#ff6600"
+            },
+            "request_timeout": {
+                "title": "Request Timeout",
+                "message": "The request took too long. Please try again",
+                "icon": "⏱️",
+                "color": "#ff6600"
+            },
+            "connection_error": {
+                "title": "Connection Error",
+                "message": "Unable to connect to weather service",
+                "icon": "🌐",
+                "color": "#ff6600"
+            },
+            "api_error": {
+                "title": "Service Error",
+                "message": "Weather service is temporarily unavailable",
+                "icon": "⚠️",
+                "color": "#ff6600"
+            },
+            "request_error": {
+                "title": "Request Error",
+                "message": "An error occurred while fetching weather data",
+                "icon": "❌",
+                "color": "#ff4444"
+            },
+            "unknown_error": {
+                "title": "Unknown Error",
+                "message": "An unexpected error occurred. Please try again",
+                "icon": "❓",
+                "color": "#ff4444"
+            }
+        }
     
     def setup_gui(self):
         """Setup the main GUI."""
@@ -209,12 +444,37 @@ class WeatherApp:
         )
         self.city_entry.pack(pady=10)
         self.city_entry.bind('<Return>', lambda e: self.search_weather())
+        self.city_entry.bind('<KeyRelease>', self.on_key_release)  # Add real-time validation
         self.city_entry.focus()
+        
+        # Input help text
+        help_text = tk.Label(
+            search_frame,
+            text="Enter city name (e.g., London, New York, Saint-Tropez, Martha's Vineyard)",
+            font=("Arial", 10),
+            bg='#87CEEB',
+            fg='#666'
+        )
+        help_text.pack(pady=5)
+        
+        # Search button for alternative to Enter key
+        search_button = tk.Button(
+            search_frame,
+            text="Get Weather",
+            font=("Arial", 12, "bold"),
+            bg='#4CAF50',
+            fg='white',
+            command=self.search_weather,
+            cursor='hand2',
+            relief='raised',
+            bd=2
+        )
+        search_button.pack(pady=5)
         
         # Weather metrics display
         self.setup_weather_display()
         
-        # Temperature and description (like your original design)
+        # Temperature and description
         self.temp_frame = tk.Frame(self.main_frame, bg='#87CEEB')
         self.temp_frame.pack(pady=20)
         
@@ -292,7 +552,7 @@ class WeatherApp:
             setattr(self, attr, value_widget)
     
     def setup_feature_buttons(self):
-        """Setup feature buttons like your original design."""
+        """Setup feature buttons."""
         buttons_frame = tk.Frame(self.main_frame, bg='#87CEEB')
         buttons_frame.pack(pady=30)
         
@@ -319,132 +579,172 @@ class WeatherApp:
             )
             btn.grid(row=row, column=col, padx=5, pady=5)
     
-    def show_error_screen(self, city_input: str):
-        """Show full-screen error when city is invalid."""
-        
-        # COMPLETELY CLEAR THE SCREEN
+    def show_error_screen(self, city_input: str, error_type: str):
+        """Show FULL-SCREEN error with specific error message and prominent back button."""
+        # COMPLETELY CLEAR THE ENTIRE SCREEN
         self.clear_screen()
         self.current_screen = "error"
         
-        # Create error screen with centered content
+        # Get error details
+        error_info = self.error_messages.get(error_type, {
+            "title": "Error",
+            "message": "An error occurred",
+            "icon": "❌",
+            "color": "#ff4444"
+        })
+        
+        # Create FULL-SCREEN error container that takes up entire window
         error_container = tk.Frame(self.main_frame, bg='#87CEEB')
         error_container.pack(expand=True, fill=tk.BOTH)
         
-        # Center everything vertically
+        # Center everything vertically and horizontally
         center_frame = tk.Frame(error_container, bg='#87CEEB')
         center_frame.pack(expand=True)
         
-        # Large error icon
+        # LARGE error icon that dominates the screen
         error_icon = tk.Label(
             center_frame,
-            text="❌",
-            font=("Arial", 100),
+            text=error_info["icon"],
+            font=("Arial", 120),  # Even larger icon
             bg='#87CEEB',
-            fg='#ff4444'
+            fg=error_info["color"]
         )
-        error_icon.pack(pady=(50, 30))
+        error_icon.pack(pady=(80, 40))
         
-        # Error title
+        # LARGE error title
         error_title = tk.Label(
             center_frame,
-            text="Incorrect Input",
-            font=("Arial", 36, "bold"),
+            text=error_info["title"],
+            font=("Arial", 42, "bold"),  # Larger title
             bg='#87CEEB',
-            fg='#ff4444'
+            fg=error_info["color"]
         )
-        error_title.pack(pady=20)
+        error_title.pack(pady=25)
         
-        # Error message with the specific input
+        # Error message
         error_msg = tk.Label(
             center_frame,
-            text=f"'{city_input}' is not a valid city name",
-            font=("Arial", 20),
+            text=error_info["message"],
+            font=("Arial", 22),  # Larger message
             bg='#87CEEB',
-            fg='#333'
+            fg='#333',
+            wraplength=500  # Wrap long messages
         )
-        error_msg.pack(pady=15)
+        error_msg.pack(pady=20)
+        
+        # Show the problematic input (if not empty)
+        if city_input.strip() and error_type != "empty_input":
+            input_display = tk.Label(
+                center_frame,
+                text=f"Your input: '{city_input}'",
+                font=("Arial", 18, "italic"),
+                bg='#87CEEB',
+                fg='#666'
+            )
+            input_display.pack(pady=15)
         
         # Instructions
         instruction = tk.Label(
             center_frame,
-            text="Please enter a valid city",
-            font=("Arial", 18, "bold"),
+            text="Please try again with a valid city name",
+            font=("Arial", 20, "bold"),
             bg='#87CEEB',
             fg='#666'
         )
-        instruction.pack(pady=15)
+        instruction.pack(pady=20)
         
         # Examples
         examples = tk.Label(
             center_frame,
-            text="Examples: New York, London, Tokyo, Paris, Berlin",
+            text="Valid examples: London, New York, Saint-Tropez, Martha's Vineyard",
             font=("Arial", 16),
             bg='#87CEEB',
-            fg='#888'
+            fg='#888',
+            wraplength=500
         )
         examples.pack(pady=15)
         
-        # Back button - large and prominent
+        # PROMINENT BACK BUTTON - Large and eye-catching
         back_button = tk.Button(
             center_frame,
-            text="← Back",
-            font=("Arial", 20, "bold"),
+            text="← Back to Weather App",
+            font=("Arial", 24, "bold"),  # Much larger button text
             bg='#4CAF50',
             fg='white',
-            width=12,
-            height=2,
+            width=20,  # Wider button
+            height=3,  # Taller button
             command=self.show_main_screen,
             cursor='hand2',
             relief='raised',
-            bd=3
+            bd=4,  # Thicker border
+            activebackground='#45a049',  # Hover effect
+            activeforeground='white'
         )
-        back_button.pack(pady=(50, 20))
+        back_button.pack(pady=(60, 40))
         back_button.focus()
         
-        # Also bind Enter key to go back
+        # MULTIPLE ways to go back for user convenience
         self.root.bind('<Return>', lambda e: self.show_main_screen())
+        self.root.bind('<Escape>', lambda e: self.show_main_screen())
+        self.root.bind('<BackSpace>', lambda e: self.show_main_screen())
+        
+        # Add visual emphasis to the error state
+        self.root.configure(bg='#87CEEB')  # Ensure consistent background
     
     def show_weather_data(self, weather_data: Dict[str, Any]):
         """Display weather data on main screen."""
         if self.current_screen == "main":
             # Update metrics
             self.humidity_display.config(text=f"{weather_data['humidity']}%", fg='#333')
-            self.wind_display.config(text=f"{weather_data['wind_speed']} m/s", fg='#333')
+            self.wind_display.config(text=f"{weather_data['wind_speed']:.1f} m/s", fg='#333')
             self.pressure_display.config(text=f"{weather_data['pressure']} hPa", fg='#333')
             self.visibility_display.config(text=f"{weather_data['visibility']:.1f} km", fg='#333')
             self.uv_display.config(text=f"{weather_data['uv_index']}", fg='#333')
             self.precip_display.config(text=f"{weather_data['precipitation']} mm", fg='#333')
             
             # Update temperature and description
-            self.temp_display.config(text=f"{weather_data['temp']}°C", fg='#000')
-            self.desc_display.config(text=weather_data['description'], fg='#000')
+            self.temp_display.config(text=f"{weather_data['temp']}°F", fg='#000')
+            self.desc_display.config(text=f"{weather_data['description']} in {weather_data['city']}, {weather_data['country']}", fg='#000')
+    
+    def on_key_release(self, event):
+        """Handle key release events for real-time feedback."""
+        # This can be used for real-time validation feedback if needed
+        pass
     
     def search_weather(self):
-        """Search for weather with strict validation."""
-        city_input = self.city_entry.get().strip()
-                
-        if not city_input:
-            return
+        """Search for weather with comprehensive error handling."""
+        city_input = self.city_entry.get()
         
         # Clear any previous key bindings
         self.root.unbind('<Return>')
+        self.root.unbind('<Escape>')
+        self.root.unbind('<BackSpace>')
+        
+        # ALWAYS validate input first, regardless of content
+        validator = CityValidator()
+        is_valid, error_msg = validator.validate_city_input(city_input)
+        
+        # If validation fails, show error immediately
+        if not is_valid:
+            self.show_error_screen(city_input, error_msg)
+            return
         
         try:
-            # Get weather data (validation happens inside WeatherAPI)
-            weather_data = self.weather_api.get_weather(city_input)
+            # Get weather data with error handling
+            weather_data, error_msg = self.weather_api.get_weather(city_input)
             
             if weather_data is None:
-                # City is invalid - show error screen
-                self.show_error_screen(city_input)
+                # Show specific error screen
+                self.show_error_screen(city_input, error_msg)
             else:
                 # Valid city - show weather data
                 self.show_weather_data(weather_data)
                 
         except Exception as e:
-            self.show_error_screen(city_input)
+            self.show_error_screen(city_input, "unknown_error")
     
     def run(self):
-        """Start the application."""        
+        """Start the application."""
         self.root.mainloop()
 
 if __name__ == "__main__":

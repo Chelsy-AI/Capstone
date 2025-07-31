@@ -21,8 +21,7 @@ Weather Animation Mapping:
 """
 
 import traceback  # For detailed error reporting when animations fail
-from config.animations import WeatherAnimation
-
+from weather_dashboard.config.animations import WeatherAnimation
 
 class AnimationController:
     """

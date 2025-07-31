@@ -19,15 +19,15 @@ load_dotenv()
 # Add the project root to Python path so we can import our modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from features.tomorrows_guess.predictor import get_tomorrows_prediction
-from config.themes import LIGHT_THEME, DARK_THEME
-from config.api import get_current_weather
-from config.storage import save_weather
-from gui import WeatherGUI
+from weather_dashboard.features.tomorrows_guess.predictor import get_tomorrows_prediction
+from weather_dashboard.config.themes import LIGHT_THEME, DARK_THEME
+from weather_dashboard.config.api import get_current_weather
+from weather_dashboard.config.storage import save_weather
+from weather_dashboard.gui.main_gui import WeatherGUI
 
 # Try to import error handling if available
 try:
-    from .error_handler import app_logger, safe_function_call
+    from weather_dashboard.config.error_handler import app_logger, safe_function_call
     error_handling_available = True
 except ImportError:
     error_handling_available = False
