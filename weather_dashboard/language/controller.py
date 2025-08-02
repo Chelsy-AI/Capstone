@@ -296,7 +296,6 @@ class LanguageController:
             if self.language_var:
                 new_language = self.language_var.get()
                 if new_language != self.current_language:
-                    print(f"🔄 Changing language from {self.current_language} to {new_language}")
                     
                     # Change language
                     self.current_language = new_language
@@ -309,7 +308,6 @@ class LanguageController:
                     self.update_all_translatable_widgets()
                     
                     # IMPORTANT: Fetch weather data in new language with proper API code
-                    print(f"🌍 Fetching weather data in {new_language} (API code: {self.get_language_code()})")
                     if hasattr(self.app, 'fetch_and_display'):
                         self.app.fetch_and_display()
                 else:

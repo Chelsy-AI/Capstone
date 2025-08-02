@@ -24,15 +24,12 @@ class WeatherDashboardBuilder:
         
     def clean_previous_builds(self):
         """Remove previous build and dist directories."""
-        print("🧹 Cleaning previous builds...")
         for directory in [self.build_dir, self.dist_dir]:
             if directory.exists():
                 shutil.rmtree(directory)
-                print(f"   Removed: {directory}")
     
     def verify_dependencies(self):
         """Check if all required dependencies are available."""
-        print("🔍 Verifying dependencies...")
         
         required_modules = [
             'customtkinter',
@@ -53,29 +50,20 @@ class WeatherDashboardBuilder:
         for module in required_modules:
             try:
                 __import__(module)
-                print(f"   ✓ {module}")
             except ImportError:
                 missing_required.append(module)
-                print(f"   ✗ {module} (REQUIRED)")
         
         for module in optional_modules:
             try:
                 __import__(module)
-                print(f"   ✓ {module} (optional)")
             except ImportError:
                 missing_optional.append(module)
-                print(f"   - {module} (optional, not found)")
         
         if missing_required:
-            print(f"\n❌ Missing required dependencies: {', '.join(missing_required)}")
-            print("   Please install them with: pip install -r requirements.txt")
             return False
         
         if missing_optional:
-            print(f"\n⚠️  Optional dependencies not found: {', '.join(missing_optional)}")
-            print("   The app will work but some features may be limited.")
-        
-        return True
+            return True
     
     def get_data_files(self):
         """Get list of data files to include in the build."""
@@ -93,7 +81,6 @@ class WeatherDashboardBuilder:
             source_path = self.project_root / source
             if source_path.exists():
                 data_files.append(f'--add-data={source_path}{os.pathsep}{dest}')
-                print(f"   📁 Adding data: {source} -> {dest}")
         
         # Add specific resource files
         resource_files = [
@@ -106,7 +93,6 @@ class WeatherDashboardBuilder:
             file_path = self.project_root / file
             if file_path.exists():
                 data_files.append(f'--add-data={file_path}{os.pathsep}.')
-                print(f"   📄 Adding file: {file}")
         
         return data_files
     
@@ -179,9 +165,8 @@ class WeatherDashboardBuilder:
                 'tkintermapview.map_widget',
                 'tkintermapview.canvas_position_marker'
             ])
-            print("   🗺️  Including map functionality")
         except ImportError:
-            print("   📍 Map functionality not available (tkintermapview not installed)")
+            pass
         
         try:
             import matplotlib
@@ -191,9 +176,8 @@ class WeatherDashboardBuilder:
                 'matplotlib.figure',
                 'matplotlib.pyplot'
             ])
-            print("   📊 Including chart functionality")
         except ImportError:
-            print("   📈 Advanced charting not available (matplotlib not installed)")
+            pass
         
         return [f'--hidden-import={module}' for module in hidden_imports]
     
@@ -235,7 +219,6 @@ class WeatherDashboardBuilder:
         system = platform.system()
         
         if system == 'Windows':
-            print("   🪟 Configuring for Windows...")
             args.extend([
                 '--version-file=version_info.txt' if os.path.exists('version_info.txt') else '',
                 '--windowed',  # No console window
@@ -253,7 +236,6 @@ class WeatherDashboardBuilder:
                     args.append(f'--add-binary={dll_path}{os.pathsep}.')
         
         elif system == 'Darwin':  # macOS
-            print("   🍎 Configuring for macOS...")
             args.extend([
                 '--windowed',
                 '--icon=resources/icons/icon.icns' if os.path.exists('resources/icons/icon.icns') else '',
@@ -261,7 +243,6 @@ class WeatherDashboardBuilder:
             ])
         
         elif system == 'Linux':
-            print("   🐧 Configuring for Linux...")
             args.extend([
                 '--windowed',
                 '--icon=resources/icons/icon.png' if os.path.exists('resources/icons/icon.png') else ''
@@ -307,13 +288,9 @@ VSVersionInfo(
         
         with open('version_info.txt', 'w', encoding='utf-8') as f:
             f.write(version_info_content)
-        print("   📋 Created version info file")
     
     def build_executable(self):
         """Build the weather dashboard executable."""
-        print(f"🚀 Building Weather Dashboard executable...")
-        print(f"   Platform: {platform.system()} {platform.machine()}")
-        print(f"   Python: {sys.version}")
         
         # Verify dependencies
         if not self.verify_dependencies():
@@ -324,9 +301,7 @@ VSVersionInfo(
         
         # Create version info for Windows
         self.create_version_info()
-        
-        print("\n📦 Configuring PyInstaller...")
-        
+                
         # Base PyInstaller arguments
         args = [
             'main.py',  # Entry point
@@ -338,26 +313,20 @@ VSVersionInfo(
         ]
         
         # Add data files
-        print("📁 Adding data files...")
         args.extend(self.get_data_files())
         
         # Add hidden imports
-        print("🔗 Adding hidden imports...")
         args.extend(self.get_hidden_imports())
         
         # Add excluded modules
-        print("🚫 Adding excluded modules...")
         args.extend(self.get_excluded_modules())
         
         # Add platform-specific arguments
-        print("⚙️  Adding platform-specific configuration...")
         args.extend(self.get_platform_specific_args())
         
         # Filter out empty arguments
         args = [arg for arg in args if arg]
-        
-        print(f"\n🔨 Running PyInstaller with {len(args)} arguments...")
-        
+                
         try:
             # Run PyInstaller
             PyInstaller.__main__.run(args)
@@ -368,9 +337,6 @@ VSVersionInfo(
             
             if exe_path.exists():
                 file_size = exe_path.stat().st_size / (1024 * 1024)  # Size in MB
-                print(f"\n✅ Build successful!")
-                print(f"   📍 Executable: {exe_path}")
-                print(f"   📏 Size: {file_size:.1f} MB")
                 
                 # Clean up temporary files
                 if os.path.exists('version_info.txt'):
@@ -378,11 +344,9 @@ VSVersionInfo(
                 
                 return True
             else:
-                print(f"\n❌ Build failed - executable not found at {exe_path}")
                 return False
                 
         except Exception as e:
-            print(f"\n❌ Build failed with error: {e}")
             return False
     
     def create_installer_script(self):
@@ -396,7 +360,6 @@ pause
 '''
             with open('install.bat', 'w') as f:
                 f.write(installer_content)
-            print("   📋 Created Windows installer script: install.bat")
         
         elif platform.system() in ['Darwin', 'Linux']:
             installer_content = f'''#!/bin/bash
@@ -408,17 +371,13 @@ echo "Weather Dashboard installed to Desktop!"
             with open('install.sh', 'w') as f:
                 f.write(installer_content)
             os.chmod('install.sh', 0o755)
-            print(f"   📋 Created installer script: install.sh")
 
 def main():
     """Main build function."""
-    print("🌤️  Weather Dashboard Build System")
-    print("=" * 50)
     
     builder = WeatherDashboardBuilder()
     
     if builder.build_executable():
-        print("\n🎉 Build process completed successfully!")
         
         # Ask if user wants to create installer
         try:
@@ -426,12 +385,9 @@ def main():
             if create_installer in ['y', 'yes']:
                 builder.create_installer_script()
         except KeyboardInterrupt:
-            print("\n\n👋 Build process interrupted by user.")
+            pass
         
-        print(f"\n📂 Your executable is ready in the 'dist' folder!")
-        print("   You can now distribute this single file to users.")
     else:
-        print("\n💥 Build process failed. Check the error messages above.")
         sys.exit(1)
 
 if __name__ == "__main__":

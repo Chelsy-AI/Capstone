@@ -197,7 +197,6 @@ class WeatherQuizGenerator:
             num_questions = len(category_questions)
         
         if num_questions == 0:
-            print(f"❌ No questions found in category '{category}'")
             return []
         
         # Randomly select questions from the category

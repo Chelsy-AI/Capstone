@@ -33,9 +33,7 @@ def draw_weather_icon(canvas, condition: str):
     # Get canvas dimensions for responsive drawing
     canvas_width = canvas.winfo_width()
     canvas_height = canvas.winfo_height()
-    
-    print(f"Drawing '{condition}' weather icon on {canvas_width}x{canvas_height} canvas")
-    
+        
     # Route to specific drawing function based on weather condition
     if condition.lower() == "sunny":
         _draw_sunny_icon(canvas, canvas_width, canvas_height)
