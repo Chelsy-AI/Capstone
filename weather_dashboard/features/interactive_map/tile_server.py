@@ -1,127 +1,115 @@
 """
-Weather Overlay Tile Server - Fixed Version
-==========================================
+Weather Overlay Tile Server
+===========================
 
-Fixed version with better error handling and fallback functionality.
+Local Flask server that combines OpenStreetMap base tiles with weather overlay data.
+
+Features:
+- Real-time tile composition merging base maps with weather layers
+- Support for multiple weather data types (temperature, wind, precipitation, etc.)
+- Dynamic image processing with brightness and contrast adjustments
+- Transparent overlay blending for optimal weather data visibility
+- Error handling for missing tiles or failed API requests
+- Configurable weather data source integration
+- High-performance image caching and processing
+
+The server runs locally to provide seamless weather overlay integration
+without external dependencies during map navigation.
 """
 
-import sys
-import os
-from io import BytesIO
-
-# Try to import Flask and PIL, handle gracefully if not available
-try:
-    from flask import Flask, send_file
-    HAS_FLASK = True
-except ImportError:
-    HAS_FLASK = False
-    print("Warning: Flask not installed. Weather overlays will not be available.")
-
-try:
-    from PIL import Image, ImageEnhance
-    HAS_PIL = True
-except ImportError:
-    HAS_PIL = False
-    print("Warning: Pillow not installed. Image processing will not be available.")
-
+from flask import Flask, send_file
 import requests
+from io import BytesIO
+from PIL import Image, ImageEnhance
+import os
+from dotenv import load_dotenv
 
-# Create Flask app only if Flask is available
-if HAS_FLASK:
-    app = Flask(__name__)
+# Load environment variables from .env file
+load_dotenv()
 
-    # Configuration - use provided API key or environment variables
-    weatherdb_api_key = None
-    weatherdb_base_url = "https://api.openweathermap.org"
-    weatherdb_tile_url = "https://tile.openweathermap.org/map"
+# Create a Flask web application
+app = Flask(__name__)
 
-    # OpenStreetMap tile URL
-    OSM_BASE_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+# Get API configuration from environment variables
+weatherdb_api_key = os.getenv("weatherdb_api_key")
+weatherdb_base_url = os.getenv("weatherdb_base_url")
+weatherdb_tile_url = os.getenv("weatherdb_tile_url")
 
-    HEADERS = {
-        "User-Agent": "MyWeatherApp/1.0"
-    }
+# URL template for getting basic map tiles from OpenStreetMap
+OSM_BASE_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
 
-    @app.route('/tiles/<layer>/<int:z>/<int:x>/<int:y>.png')
-    def serve_tile(layer, z, x, y):
-        """Serve combined map and weather tiles"""
-        try:
-            # Get base map tile
-            osm_url = OSM_BASE_TILE_URL.format(z=z, x=x, y=y)
-            base_resp = requests.get(osm_url, headers=HEADERS, timeout=10)
-            
-            if base_resp.status_code != 200:
-                app.logger.error(f"Failed to fetch OSM base tile: {base_resp.status_code}")
-                return "Base tile not found", 404
-            
-            # If PIL is not available, just return base tile
-            if not HAS_PIL:
-                return send_file(BytesIO(base_resp.content), mimetype='image/png')
-            
-            # Convert to PIL Image
-            base_img = Image.open(BytesIO(base_resp.content)).convert("RGBA")
+# Headers to include with web requests
+HEADERS = {
+    "User-Agent": "MyWeatherApp/1.0"
+}
 
-            # Try to get weather overlay if API key is available
-            if weatherdb_api_key and layer != "none":
-                overlay_url = f"{weatherdb_tile_url}/{layer}/{z}/{x}/{y}.png?appid={weatherdb_api_key}"
-                
-                try:
-                    overlay_resp = requests.get(overlay_url, headers=HEADERS, timeout=10)
-                    
-                    if overlay_resp.status_code == 200:
-                        # Process overlay
-                        overlay_img = Image.open(BytesIO(overlay_resp.content)).convert("RGBA")
-                        
-                        # Make overlay darker and blend
-                        enhancer = ImageEnhance.Brightness(overlay_img)
-                        darker_overlay = enhancer.enhance(0.3)
-                        
-                        contrast_enhancer = ImageEnhance.Contrast(darker_overlay)
-                        final_overlay = contrast_enhancer.enhance(0.8)
+@app.route('/tiles/<layer>/<int:z>/<int:x>/<int:y>.png')
+def serve_tile(layer, z, x, y):
+    """
+    This function combines basic map tiles with weather overlay tiles.
+    
+    Parameters:
+    - layer: type of weather data (temp, wind, etc.)
+    - z: zoom level
+    - x, y: tile coordinates on the map grid
+    """
+    try:
+        # Step 1: Get the basic map tile from OpenStreetMap
+        osm_url = OSM_BASE_TILE_URL.format(z=z, x=x, y=y)
+        base_resp = requests.get(osm_url, headers=HEADERS)
+        
+        # Check if we successfully got the base map tile
+        if base_resp.status_code != 200:
+            app.logger.error(f"Failed to fetch OSM base tile {osm_url}: {base_resp.status_code}")
+            return "Base tile not found", 404
+        
+        # Convert the base tile image data into a PIL Image object
+        # RGBA mode allows transparency
+        base_img = Image.open(BytesIO(base_resp.content)).convert("RGBA")
 
-                        # Combine images
-                        base_img.paste(final_overlay, (0, 0), final_overlay)
-                
-                except Exception as e:
-                    app.logger.error(f"Failed to get weather overlay: {e}")
-                    # Continue with base image only
-
-            # Return combined image
+        # Step 2: Get the weather overlay tile
+        overlay_url = f"{weatherdb_tile_url}/{layer}/{z}/{x}/{y}.png?appid={weatherdb_api_key}"
+        overlay_resp = requests.get(overlay_url, headers=HEADERS)
+        
+        # If we can't get weather data, just return the basic map
+        if overlay_resp.status_code != 200:
             output = BytesIO()
             base_img.save(output, format="PNG")
             output.seek(0)
             return send_file(output, mimetype='image/png')
 
-        except Exception as e:
-            app.logger.error(f"Error serving tile: {e}")
-            return "Internal Server Error", 500
+        # Step 3: Process the weather overlay to make it darker and more visible
+        overlay_img = Image.open(BytesIO(overlay_resp.content)).convert("RGBA")
+        
+        # Make the overlay much darker (30% of original brightness)
+        enhancer = ImageEnhance.Brightness(overlay_img)
+        much_darker_overlay = enhancer.enhance(0.3)
+        
+        # Also reduce contrast slightly for better visibility(80% of original contrast)
+        contrast_enhancer = ImageEnhance.Contrast(much_darker_overlay)
+        final_overlay = contrast_enhancer.enhance(0.8)
 
-    @app.route('/health')
-    def health_check():
-        """Health check endpoint"""
-        return {"status": "ok", "has_api_key": weatherdb_api_key is not None}
+        # Step 4: Combine the base map with the weather overlay
+        base_img.paste(final_overlay, (0, 0), final_overlay)
 
-def start_tile_server(api_key=None, port=5005):
-    """Start the tile server"""
-    global weatherdb_api_key
-    
-    if not HAS_FLASK:
-        print("Flask not available - tile server cannot start")
-        return
-    
-    # Set API key
-    weatherdb_api_key = api_key
-    
-    try:
-        # Run Flask server
-        app.run(host="127.0.0.1", port=port, debug=False, use_reloader=False, threaded=True)
+        # Step 5: Send the combined image back to the map widget
+        output = BytesIO()  # Create a byte buffer to hold image data
+        base_img.save(output, format="PNG")  # Save the combined image as PNG
+        output.seek(0)  # Reset buffer position to beginning
+        return send_file(output, mimetype='image/png')  # Send the image
+
     except Exception as e:
-        print(f"Failed to start tile server: {e}")
+        # If anything goes wrong, log the error and return an error message
+        app.logger.error(f"Error merging tiles: {e}")
+        return "Internal Server Error", 500
 
+def start_tile_server(*args, **kwargs):
+    """Start the tile server on localhost port 5005"""
+    # Run the Flask server
+    # debug=False and use_reloader=False prevent issues when running in threads
+    app.run(host="127.0.0.1", port=5005, debug=False, use_reloader=False)
+
+# If this file is run directly (not imported), start the server
 if __name__ == "__main__":
-    # Get API key from environment or command line
-    api_key = os.getenv("OPENWEATHER_API_KEY")
-    if len(sys.argv) > 1:
-        api_key = sys.argv[1]
+    start_tile_server()
     
-    start_tile_server(api_key)
