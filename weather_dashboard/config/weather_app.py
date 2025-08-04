@@ -572,14 +572,14 @@ class WeatherApp(tk.Tk):
             # If prediction fails, use default "no data" values
             self.current_prediction_data = (None, "N/A", 0)
 
-    def toggle_theme(self):
+    def toggle_text(self):
         """Switch between light and dark color themes."""
-        # Don't toggle theme if we're on error screen
+        # Don't toggle text if we're on error screen
         if self.current_screen == "error":
             return
             
         # Tell the GUI to switch themes
-        self.gui.toggle_theme()
+        self.gui.toggle_text()
         
         # Also tell the sun/moon page about the theme change
         if hasattr(self.gui, 'sun_moon_controller'):

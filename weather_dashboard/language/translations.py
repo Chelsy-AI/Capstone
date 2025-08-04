@@ -26,7 +26,7 @@ TRANSLATIONS = {
         "precipitation": "Precip.",
         
         # Main Page - Navigation Buttons
-        "toggle_theme": "Toggle Theme",
+        "toggle_theme": "Toggle Text",
         "tomorrow_prediction": "Tomorrow's Prediction",
         "weather_history": "Weather History",
         "weather_quiz": "Weather Quiz",
@@ -342,7 +342,7 @@ TRANSLATIONS = {
         "precipitation": "Precipitación",
         
         # Main Page - Navigation Buttons
-        "toggle_theme": "Cambiar Tema",
+        "toggle_theme": "Cambiar Texto",
         "tomorrow_prediction": "Predicción de Mañana",
         "weather_history": "Historial del Clima",
         "weather_quiz": "Quiz del Clima",
@@ -665,7 +665,7 @@ TRANSLATIONS = {
         "precipitation": "वर्षा",
         
         # Main Page - Navigation Buttons
-        "toggle_theme": "थीम बदलें",
+        "toggle_theme": "पाठ टॉगल करें",
         "tomorrow_prediction": "कल की भविष्यवाणी",
         "weather_history": "मौसम इतिहास",
         "weather_quiz": "मौसम प्रश्नोत्तरी",

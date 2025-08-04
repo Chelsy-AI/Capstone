@@ -557,7 +557,7 @@ class WeatherApp:
         buttons_frame.pack(pady=30)
         
         button_names = [
-            "Toggle Theme", "Tomorrow's Prediction", "Weather History",
+            "Toggle Text", "Tomorrow's Prediction", "Weather History",
             "City Comparison", "Weather Graphs", "Map View",
             "Weather Quiz", "Sun & Moon", "Language"
         ]

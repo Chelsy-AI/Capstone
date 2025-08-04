@@ -10,11 +10,8 @@ The Weather Dashboard is a comprehensive desktop application that provides real-
 
 When you first open the Weather Dashboard, you'll be guided through initial setup:
 
-![Language Selection](images/language-selection.png)
-
 1. **Language Selection**: Choose from English, Spanish, or Hindi
-2. **Theme Preference**: Select light or dark mode
-3. **Default Location**: Enter your preferred city for startup
+2. **Text Theme Preference**: Select light or dark text
 
 Your preferences are automatically saved for future sessions.
 
@@ -24,15 +21,13 @@ Your preferences are automatically saved for future sessions.
 
 The main dashboard provides comprehensive current weather information.
 
-![Main Dashboard](images/main-dashboard.png)
-
 **How to search for weather:**
 1. Enter any city name in the search box at the top
-2. Press Enter or click the search button
+2. Press Enter
 3. Current conditions appear instantly with detailed metrics
 
 **Current weather includes:**
-- Temperature (actual and "feels like")
+- Temperature
 - Humidity and atmospheric pressure
 - Wind speed and direction
 - Visibility and UV index
@@ -54,38 +49,28 @@ Switch between temperature units with a simple click.
 
 View weather data trends with dynamic, interactive charts.
 
-![Weather Graphs](images/weather-graphs.png)
-
 **Features:**
 - **Hover tooltips**: Get exact values by hovering over data points
-- **Zoom functionality**: Click and drag to zoom into specific time periods
 - **Multiple metrics**: Temperature, humidity, pressure, and more
-- **Time range selection**: View data from hours to weeks
 
 **How to use:**
-1. Navigate to the graphs section
-2. Select your desired time range
-3. Hover over any point for detailed information
-4. Use mouse wheel to zoom in/out
-5. Click and drag to pan across different time periods
+1. Navigate to the Graphs section  
+2. Select the desired graph type from the dropdown menu  
+3. Hover over any data point to view detailed information  
+4. Click on [i] for additional insights and explanations  
 
 ### Historical Weather Tracking
 
 Access 7 days of historical weather data with intelligent caching.
 
-![Historical Data](images/historical-tracking.png)
-
 **What you can track:**
-- Daily temperature highs and lows
-- Precipitation patterns
-- Weather condition changes
-- Atmospheric pressure trends
+- Daily high and low temperatures  
+- Changes in weather conditions  
+- Average temperature for each day  
 
 **Navigation:**
-1. Scroll down to the history section
-2. Click on any day to see detailed information
-3. Compare patterns across different days
-4. Data is automatically cached for offline viewing
+1. Compare weather patterns across multiple days  
+2. View cached data automatically when offline
 
 ## Interactive Features
 
@@ -93,28 +78,22 @@ Access 7 days of historical weather data with intelligent caching.
 
 Explore weather patterns with the interactive map feature.
 
-![Interactive Map](images/weather-map.png)
-
 **Map features:**
 - Real-time city location markers
 - Weather overlay information
 - OpenStreetMap integration
-- Click-to-search functionality
 
 **How to use the map:**
-1. Click the map tab or button
+1. Click the map button
 2. Navigate by clicking and dragging
 3. Zoom with mouse wheel or +/- buttons
 4. Click any location to get weather for that area
-5. Markers show current conditions for major cities
 
 *Note: Enhanced map features require tkintermapview installation*
 
 ### City Comparison Tool
 
 Compare weather conditions between multiple cities side-by-side.
-
-![City Comparison](images/city-comparison.png)
 
 **Setting up comparisons:**
 1. Access the city comparison feature
@@ -141,7 +120,6 @@ Experience real-time particle-based animations that match current conditions.
 
 **Performance options:**
 - Animations run at smooth 30fps
-- Can be disabled in settings for better performance
 - Automatically adjust based on system capabilities
 
 ## Astronomical Information
@@ -149,8 +127,6 @@ Experience real-time particle-based animations that match current conditions.
 ### Sun and Moon Phases
 
 Get detailed astronomical data for any location.
-
-![Sun Moon Phases](images/sun-moon-phases.png)
 
 **Available information:**
 - Sunrise and sunset times
@@ -170,19 +146,17 @@ Get detailed astronomical data for any location.
 
 Test and expand your weather knowledge with the built-in quiz.
 
-![Weather Quiz](images/weather-quiz.png)
-
-**Quiz features:**
-- Comprehensive question database
-- Multiple difficulty levels
-- Immediate feedback and explanations
-- Score tracking and progress
+**Quiz Features:**
+- Based on meteorological data from five major global cities: Phoenix, Ahmedabad, Denver, Columbus, and Lebrija  
+- Covers climate patterns, temperature variations, and weather phenomena  
+- Designed to test and improve your weather knowledge  
+- Displays results instantly after each quiz  
 
 **How to take a quiz:**
-1. Click on the Quiz section
-2. Select difficulty level
-3. Answer questions and receive instant feedback
-4. Learn from detailed explanations
+1. Click on the Quiz section  
+2. Answer the questions and receive your result instantly  
+3. Click the "New Quiz" button to try again  
+
 
 ## Prediction and Forecasting
 
@@ -198,20 +172,17 @@ Get intelligent weather predictions with confidence scoring.
 
 **Understanding predictions:**
 - Higher confidence scores indicate more reliable forecasts
-- Accuracy tracking shows how well predictions perform over time
 - Predictions improve with more historical data
 
 ## Customization and Themes
 
-### Dynamic Theme Switching
+### Dynamic Text Theme Switching
 
-Switch between light and dark modes to match your preference or time of day.
+Switch between light and dark texts to match your preference or time of day.
 
-![Theme Switching](images/theme-switching.png)
-
-**Available themes:**
-- **Light mode**: Clean, bright interface for daytime use
-- **Dark mode**: Easy on the eyes for evening or low-light conditions
+**Available text themes:**
+- **Light Mode** – Black text on white for clear daytime viewing  
+- **Dark Mode** – White text on dark for comfortable low-light use  
 
 **To change themes:**
 1. Locate the theme toggle button
@@ -229,27 +200,11 @@ The application supports full internationalization with multiple languages.
 - Hindi (हिन्दी)
 
 **To change language:**
-1. Go to language settings (available on first launch)
+1. Go to language button
 2. Select your preferred language
 3. Interface text updates immediately
-4. Restart may be required for complete translation
 
 ## Data Export and Sharing
-
-### Exporting Weather Data
-
-Save weather information for external use or analysis.
-
-**Export options:**
-- Historical weather data in CSV format
-- Current conditions snapshot
-- Chart images for reports or presentations
-
-**How to export:**
-1. Navigate to the data you want to export
-2. Look for export or save options
-3. Choose your preferred format
-4. Select save location
 
 ### Weather Icons and Visual Elements
 
@@ -300,13 +255,11 @@ The application is designed for optimal performance:
 - Restart application after installation
 
 **Animation performance issues:**
-- Disable animations in settings menu
 - Close other resource-intensive applications
 - Update graphics drivers
 - Reduce visual effects in system settings
 
 **Language not switching:**
-- Restart the application after language change
 - Verify language files are properly installed
 - Check for system locale compatibility
 
@@ -412,6 +365,96 @@ When seeking help, please provide:
 - Error messages or logs
 - Steps to reproduce the issue
 - Screenshots when relevant
+
+### Installation Help
+
+**If you encounter installation issues:**
+
+```bash
+# Check Python version
+python --version
+
+# Reinstall dependencies
+pip uninstall -r requirements.txt -y
+pip install -r requirements.txt
+
+# Clear cache and restart
+rm -rf __pycache__
+python main.py
+```
+
+**For Windows users:**
+```cmd
+# If you see SSL errors
+pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org -r requirements.txt
+```
+
+**For macOS users:**
+```bash
+# If you see permission errors
+pip install --user -r requirements.txt
+```
+
+**For Linux users:**
+```bash
+# Install system dependencies
+sudo apt-get update
+sudo apt-get install python3-tk python3-dev
+
+# Then install Python requirements
+pip install -r requirements.txt
+```
+
+### Performance Troubleshooting
+
+**If the application runs slowly:**
+
+1. **Check system requirements:**
+   - 4GB RAM minimum (8GB recommended)
+   - Python 3.8+ installed
+   - Stable internet connection
+
+2. **Optimize performance:**
+   ```bash
+   # Disable animations
+   export ENABLE_ANIMATIONS=false
+   
+   # Reduce cache size
+   export MAX_CACHE_SIZE=100
+   
+   # Lower animation framerate
+   export ANIMATION_FPS=15
+   ```
+
+3. **Close other applications:**
+   - Close unnecessary programs
+   - Check for background processes using CPU
+   - Ensure adequate free disk space
+
+### Data and Privacy
+
+**What data is stored:**
+- Weather history (locally in CSV files)
+- User preferences (language, theme, default city)
+- Temporary cache files for performance
+
+**What data is NOT stored:**
+- Personal information
+- Location tracking
+- Usage analytics
+- Any data sent to third parties
+
+**Clearing data:**
+```bash
+# Remove all cached data
+rm -rf data/cache/
+
+# Reset user preferences
+rm language_settings.json
+
+# Clear weather history
+rm data/weather_history.csv
+```
 
 ---
 

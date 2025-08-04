@@ -21,3 +21,4 @@ six==1.17.0
 tkintermapview==1.29
 ttkbootstrap==1.13.11
 urllib3==2.5.0
+PyInstaller

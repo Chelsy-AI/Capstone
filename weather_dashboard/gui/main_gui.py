@@ -530,7 +530,7 @@ class WeatherGUI:
         buttons = [
             # Row 1: Core Weather Features
             (self.language_controller.get_text("Toggle Text"), 
-             lambda: self.app.toggle_theme(), col1_x, row1_y),
+             lambda: self.app.toggle_text(), col1_x, row1_y),
             (self.language_controller.get_text("tomorrow_prediction"), 
              lambda: self.show_page("prediction"), col2_x, row1_y),
             (self.language_controller.get_text("weather_history"), 
@@ -836,9 +836,9 @@ class WeatherGUI:
         if hasattr(self, 'sun_moon_controller'):
             self.sun_moon_controller.update_display(city)
 
-    def toggle_theme(self):
+    def toggle_text(self):
         """Toggle between light and dark themes."""
-        self.weather_display.toggle_theme()
+        self.weather_display.toggle_text()
 
     def cleanup_animation(self):
         """Clean up animation resources when closing the app."""

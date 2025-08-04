@@ -522,7 +522,7 @@ class WeatherDisplay:
         if hasattr(self.app, 'current_history_data'):
             self.app.current_history_data.clear()
 
-    def toggle_theme(self):
+    def toggle_text(self):
         """
         Toggle between light and dark themes.
         
